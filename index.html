@@ -1,33 +1,597 @@
-<html lang="zh-Hant">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-<head> 
-    <title>melon</title>
-    
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光之採集者 - The Lumina Gatherer (精細版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase/Firestore Imports (Required for all canvas apps, even if not fully used for storage in this single-player context) --><script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        window.firebaseInit = async () => {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+            if (firebaseConfig) {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Expose instances globally (for use in the game logic script)
+                window.db = db;
+                window.auth = auth;
+                window.userId = auth.currentUser?.uid || crypto.randomUUID();
+                
+                console.log(`Firebase Initialized for user: ${window.userId}`);
+                // Proceed with game initialization after auth
+                window.startGame();
+            } else {
+                console.warn("Firebase config not found. Running game in standalone mode.");
+                window.startGame(); // Start game without Firebase if config is missing
+            }
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0d0d0d;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow: auto;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 1400px; /* 增加最大寬度以適應更大的Canvas */
+            width: 100%;
+            background-color: #1c1c1c;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+        }
+        canvas {
+            border: 6px solid #4a5568;
+            background-color: #000000;
+            image-rendering: crisp-edges; /* 更精細的像素渲染 */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            border-radius: 8px;
+        }
+        .status-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-around;
+            padding: 15px;
+            background-color: #2d3748;
+            border-radius: 10px;
+            width: 100%;
+        }
+        .stat-item {
+            padding: 8px 15px;
+            background-color: #1a202c;
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+            font-weight: bold;
+            color: #90cdf4;
+        }
+        .stat-bar {
+            height: 10px;
+            background-color: #4a5568;
+            border-radius: 5px;
+            overflow: hidden;
+            width: 100px;
+            margin-left: 5px;
+        }
+        .stat-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .messages {
+            min-height: 50px;
+            padding: 12px;
+            background-color: #1a202c;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9em;
+        }
+        .ore-count span {
+            margin-right: 15px;
+        }
+    </style>
 </head>
 <body>
-    <style>
-    body {
-        font-family: 'Inter', sans-serif;
-        background-color: #009dff;
-    }
-    </style>    
-    <section class="mb-10">
-            <kai class="text-3xl font-semibold text-gray-700 mb-4 border-l-4 border-yellow-500 pl-3">
-                 秉諺是豬 (&lt;ahhhhhhhh&gt;)
-            </kai>
-            <ray class="text-gray-600 leading-relaxed mb-4">
-                在 &lt;null&gt; 
-            </ray>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-yellow-300 mb-4">《光之採集者》 - 礦坑探索 (精細版)</h1>
+        
+        <div id="status-ui" class="status-panel">
+            <!-- 狀態列會由 JS 填充 --></div>
 
-            <weeee class="rounded-lg shadow-md p-4 bg-white border border-gray-200 text-center">
-                <a href="https://youtu.be/avCWDDox1nE?si=bnt63mgV-_90sFSd" 
-                   download="null.png"
-                   class="">
-                   古古ㄍㄚˊㄍㄚˊ
-                </a>
-            </weeee>
-        </section>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="messages-box" class="messages w-full">
+            歡迎來到黑暗礦坑！尋找藍色礦石以完成任務。按下 'E' 鍵與環境互動。
+        </div>
+
+        <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+            <div class="bg-red-900 border-4 border-red-500 p-8 rounded-lg text-center shadow-2xl">
+                <h2 id="modal-title" class="text-4xl font-bold mb-4 text-white">遊戲結束</h2>
+                <p id="modal-message" class="text-xl mb-6 text-gray-200">你的火把熄滅了，黑暗吞噬了你...</p>
+                <button onclick="window.location.reload()" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-300 transform hover:scale-105">重新開始</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 64; // 精細化：每個邏輯圖塊的實際繪製尺寸從 32 變為 64
+        const MAP_WIDTH = 25;
+        const MAP_HEIGHT = 15;
+        const FUEL_MAX = 1000;
+        const HP_MAX = 100;
+        const LIGHT_RADIUS_MAX_LOGIC = 7; // 邏輯上的光照半徑
+        const LIGHT_RADIUS_MAX_DRAW = LIGHT_RADIUS_MAX_LOGIC * 2; // 繪製時的光照半徑，為邏輯半徑的 2 倍
+        const DARK_DAMAGE_TICK = 1000; // 黑暗傷害間隔 (ms)
+        const FUEL_DRAIN_RATE = 1; // 每秒消耗的燃料單位
+
+        canvas.width = MAP_WIDTH * TILE_SIZE;
+        canvas.height = MAP_HEIGHT * TILE_SIZE;
+
+        // --- 遊戲狀態 ---
+        let gameActive = true;
+        let lastFuelDrainTime = 0;
+        let lastDarkDamageTime = 0;
+        let messageTimer = null;
+        let staticLights = []; // 靜態火盆
+        let enemies = []; // 黯影潛伏者
+
+        const player = {
+            x: 1,
+            y: 1,
+            hp: HP_MAX,
+            fuel: FUEL_MAX,
+            lightRadiusLogic: LIGHT_RADIUS_MAX_LOGIC, // 邏輯上的光照半徑
+            collectedOres: { Blue: 0, Red: 0, Green: 0 },
+            movePending: { x: 0, y: 0 }
+        };
+
+        // --- 地圖定義 (0=牆, 1=路, 2=起點, 3=燃料, 4=靜態光, 5=敵人, B/R/G=礦石) ---
+        const mapData = [
+            '0000000000000000000000000',
+            '0211111101111110111111110',
+            '010000010100001010000010',
+            '010B11110103111011111010',
+            '010100000101001000001010',
+            '010111111101111411111010',
+            '010000000000000000000010',
+            '0111111101111111011R1110',
+            '000000010000000101000000',
+            '0111111111131111011111110',
+            '010000000000000000000010',
+            '0111411111111111111111110',
+            '010000000000000000000010',
+            '0111G11111111111111111110',
+            '0000000000000000000000000',
+        ];
+        
+        // --- 輔助函數 ---
+        
+        /** 顯示訊息並定時清除 */
+        function showMessage(text, duration = 3000) {
+            const msgBox = document.getElementById('messages-box');
+            msgBox.textContent = text;
+            clearTimeout(messageTimer);
+            messageTimer = setTimeout(() => {
+                msgBox.textContent = '繼續探索礦坑...';
+            }, duration);
+        }
+
+        /** 計算曼哈頓距離 (用於判斷光照) */
+        function distance(x1, y1, x2, y2) {
+            return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+        }
+
+        /** 檢查地圖上的座標是否為牆 */
+        function isWall(x, y) {
+            if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return true;
+            return mapData[y][x] === '0';
+        }
+
+        /** 獲取地圖上的物品代碼 */
+        function getItem(x, y) {
+            return mapData[y][x];
+        }
+
+        /** 從地圖上移除物品 (替換為地板) */
+        function removeItem(x, y) {
+            const row = mapData[y];
+            mapData[y] = row.substring(0, x) + '1' + row.substring(x + 1);
+        }
+
+        /** 設置靜態火盆為永久點亮 */
+        function setStaticLightLit(x, y, isLit = true) {
+            const light = staticLights.find(l => l.x === x && l.y === y);
+            if (light) {
+                light.isLit = isLit;
+                showMessage(`靜態火盆已點燃，提供固定照明。`);
+            }
+        }
+
+        /** 獲取當前地圖上所有活動光源的半徑 */
+        function getAllLightRadii(px, py) {
+            const activeLights = [];
+            // 玩家火把
+            activeLights.push({ x: px, y: py, radius: player.lightRadiusLogic });
+            
+            // 靜態火盆
+            staticLights.forEach(light => {
+                if (light.isLit) {
+                    activeLights.push({ x: light.x, y: light.y, radius: 4 }); // 靜態火盆固定邏輯半徑
+                }
+            });
+            return activeLights;
+        }
+
+        /** 檢查某一格是否在任何光源範圍內 */
+        function isTileLit(tx, ty, activeLights) {
+            for (const light of activeLights) {
+                if (distance(tx, ty, light.x, light.y) <= light.radius) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // --- 敵人邏輯 (黯影潛伏者) ---
+        class Enemy {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.name = '黯影潛伏者';
+                this.attackRange = 2; // 攻擊距離
+            }
+
+            // 簡單的 AI: 追蹤玩家 (如果玩家靠近)
+            update() {
+                if (!gameActive) return;
+
+                const dist = distance(this.x, this.y, player.x, player.y);
+
+                // 如果距離太遠或玩家光圈充足，不移動
+                if (dist > 10) return; 
+
+                // 如果玩家在攻擊範圍內，進行攻擊 (假設攻擊傷害為 10)
+                if (dist <= this.attackRange) {
+                    player.hp -= 10;
+                    showMessage(`被 ${this.name} 攻擊! 損失 10 HP。`);
+                    if (player.hp <= 0) gameOver('被敵人擊敗了！');
+                    return;
+                }
+
+                // 追蹤玩家 (簡化為一步移動)
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+
+                let nextX = this.x;
+                let nextY = this.y;
+
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    nextX += (dx > 0 ? 1 : -1);
+                } else if (Math.abs(dy) > 0) {
+                    nextY += (dy > 0 ? 1 : -1);
+                }
+
+                if (!isWall(nextX, nextY)) {
+                    this.x = nextX;
+                    this.y = nextY;
+                }
+            }
+        }
+        
+        /** 初始化敵人與靜態光源 */
+        function initializeEntities() {
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    const item = getItem(x, y);
+                    if (item === '4') { // 靜態火盆
+                        staticLights.push({ x, y, isLit: false });
+                    } else if (item === '5') { // 敵人
+                        enemies.push(new Enemy(x, y));
+                        removeItem(x, y); // 將地圖上的 '5' 替換為 '1' (地板)
+                    }
+                }
+            }
+        }
+        
+        // --- 核心遊戲循環邏輯 ---
+
+        /** 處理玩家的互動 (E 鍵) */
+        function handleInteraction() {
+            const item = getItem(player.x, player.y);
+            
+            if (item === '3') { // 燃料
+                const fuelRestored = 300;
+                player.fuel = Math.min(FUEL_MAX, player.fuel + fuelRestored);
+                removeItem(player.x, player.y);
+                showMessage(`拾取燃料！火把燃料增加 ${fuelRestored} 點。`);
+            } else if (item === '4') { // 靜態火盆
+                setStaticLightLit(player.x, player.y, true);
+            } else if (['B', 'R', 'G'].includes(item)) { // 礦石
+                const oreColor = { 'B': 'Blue', 'R': 'Red', 'G': 'Green' }[item];
+                player.collectedOres[oreColor]++;
+                removeItem(player.x, player.y);
+                showMessage(`採集到 ${oreColor === 'Blue' ? '藍色' : oreColor === 'Red' ? '紅色' : '綠色'} 光華礦！`);
+                updateUI();
+                
+                // 任務完成檢查 (範例：收集 3 塊藍色礦石)
+                if (player.collectedOres.Blue >= 3) {
+                    gameOver('任務完成：你成功收集了所有藍色礦石！', true);
+                }
+            } else if (item === '2') { // 起點/NPC
+                showMessage('學者：你需要三塊藍色光華礦來修復動力爐。請在礦坑深處尋找它們！');
+            }
+        }
+
+        /** 更新火把燃料和光照半徑 */
+        function updateTorch(dt) {
+            // 每秒消耗 FUEL_DRAIN_RATE
+            if (dt - lastFuelDrainTime >= 1000 / FUEL_DRAIN_RATE) {
+                if (player.fuel > 0) {
+                    player.fuel--;
+                    updateUI();
+                }
+                lastFuelDrainTime = dt;
+            }
+
+            if (player.fuel > 0) {
+                // 燃料越多，光照半徑越大 (線性縮小)
+                player.lightRadiusLogic = 2 + Math.floor(LIGHT_RADIUS_MAX_LOGIC * (player.fuel / FUEL_MAX));
+            } else {
+                player.lightRadiusLogic = 0;
+                // 燃料耗盡，開始黑暗傷害
+                if (dt - lastDarkDamageTime >= DARK_DAMAGE_TICK) {
+                    player.hp -= 5;
+                    showMessage('黑暗迷霧吞噬著你！ -5 HP', 1500);
+                    lastDarkDamageTime = dt;
+                    if (player.hp <= 0) {
+                        gameOver('火把燃料耗盡，你被黑暗吞噬了...');
+                    }
+                }
+            }
+        }
+
+        /** 繪製遊戲畫面 */
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const activeLights = getAllLightRadii(player.x, player.y);
+
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    const item = getItem(x, y);
+                    const isLit = isTileLit(x, y, activeLights);
+                    const sx = x * TILE_SIZE;
+                    const sy = y * TILE_SIZE;
+                    
+                    if (!isLit) {
+                        // 完全黑暗
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+                        continue;
+                    }
+                    
+                    // 繪製地板/牆壁
+                    if (item === '0') {
+                        ctx.fillStyle = '#4a4a4a'; // 牆壁
+                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+                    } else {
+                        ctx.fillStyle = '#1e1e1e'; // 地板
+                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
+                    }
+                    
+                    // 繪製物品
+                    const itemSize = TILE_SIZE / 2; // 物品大小
+                    const itemOffset = TILE_SIZE / 4; // 居中偏移
+
+                    ctx.fillStyle = '#e0e0e0';
+                    if (item === '3') {
+                        ctx.fillStyle = '#ffcc66'; // 燃料 (木材/油)
+                        ctx.fillRect(sx + itemOffset, sy + itemOffset, itemSize, itemSize);
+                    } else if (item === '4') {
+                        const staticLight = staticLights.find(l => l.x === x && l.y === y);
+                        ctx.fillStyle = staticLight && staticLight.isLit ? '#fffb00' : '#4a4a4a'; // 靜態火盆
+                        ctx.beginPath();
+                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (item === 'B') {
+                        ctx.fillStyle = '#00c3ff'; // 藍色礦石
+                        ctx.beginPath();
+                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (item === 'R') {
+                        ctx.fillStyle = '#ff4d4d'; // 紅色礦石
+                        ctx.beginPath();
+                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (item === 'G') {
+                        ctx.fillStyle = '#70ff70'; // 綠色礦石
+                        ctx.beginPath();
+                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // 繪製敵人
+            enemies.forEach(enemy => {
+                 if (isTileLit(enemy.x, enemy.y, activeLights)) {
+                    ctx.fillStyle = '#ff00ff'; // 敵人 (紫色)
+                    ctx.beginPath();
+                    ctx.arc(enemy.x * TILE_SIZE + TILE_SIZE / 2, enemy.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            // 繪製玩家
+            ctx.fillStyle = '#ffff00'; // 玩家 (黃色)
+            ctx.beginPath();
+            ctx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 繪製玩家火把光暈
+            const currentDrawLightRadius = player.lightRadiusLogic * TILE_SIZE * 0.8; // 乘以 TILE_SIZE 並微調
+            const lightGradient = ctx.createRadialGradient(
+                player.x * TILE_SIZE + TILE_SIZE / 2, 
+                player.y * TILE_SIZE + TILE_SIZE / 2, 
+                0, 
+                player.x * TILE_SIZE + TILE_SIZE / 2, 
+                player.y * TILE_SIZE + TILE_SIZE / 2, 
+                currentDrawLightRadius 
+            );
+            lightGradient.addColorStop(0, 'rgba(255, 255, 0, 0.2)');
+            lightGradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.1)');
+            lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+            
+            ctx.fillStyle = lightGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        /** 更新 UI 狀態面板 */
+        function updateUI() {
+            const uiPanel = document.getElementById('status-ui');
+            const hpColor = player.hp > 50 ? 'bg-green-500' : player.hp > 20 ? 'bg-yellow-500' : 'bg-red-500';
+            const fuelColor = player.fuel > 500 ? 'bg-yellow-500' : player.fuel > 200 ? 'bg-orange-500' : 'bg-red-500';
+
+            uiPanel.innerHTML = `
+                <div class="stat-item flex items-center">
+                    生命值 (HP): 
+                    <div class="stat-bar"><div class="stat-fill ${hpColor}" style="width: ${player.hp}%"></div></div>
+                    (${player.hp}/${HP_MAX})
+                </div>
+                <div class="stat-item flex items-center">
+                    燃料存量 (Fuel): 
+                    <div class="stat-bar"><div class="stat-fill ${fuelColor}" style="width: ${player.fuel / FUEL_MAX * 100}%"></div></div>
+                    (${player.fuel}/${FUEL_MAX})
+                </div>
+                <div class="stat-item">光照半徑: ${player.lightRadiusLogic}</div>
+                <div class="stat-item ore-count">
+                    礦石 (任務目標: 3 藍): 
+                    <span style="color:#00c3ff;">藍色: ${player.collectedOres.Blue}</span> 
+                    <span style="color:#ff4d4d;">紅色: ${player.collectedOres.Red}</span> 
+                    <span style="color:#70ff70;">綠色: ${player.collectedOres.Green}</span>
+                </div>
+                <div class="stat-item">角色 ID: ${window.userId || 'N/A'}</div>
+            `;
+        }
+        
+        /** 處理遊戲結束 */
+        function gameOver(message, victory = false) {
+            gameActive = false;
+            const modal = document.getElementById('game-over-modal');
+            const title = document.getElementById('modal-title');
+            const msg = document.getElementById('modal-message');
+            const button = modal.querySelector('button');
+
+            title.textContent = victory ? '任務成功！' : '遊戲結束！';
+            msg.textContent = message;
+            
+            if (victory) {
+                modal.classList.remove('bg-red-900', 'border-red-500');
+                modal.classList.add('bg-green-900', 'border-green-500');
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.add('bg-green-600', 'hover:bg-green-700');
+            } else {
+                modal.classList.remove('bg-green-900', 'border-green-500');
+                modal.classList.add('bg-red-900', 'border-red-500');
+                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                button.classList.add('bg-red-600', 'hover:bg-red-700');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        /** 主要遊戲循環 */
+        function gameLoop(dt) {
+            if (!gameActive) return;
+
+            // 1. 處理移動
+            let nextX = player.x + player.movePending.x;
+            let nextY = player.y + player.movePending.y;
+
+            if (player.movePending.x !== 0 || player.movePending.y !== 0) {
+                if (!isWall(nextX, nextY)) {
+                    player.x = nextX;
+                    player.y = nextY;
+                }
+                player.movePending.x = 0;
+                player.movePending.y = 0;
+            }
+
+            // 2. 更新火把
+            updateTorch(dt);
+            
+            // 3. 敵人 AI 更新
+            enemies.forEach(enemy => enemy.update());
+
+            // 4. 繪製
+            draw();
+            
+            // 5. 循環
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- 輸入處理 ---
+        window.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+
+            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+                player.movePending = { x: 0, y: -1 };
+            } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+                player.movePending = { x: 0, y: 1 };
+            } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+                player.movePending = { x: -1, y: 0 };
+            } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+                player.movePending = { x: 1, y: 0 };
+            } else if (e.key === 'e' || e.key === 'E') {
+                handleInteraction();
+            }
+        });
+
+        // --- 遊戲啟動 ---
+        window.startGame = () => {
+            initializeEntities();
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 初始化 Firebase (如果存在) 並啟動遊戲
+        if (typeof window.firebaseInit === 'function') {
+            window.firebaseInit();
+        } else {
+            // Fallback for environments without Firebase bootstrapping
+            window.startGame();
+        }
+    </script>
 </body>
 </html>
