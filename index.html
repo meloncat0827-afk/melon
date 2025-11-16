@@ -1,597 +1,914 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>光之採集者 - The Lumina Gatherer (精細版)</title>
+    <title>Deeeep_miner.io</title>
+    <!-- 載入 Tailwind CSS for modern structure and utility -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase/Firestore Imports (Required for all canvas apps, even if not fully used for storage in this single-player context) --><script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        window.firebaseInit = async () => {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-
-            if (firebaseConfig) {
-                const app = initializeApp(firebaseConfig);
-                const auth = getAuth(app);
-                const db = getFirestore(app);
-
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Expose instances globally (for use in the game logic script)
-                window.db = db;
-                window.auth = auth;
-                window.userId = auth.currentUser?.uid || crypto.randomUUID();
-                
-                console.log(`Firebase Initialized for user: ${window.userId}`);
-                // Proceed with game initialization after auth
-                window.startGame();
-            } else {
-                console.warn("Firebase config not found. Running game in standalone mode.");
-                window.startGame(); // Start game without Firebase if config is missing
-            }
-        };
-    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        /* 使用自訂 CSS 創建像素風格和遊戲氛圍 */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        
+        :root {
+            --pixel-font: 'VT323', monospace;
+            --primary-color: #4CAF50; /* 綠色，代表挖礦/生命 */
+            --secondary-color: #FFC107; /* 黃色，代表能量/金錢 */
+            --dark-bg: #1A1A1A;
+            --light-text: #FFFFFF;
+        }
+
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #0d0d0d;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            overflow: auto;
+            font-family: var(--pixel-font);
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            overscroll-behavior: none; /* 防止移動端下拉刷新 */
         }
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            max-width: 1400px; /* 增加最大寬度以適應更大的Canvas */
+
+        /* 像素化按鈕樣式 */
+        .pixel-btn {
+            background-color: var(--primary-color);
+            color: var(--dark-bg);
+            border: 4px solid #101010;
+            padding: 8px 16px;
+            text-shadow: 1px 1px #000;
+            box-shadow: 4px 4px #101010;
+            transition: all 0.1s;
+            line-height: 1;
+            font-size: 1.5rem;
+            cursor: pointer;
+            -webkit-appearance: none; /* For mobile */
+            -moz-appearance: none;
+            appearance: none;
+            border-radius: 0; /* 像素風不需要圓角 */
+        }
+
+        .pixel-btn:hover {
+            background-color: #66BB6A;
+            box-shadow: 2px 2px #101010;
+            transform: translate(2px, 2px);
+        }
+
+        .pixel-btn:active {
+            box-shadow: none;
+            transform: translate(4px, 4px);
+        }
+
+        /* HUD 樣式 */
+        .hud-panel {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid var(--primary-color);
+            padding: 8px;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            font-size: 1.25rem;
+        }
+
+        /* 能量條樣式 */
+        .energy-bar-container {
             width: 100%;
-            background-color: #1c1c1c;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+            height: 24px;
+            background: #333;
+            border: 2px solid #000;
+            margin-top: 4px;
         }
-        canvas {
-            border: 6px solid #4a5568;
-            background-color: #000000;
-            image-rendering: crisp-edges; /* 更精細的像素渲染 */
-            image-rendering: -moz-crisp-edges;
-            image-rendering: -webkit-optimize-contrast;
-            border-radius: 8px;
-        }
-        .status-panel {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: space-around;
-            padding: 15px;
-            background-color: #2d3748;
-            border-radius: 10px;
-            width: 100%;
-        }
-        .stat-item {
-            padding: 8px 15px;
-            background-color: #1a202c;
-            border-radius: 6px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-            font-weight: bold;
-            color: #90cdf4;
-        }
-        .stat-bar {
-            height: 10px;
-            background-color: #4a5568;
-            border-radius: 5px;
-            overflow: hidden;
-            width: 100px;
-            margin-left: 5px;
-        }
-        .stat-fill {
+
+        .energy-bar {
             height: 100%;
+            background-color: var(--secondary-color);
             transition: width 0.3s;
         }
-        .messages {
-            min-height: 50px;
-            padding: 12px;
-            background-color: #1a202c;
-            border: 1px solid #4a5568;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 0.9em;
+
+        /* 第二段介面 (Meta Modal) */
+        #meta-modal {
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            transition: opacity 0.3s ease;
         }
-        .ore-count span {
-            margin-right: 15px;
+
+        .meta-container {
+            width: 95%;
+            max-width: 900px; /* 稍微放大容器以容納更多內容 */
+            height: 90%;
+            max-height: 650px;
+            background: #282C34;
+            border: 5px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .meta-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            font-size: 1.5rem;
+            white-space: nowrap; /* 防止 Tab 換行 */
+        }
+
+        .meta-tab.active {
+            border: 2px solid var(--secondary-color);
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--secondary-color);
+        }
+
+        /* 項目卡片樣式 */
+        .item-card {
+            background: #3c414a;
+            border: 2px solid #555;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .item-card .pixel-btn {
+            font-size: 1.2rem;
+        }
+        
+        /* 稀有礦石列表專用樣式 */
+        .rare-ore-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .rare-ore-card {
+            background: #3c414a;
+            border: 2px solid #555;
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* ============================== */
+        /* === 稀有礦石動畫 CSS 效果 === */
+        /* ============================== */
+
+        /* Animation Keyframes */
+        @keyframes epic-flash {
+            0% { opacity: 0; background-color: rgba(255, 255, 0, 0); }
+            50% { opacity: 1; background-color: rgba(255, 255, 0, 0.4); }
+            100% { opacity: 0; background-color: rgba(255, 255, 0, 0); }
+        }
+
+        @keyframes legendary-burst {
+            0% { opacity: 0; background-color: rgba(255, 0, 255, 0); }
+            25% { opacity: 1; background-color: rgba(255, 0, 255, 0.6); transform: scale(1.05); }
+            50% { opacity: 1; background-color: rgba(255, 255, 255, 0.8); }
+            75% { opacity: 1; background-color: rgba(255, 0, 255, 0.6); }
+            100% { opacity: 0; background-color: rgba(255, 0, 255, 0); transform: scale(1); }
+        }
+
+        @keyframes cosmic-explosion {
+            0%, 100% { opacity: 0; background-color: rgba(0, 0, 0, 0); }
+            10% { opacity: 1; background-color: rgba(255, 255, 255, 1); border-color: #00FFFF; transform: scale(1.1); box-shadow: 0 0 50px #00FFFF; }
+            30% { opacity: 1; background-color: rgba(255, 0, 255, 0.8); border-color: #FF00FF; transform: scale(1.05); box-shadow: 0 0 40px #FF00FF; }
+            50% { opacity: 1; background-color: rgba(255, 255, 255, 1); border-color: #FFFF00; transform: scale(1.1); box-shadow: 0 0 50px #FFFF00; }
+            70% { opacity: 1; background-color: rgba(0, 255, 255, 0.8); border-color: #00FFFF; transform: scale(1.05); box-shadow: 0 0 40px #00FFFF; }
+            90% { opacity: 1; background-color: rgba(255, 255, 255, 1); }
+        }
+
+        /* 全屏閃光疊層 */
+        #flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99; /* 低於 Modal，高於遊戲畫面 */
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* 套用動畫類 */
+        .flash-epic {
+            animation: epic-flash 0.5s ease-out 1;
+        }
+
+        .flash-legendary {
+            animation: legendary-burst 1s ease-in-out 1;
+        }
+
+        .flash-cosmic {
+            animation: cosmic-explosion 1.5s linear 1;
+        }
+
+        /* Canvas 容器邊框效果 */
+        #canvas-container {
+            transition: all 0.15s ease-out; /* 讓邊框變化更平滑 */
+        }
+
+        .canvas-legendary-border {
+            border-color: #FF00FF !important;
+            box-shadow: 0 0 20px #FF00FF;
+            transform: scale(1.005);
+        }
+
+        .canvas-cosmic-border {
+            border-color: #00FFFF !important;
+            box-shadow: 0 0 30px #00FFFF, 0 0 10px #FFFF00;
+            transform: scale(1.01);
         }
     </style>
 </head>
-<body>
-    <div class="game-container">
-        <h1 class="text-3xl font-bold text-yellow-300 mb-4">《光之採集者》 - 礦坑探索 (精細版)</h1>
+<body class="flex flex-col items-center justify-center min-h-screen p-2 select-none">
+
+    <!-- 全局變數初始化 (Firebase 佔位符) -->
+    <script>
+        // 這是 Firestore 必要的全局變數佔位符，用於未來實作資料持久化
+        const __app_id = 'mining-rpg-deeeep-style';
+        const __firebase_config = '{}'; 
+    </script>
+    
+    <!-- 第一段介面：挖礦模式 (Action View) -->
+    <div id="mining-view" class="w-full h-full flex flex-col items-center">
         
-        <div id="status-ui" class="status-panel">
-            <!-- 狀態列會由 JS 填充 --></div>
-
-        <canvas id="gameCanvas"></canvas>
-
-        <div id="messages-box" class="messages w-full">
-            歡迎來到黑暗礦坑！尋找藍色礦石以完成任務。按下 'E' 鍵與環境互動。
-        </div>
-
-        <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
-            <div class="bg-red-900 border-4 border-red-500 p-8 rounded-lg text-center shadow-2xl">
-                <h2 id="modal-title" class="text-4xl font-bold mb-4 text-white">遊戲結束</h2>
-                <p id="modal-message" class="text-xl mb-6 text-gray-200">你的火把熄滅了，黑暗吞噬了你...</p>
-                <button onclick="window.location.reload()" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-300 transform hover:scale-105">重新開始</button>
+        <!-- HUD 頂部資訊欄 -->
+        <div class="hud-panel w-full max-w-4xl mb-4 text-center">
+            <div class="flex justify-between items-center text-xl mb-1">
+                <span>深度: <span id="depth-display">0 M</span></span>
+                <span class="text-secondary-color">能量: <span id="energy-value">100</span>/<span id="max-energy-value">100</span></span>
+                <button id="meta-btn" class="pixel-btn px-4 py-1 text-sm bg-blue-600 hover:bg-blue-700">裝備/升級 (Meta)</button>
+            </div>
+            <div class="energy-bar-container mb-2">
+                <div id="energy-bar" class="energy-bar" style="width: 100%;"></div>
+            </div>
+            
+            <!-- 資源/容量顯示 -->
+            <div class="flex justify-around text-lg">
+                <span>石頭: <span id="res-stone">0</span> / <span id="max-res-stone">500</span></span>
+                <span>精煉金屬: <span id="res-ore">0</span> / <span id="max-res-ore">500</span></span>
+                <span>金錢: <span id="res-money">0</span></span>
             </div>
         </div>
 
+        <!-- 遊戲 Canvas 區域容器 (新增 ID 以便控制邊框動畫) -->
+        <div id="canvas-container" class="w-full max-w-4xl aspect-[16/9] bg-gray-800 border-4 border-gray-900 shadow-2xl relative overflow-hidden">
+            <canvas id="game-canvas" class="w-full h-full"></canvas>
+            <!-- 挖礦按鈕/訊息框 -->
+            <div id="action-area" class="absolute inset-0 flex flex-col items-center justify-center p-4">
+                <div id="action-message" class="text-2xl text-red-400 mb-4 bg-black/70 p-2 hidden">能量耗盡！請休息或補充！</div>
+                <div id="storage-message" class="text-2xl text-red-400 mb-4 bg-black/70 p-2 hidden">背包已滿！請出售或升級容量！</div>
+                <button id="mine-btn" class="pixel-btn text-3xl p-6 transition-all duration-100 ease-in-out">⛏️ 點擊挖礦 ⛏️</button>
+            </div>
+        </div>
+        
+        <!-- 全屏閃光疊層 (用於稀有礦石動畫) -->
+        <div id="flash-overlay" class="absolute inset-0"></div>
+    </div>
+    
+    <!-- 第二段介面：元數據模式 (Meta Modal) -->
+    <div id="meta-modal" class="fixed inset-0 flex items-center justify-center hidden">
+        <div class="meta-container">
+            <h2 class="text-3xl border-b-4 border-primary-color pb-2 mb-4">元數據中心</h2>
+
+            <!-- 標籤導航 -->
+            <div class="flex mb-4 border-b border-gray-500 overflow-x-auto">
+                <div class="meta-tab active" data-tab="upgrades">⚒️ 升級 (Upgrades)</div>
+                <div class="meta-tab" data-tab="crafting">⚙️ 製造 (Pickaxes)</div>
+                <div class="meta-tab" data-tab="consumables">🛒 補給 (Shop)</div>
+                <div class="meta-tab" data-tab="rare_ores">🔮 奇珍礦石 (Rare Ores)</div>
+                <div class="meta-tab" data-tab="stats">📈 狀態 (Stats)</div>
+            </div>
+
+            <!-- 標籤內容 -->
+            <div id="tab-content">
+                <!-- 升級 Tab (Upgrades) -->
+                <div id="upgrades" class="meta-content">
+                    <h3 class="text-2xl mb-4">核心升級 (背包擴容、能量擴容、效率)</h3>
+
+                    <div id="upgrade-list">
+                        <!-- 升級項目將由 JS 填充 -->
+                    </div>
+                </div>
+
+                <!-- 製造 Tab (Crafting - Pickaxes) -->
+                <div id="crafting" class="meta-content hidden">
+                    <h3 class="text-2xl mb-4">鎬子製造/升級</h3>
+                    <div id="crafting-list">
+                        <!-- 製造項目將由 JS 填充 -->
+                    </div>
+                </div>
+                
+                <!-- 補給 Tab (Consumables - Shop) -->
+                <div id="consumables" class="meta-content hidden">
+                    <h3 class="text-2xl mb-4">能量補給站 (使用金錢購買)</h3>
+                    <div id="consumables-list">
+                        <!-- 消耗品項目將由 JS 填充 -->
+                    </div>
+                </div>
+                
+                <!-- 奇珍礦石 Tab (Rare Ores) -->
+                <div id="rare_ores" class="meta-content hidden">
+                    <h3 class="text-2xl mb-4">已發現的稀有礦物 (共 1000 種)</h3>
+                    <div id="rare-ore-list" class="rare-ore-grid">
+                        <!-- 稀有礦石列表將由 JS 填充 -->
+                    </div>
+                </div>
+
+                <!-- 狀態 Tab (Stats) -->
+                <div id="stats" class="meta-content hidden">
+                    <h3 class="text-2xl mb-4">當前狀態</h3>
+                    <p>當前鎬子等級: <span id="stat-pickaxe">1</span></p>
+                    <p>每次挖礦消耗能量: <span id="stat-energy-cost">5</span></p>
+                    <p>每次挖礦基礎收益: <span id="stat-base-yield">1</span></p>
+                    <p>最大能量值: <span id="stat-max-energy">100</span></p>
+                    <p>背包最大容量: <span id="stat-max-resources">500</span></p>
+                    <p class="mt-4 text-secondary-color">提示：每 10 秒會自動恢復 1 點能量。</p>
+                </div>
+            </div>
+
+            <!-- 關閉按鈕 -->
+            <button id="close-meta-btn" class="pixel-btn absolute top-4 right-4 bg-red-600 hover:bg-red-700">X 關閉</button>
+        </div>
     </div>
 
+    <!-- 遊戲邏輯與交互 -->
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 64; // 精細化：每個邏輯圖塊的實際繪製尺寸從 32 變為 64
-        const MAP_WIDTH = 25;
-        const MAP_HEIGHT = 15;
-        const FUEL_MAX = 1000;
-        const HP_MAX = 100;
-        const LIGHT_RADIUS_MAX_LOGIC = 7; // 邏輯上的光照半徑
-        const LIGHT_RADIUS_MAX_DRAW = LIGHT_RADIUS_MAX_LOGIC * 2; // 繪製時的光照半徑，為邏輯半徑的 2 倍
-        const DARK_DAMAGE_TICK = 1000; // 黑暗傷害間隔 (ms)
-        const FUEL_DRAIN_RATE = 1; // 每秒消耗的燃料單位
+        // --- 礦石數據生成 (保持不變) ---
+        const RARE_ORE_COUNT = 1000;
+        const MIN_RARITY_MULTIPLIER = 1000; 
+        const MAX_RARITY_MULTIPLIER = 1500000000;
 
-        canvas.width = MAP_WIDTH * TILE_SIZE;
-        canvas.height = MAP_HEIGHT * TILE_SIZE;
+        function generateRareOresData() {
+            const rareOres = [];
+            const logRange = Math.log(MAX_RARITY_MULTIPLIER) - Math.log(MIN_RARITY_MULTIPLIER);
+            const step = logRange / (RARE_ORE_COUNT - 1);
 
-        // --- 遊戲狀態 ---
-        let gameActive = true;
-        let lastFuelDrainTime = 0;
-        let lastDarkDamageTime = 0;
-        let messageTimer = null;
-        let staticLights = []; // 靜態火盆
-        let enemies = []; // 黯影潛伏者
+            for (let i = 0; i < RARE_ORE_COUNT; i++) {
+                const rarityLog = Math.log(MIN_RARITY_MULTIPLIER) + i * step;
+                const rarityMultiplier = Math.round(Math.exp(rarityLog));
+                
+                let nameSuffix;
+                if (rarityMultiplier >= 1000000000) nameSuffix = '宇宙級';
+                else if (rarityMultiplier >= 100000000) nameSuffix = '星系級';
+                else if (rarityMultiplier >= 1000000) nameSuffix = '傳說級';
+                else if (rarityMultiplier >= 10000) nameSuffix = '史詩級';
+                else nameSuffix = '稀有級';
 
-        const player = {
-            x: 1,
-            y: 1,
-            hp: HP_MAX,
-            fuel: FUEL_MAX,
-            lightRadiusLogic: LIGHT_RADIUS_MAX_LOGIC, // 邏輯上的光照半徑
-            collectedOres: { Blue: 0, Red: 0, Green: 0 },
-            movePending: { x: 0, y: 0 }
+                rareOres.push({
+                    id: `rareOre_${i + 1}`,
+                    name: `${nameSuffix} #${i + 1}`,
+                    rarity: rarityMultiplier,
+                });
+            }
+            return rareOres;
+        }
+
+        const rareOresData = generateRareOresData();
+
+
+        // --- 遊戲狀態管理 (Game State) ---
+        let gameState = {
+            energy: 100,
+            maxEnergy: 100,
+            depth: 0,
+            money: 0,
+            resources: {
+                stone: 0,
+                ore: 0, // Standard Ore
+            },
+            maxResources: 500, // 新增: 最大資源容量
+            rareOres: {},
+            pickaxeLevel: 1,
+            pickaxeCost: 5, // Energy cost per mine
+            pickaxeYield: 1, // Base stone yield per mine
+            
+            // 升級追蹤
+            efficiency: 1, 
+            maxEnergyUpgrade: 1, 
+            yield: 1, 
+            bagUpgradeLevel: 1, // 新增: 背包擴容等級
         };
 
-        // --- 地圖定義 (0=牆, 1=路, 2=起點, 3=燃料, 4=靜態光, 5=敵人, B/R/G=礦石) ---
-        const mapData = [
-            '0000000000000000000000000',
-            '0211111101111110111111110',
-            '010000010100001010000010',
-            '010B11110103111011111010',
-            '010100000101001000001010',
-            '010111111101111411111010',
-            '010000000000000000000010',
-            '0111111101111111011R1110',
-            '000000010000000101000000',
-            '0111111111131111011111110',
-            '010000000000000000000010',
-            '0111411111111111111111110',
-            '010000000000000000000010',
-            '0111G11111111111111111110',
-            '0000000000000000000000000',
+        // --- 升級/製造/消耗品 數據 ---
+
+        // 核心升級數據 (包含背包擴容)
+        const upgradesData = [
+            { id: 'maxEnergyUpgrade', name: '🔋 最大能量擴容', costResource: 'money', baseCost: 100, effect: 'maxEnergy', value: 20, desc: '永久增加最大能量值 20 點。', maxLevel: 10 },
+            { id: 'efficiency', name: '⚡ 挖礦效率提升', costResource: 'ore', baseCost: 10, effect: 'pickaxeCost', value: -1, desc: '每次挖礦消耗能量減少 1 點。', maxLevel: 5 },
+            { id: 'yield', name: '💎 基礎收益強化', costResource: 'stone', baseCost: 50, effect: 'pickaxeYield', value: 1, desc: '每次挖礦基礎收益增加 1 點。', maxLevel: 10 },
+            // 新增背包升級 (共 5 個等級，從 Level 1 升級到 Level 6)
+            { id: 'bagUpgradeLevel', name: '🎒 背包空間擴展', costResource: 'money', baseCost: 500, effect: 'maxResources', value: 500, desc: '將資源儲存上限增加 500 點。', maxLevel: 6 }, 
         ];
         
-        // --- 輔助函數 ---
+        // 裝備製造數據 (擴展至 8 級鎬)
+        const craftingData = [
+            { id: 'pickaxe2', name: '鐵鎬', required: { stone: 50, ore: 20 }, effect: { level: 2, cost: 3, yield: 2 }, desc: 'Lv. 2：提升效率與收益。' },
+            { id: 'pickaxe3', name: '鑽石鎬', required: { stone: 200, ore: 100 }, effect: { level: 3, cost: 1, yield: 5 }, desc: 'Lv. 3：達到頂級效率。' },
+            { id: 'pickaxe4', name: '鈦合金鎬', required: { stone: 500, ore: 300, money: 1000 }, effect: { level: 4, cost: 1, yield: 10 }, desc: 'Lv. 4：增加基礎收益。' },
+            { id: 'pickaxe5', name: '能量結晶鎬', required: { stone: 1000, ore: 500, money: 5000 }, effect: { level: 5, cost: 0, yield: 15 }, desc: 'Lv. 5：不再消耗能量！' },
+            { id: 'pickaxe6', name: '虛空熔爐鎬', required: { stone: 2000, ore: 1000, money: 15000 }, effect: { level: 6, cost: 0, yield: 25 }, desc: 'Lv. 6：極大地增加收益。' },
+            { id: 'pickaxe7', name: '宇宙鑽頭', required: { stone: 5000, ore: 3000, money: 50000 }, effect: { level: 7, cost: 0, yield: 50 }, desc: 'Lv. 7：開始挖掘更高階資源。' },
+            { id: 'pickaxe8', name: '創世神之手', required: { stone: 10000, ore: 5000, money: 100000 }, effect: { level: 8, cost: 0, yield: 100 }, desc: 'Lv. 8：最終級別，挖掘效率達到極限。' },
+        ];
         
-        /** 顯示訊息並定時清除 */
-        function showMessage(text, duration = 3000) {
-            const msgBox = document.getElementById('messages-box');
-            msgBox.textContent = text;
-            clearTimeout(messageTimer);
-            messageTimer = setTimeout(() => {
-                msgBox.textContent = '繼續探索礦坑...';
+        // 消耗品 (食物) 數據
+        const consumablesData = [
+            { id: 'food_small', name: '☕ 咖啡', cost: 100, energy: 50, desc: '立即恢復 50 點能量。' },
+            { id: 'food_medium', name: '🍔 能量餐', cost: 500, energy: 200, desc: '立即恢復 200 點能量。' },
+            { id: 'food_large', name: '🚀 超級能量飲', cost: 2000, energy: 99999, desc: '瞬間充滿能量，甚至超越上限。' },
+        ];
+
+        // --- DOM 元素獲取 ---
+        const $metaBtn = document.getElementById('meta-btn');
+        const $metaModal = document.getElementById('meta-modal');
+        const $closeMetaBtn = document.getElementById('close-meta-btn');
+        const $mineBtn = document.getElementById('mine-btn');
+        const $actionMessage = document.getElementById('action-message');
+        const $storageMessage = document.getElementById('storage-message'); // 新增
+        const $tabContents = document.querySelectorAll('.meta-content');
+        const $tabs = document.querySelectorAll('.meta-tab');
+        const $upgradeList = document.getElementById('upgrade-list');
+        const $craftingList = document.getElementById('crafting-list');
+        const $consumablesList = document.getElementById('consumables-list'); // 新增
+        const $rareOreList = document.getElementById('rare-ore-list');
+        const $flashOverlay = document.getElementById('flash-overlay');
+        const $canvasContainer = document.getElementById('canvas-container');
+
+        // --- 介面更新函數 (Stage 1 HUD) ---
+        function updateHUD() {
+            const currentStone = gameState.resources.stone;
+            const currentOre = gameState.resources.ore;
+            const maxRes = gameState.maxResources;
+
+            document.getElementById('depth-display').textContent = `${gameState.depth} M`;
+            document.getElementById('energy-value').textContent = gameState.energy.toLocaleString();
+            document.getElementById('max-energy-value').textContent = gameState.maxEnergy.toLocaleString();
+            document.getElementById('energy-bar').style.width = `${(gameState.energy / gameState.maxEnergy) * 100}%`;
+            document.getElementById('res-stone').textContent = currentStone.toLocaleString();
+            document.getElementById('res-ore').textContent = currentOre.toLocaleString();
+            document.getElementById('res-money').textContent = gameState.money.toLocaleString();
+            document.getElementById('max-res-stone').textContent = maxRes.toLocaleString(); // 更新容量顯示
+            document.getElementById('max-res-ore').textContent = maxRes.toLocaleString();
+
+            const isEnergyLow = gameState.energy <= 0;
+            const isStorageFull = currentStone >= maxRes || currentOre >= maxRes;
+            
+            // 檢查挖礦條件
+            if (isEnergyLow || isStorageFull) {
+                $mineBtn.disabled = true;
+                $mineBtn.textContent = isEnergyLow ? '筋疲力盡...' : '背包已滿！';
+                $mineBtn.classList.add('bg-gray-500', 'hover:bg-gray-500');
+                $mineBtn.classList.remove('bg-primary-color', 'hover:bg-primary-color');
+            } else {
+                $mineBtn.disabled = false;
+                $mineBtn.textContent = `⛏️ 點擊挖礦 (消耗 ${gameState.pickaxeCost} 能量) ⛏️`;
+                $mineBtn.classList.remove('bg-gray-500', 'hover:bg-gray-500');
+                $mineBtn.classList.add('bg-primary-color', 'hover:bg-primary-color');
+            }
+            
+            // 顯示警告訊息
+            $actionMessage.classList.toggle('hidden', !isEnergyLow);
+            $storageMessage.classList.toggle('hidden', !isStorageFull || isEnergyLow);
+        }
+        
+        // 稀有礦石動畫效果 (保持不變)
+        function triggerRareAnimation(rarity) {
+            let flashClass = '';
+            let duration = 0;
+
+            $flashOverlay.className = 'absolute inset-0';
+            $canvasContainer.classList.remove('canvas-legendary-border', 'canvas-cosmic-border');
+
+            if (rarity >= 10000 && rarity < 1000000) {
+                flashClass = 'flash-epic';
+                duration = 500;
+            } else if (rarity >= 1000000 && rarity < 100000000) {
+                flashClass = 'flash-legendary';
+                duration = 1000;
+                $canvasContainer.classList.add('canvas-legendary-border');
+            } else if (rarity >= 100000000) {
+                flashClass = 'flash-cosmic';
+                duration = 1500;
+                $canvasContainer.classList.add('canvas-cosmic-border');
+            } else {
+                return;
+            }
+
+            $flashOverlay.classList.add(flashClass);
+            
+            setTimeout(() => {
+                $flashOverlay.className = 'absolute inset-0';
+                $canvasContainer.classList.remove('canvas-legendary-border', 'canvas-cosmic-border');
             }, duration);
         }
 
-        /** 計算曼哈頓距離 (用於判斷光照) */
-        function distance(x1, y1, x2, y2) {
-            return Math.abs(x1 - x2) + Math.abs(y1 - y2);
-        }
+        // --- 遊戲核心邏輯 ---
 
-        /** 檢查地圖上的座標是否為牆 */
-        function isWall(x, y) {
-            if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return true;
-            return mapData[y][x] === '0';
-        }
+        function mine() {
+            const maxRes = gameState.maxResources;
+            const currentStone = gameState.resources.stone;
+            const currentOre = gameState.resources.ore;
 
-        /** 獲取地圖上的物品代碼 */
-        function getItem(x, y) {
-            return mapData[y][x];
-        }
+            if (gameState.energy <= 0 || currentStone >= maxRes || currentOre >= maxRes) return;
 
-        /** 從地圖上移除物品 (替換為地板) */
-        function removeItem(x, y) {
-            const row = mapData[y];
-            mapData[y] = row.substring(0, x) + '1' + row.substring(x + 1);
-        }
+            // 1. 消耗能量 (pickaxeCost可能為0)
+            gameState.energy -= gameState.pickaxeCost;
+            if (gameState.energy < 0) gameState.energy = 0;
 
-        /** 設置靜態火盆為永久點亮 */
-        function setStaticLightLit(x, y, isLit = true) {
-            const light = staticLights.find(l => l.x === x && l.y === y);
-            if (light) {
-                light.isLit = isLit;
-                showMessage(`靜態火盆已點燃，提供固定照明。`);
-            }
-        }
+            // 2. 產出基礎資源
+            const baseYield = gameState.pickaxeYield;
+            const depthFactor = Math.floor(gameState.depth / 10) + 1;
 
-        /** 獲取當前地圖上所有活動光源的半徑 */
-        function getAllLightRadii(px, py) {
-            const activeLights = [];
-            // 玩家火把
-            activeLights.push({ x: px, y: py, radius: player.lightRadiusLogic });
+            let stoneGained = baseYield;
+            let oreGained = 0;
             
-            // 靜態火盆
-            staticLights.forEach(light => {
-                if (light.isLit) {
-                    activeLights.push({ x: light.x, y: light.y, radius: 4 }); // 靜態火盆固定邏輯半徑
-                }
-            });
-            return activeLights;
-        }
-
-        /** 檢查某一格是否在任何光源範圍內 */
-        function isTileLit(tx, ty, activeLights) {
-            for (const light of activeLights) {
-                if (distance(tx, ty, light.x, light.y) <= light.radius) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // --- 敵人邏輯 (黯影潛伏者) ---
-        class Enemy {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.name = '黯影潛伏者';
-                this.attackRange = 2; // 攻擊距離
+            if (depthFactor > 1 && Math.random() < 0.2) {
+                oreGained = Math.floor(Math.random() * depthFactor);
             }
 
-            // 簡單的 AI: 追蹤玩家 (如果玩家靠近)
-            update() {
-                if (!gameActive) return;
+            // 檢查並限制資源在容量內
+            if (currentStone < maxRes) {
+                gameState.resources.stone += stoneGained;
+                if (gameState.resources.stone > maxRes) gameState.resources.stone = maxRes;
+            } else {
+                alertMessage('石頭容量已滿！', 'red');
+            }
 
-                const dist = distance(this.x, this.y, player.x, player.y);
+            if (currentOre < maxRes) {
+                gameState.resources.ore += oreGained;
+                if (gameState.resources.ore > maxRes) gameState.resources.ore = maxRes;
+            } else {
+                alertMessage('精煉金屬容量已滿！', 'red');
+            }
+            
+            // 每挖 10 次，深度+1
+            if (gameState.resources.stone % 10 === 0) {
+                gameState.depth += 1;
+                gameState.money += depthFactor;
+            }
 
-                // 如果距離太遠或玩家光圈充足，不移動
-                if (dist > 10) return; 
-
-                // 如果玩家在攻擊範圍內，進行攻擊 (假設攻擊傷害為 10)
-                if (dist <= this.attackRange) {
-                    player.hp -= 10;
-                    showMessage(`被 ${this.name} 攻擊! 損失 10 HP。`);
-                    if (player.hp <= 0) gameOver('被敵人擊敗了！');
-                    return;
-                }
-
-                // 追蹤玩家 (簡化為一步移動)
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-
-                let nextX = this.x;
-                let nextY = this.y;
-
-                if (Math.abs(dx) > Math.abs(dy)) {
-                    nextX += (dx > 0 ? 1 : -1);
-                } else if (Math.abs(dy) > 0) {
-                    nextY += (dy > 0 ? 1 : -1);
-                }
-
-                if (!isWall(nextX, nextY)) {
-                    this.x = nextX;
-                    this.y = nextY;
+            // --- 3. 奇珍礦石掉落邏輯 (保持不變) ---
+            let droppedRareOre = null;
+            
+            for (const ore of rareOresData) {
+                if (Math.random() < (1 / ore.rarity)) {
+                    droppedRareOre = ore;
+                    break;
                 }
             }
+
+            if (droppedRareOre) {
+                gameState.rareOres[droppedRareOre.id] = (gameState.rareOres[droppedRareOre.id] || 0) + 1;
+                gameState.money += Math.max(1, Math.floor(Math.log10(droppedRareOre.rarity)) * 100);
+
+                triggerRareAnimation(droppedRareOre.rarity);
+
+                alertMessage(`恭喜！挖到稀有礦物: ${droppedRareOre.name}！ (Rarity: 1/${droppedRareOre.rarity.toLocaleString()})`, 'yellow');
+            }
+
+            // 4. 視覺反饋
+            const canvas = document.getElementById('game-canvas');
+            if (!droppedRareOre || droppedRareOre.rarity < 10000) {
+                canvas.style.backgroundColor = droppedRareOre ? '#8B4513' : '#333';
+                setTimeout(() => {
+                    canvas.style.backgroundColor = 'transparent';
+                }, 50);
+            } else {
+                canvas.style.backgroundColor = 'transparent';
+            }
+
+            updateHUD();
         }
         
-        /** 初始化敵人與靜態光源 */
-        function initializeEntities() {
-            for (let y = 0; y < MAP_HEIGHT; y++) {
-                for (let x = 0; x < MAP_WIDTH; x++) {
-                    const item = getItem(x, y);
-                    if (item === '4') { // 靜態火盆
-                        staticLights.push({ x, y, isLit: false });
-                    } else if (item === '5') { // 敵人
-                        enemies.push(new Enemy(x, y));
-                        removeItem(x, y); // 將地圖上的 '5' 替換為 '1' (地板)
+        // --- 能量恢復循環 ---
+        function startEnergyRegen() {
+            setInterval(() => {
+                if (gameState.energy < gameState.maxEnergy) {
+                    gameState.energy += 1;
+                    if (gameState.energy > gameState.maxEnergy) {
+                        gameState.energy = gameState.maxEnergy;
                     }
+                    updateHUD();
                 }
-            }
+            }, 10000); // 每 10 秒回復 1 點能量
+        }
+
+
+        // --- 第二段介面 (Meta Modal) 邏輯 ---
+
+        // 渲染升級列表 (包含背包擴容)
+        function renderUpgrades() {
+            $upgradeList.innerHTML = '';
+            upgradesData.forEach(upgrade => {
+                const currentLevel = gameState[upgrade.id] || 1;
+                const currentCost = upgrade.baseCost * currentLevel;
+                const isMaxed = upgrade.maxLevel && currentLevel >= upgrade.maxLevel;
+
+                let currentEffectValue = '';
+                if (upgrade.id === 'maxEnergyUpgrade') currentEffectValue = gameState.maxEnergy;
+                else if (upgrade.id === 'efficiency') currentEffectValue = gameState.pickaxeCost;
+                else if (upgrade.id === 'yield') currentEffectValue = gameState.pickaxeYield;
+                else if (upgrade.id === 'bagUpgradeLevel') currentEffectValue = gameState.maxResources;
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xl font-bold">${upgrade.name} (Lv. ${currentLevel}${isMaxed ? ' - MAX' : ''})</div>
+                        <div class="text-sm">${upgrade.desc} (當前效果: ${currentEffectValue.toLocaleString()}${upgrade.id === 'bagUpgradeLevel' ? ' 容量' : (upgrade.id === 'efficiency' ? ' 能量消耗' : '')})</div>
+                        <div class="mt-1 text-secondary-color">${isMaxed ? '已達最高等級' : `成本: ${currentCost.toLocaleString()} ${upgrade.costResource}`}</div>
+                    </div>
+                    <button data-upgrade-id="${upgrade.id}" class="pixel-btn text-base ${isMaxed ? 'bg-gray-500' : 'bg-primary-color'}" ${isMaxed ? 'disabled' : ''}>
+                        ${isMaxed ? '已滿級' : '升級'}
+                    </button>
+                `;
+                $upgradeList.appendChild(card);
+            });
         }
         
-        // --- 核心遊戲循環邏輯 ---
-
-        /** 處理玩家的互動 (E 鍵) */
-        function handleInteraction() {
-            const item = getItem(player.x, player.y);
+        // 處理升級點擊事件
+        function handleUpgrade(event) {
+            const btn = event.target.closest('button[data-upgrade-id]');
+            if (!btn) return;
             
-            if (item === '3') { // 燃料
-                const fuelRestored = 300;
-                player.fuel = Math.min(FUEL_MAX, player.fuel + fuelRestored);
-                removeItem(player.x, player.y);
-                showMessage(`拾取燃料！火把燃料增加 ${fuelRestored} 點。`);
-            } else if (item === '4') { // 靜態火盆
-                setStaticLightLit(player.x, player.y, true);
-            } else if (['B', 'R', 'G'].includes(item)) { // 礦石
-                const oreColor = { 'B': 'Blue', 'R': 'Red', 'G': 'Green' }[item];
-                player.collectedOres[oreColor]++;
-                removeItem(player.x, player.y);
-                showMessage(`採集到 ${oreColor === 'Blue' ? '藍色' : oreColor === 'Red' ? '紅色' : '綠色'} 光華礦！`);
-                updateUI();
+            const id = btn.dataset.upgradeId;
+            const upgrade = upgradesData.find(u => u.id === id);
+            
+            const currentLevel = gameState[id] || 1;
+            const currentCost = upgrade.baseCost * currentLevel;
+
+            if (gameState[upgrade.costResource] >= currentCost) {
+                gameState[upgrade.costResource] -= currentCost;
                 
-                // 任務完成檢查 (範例：收集 3 塊藍色礦石)
-                if (player.collectedOres.Blue >= 3) {
-                    gameOver('任務完成：你成功收集了所有藍色礦石！', true);
+                // 執行效果
+                if (upgrade.effect === 'maxEnergy') {
+                    gameState.maxEnergy += upgrade.value;
+                    gameState.energy += upgrade.value; 
+                } else if (upgrade.effect === 'pickaxeCost') {
+                    gameState.pickaxeCost = Math.max(0, gameState.pickaxeCost + upgrade.value); // 消耗最低為 0
+                } else if (upgrade.effect === 'pickaxeYield') {
+                    gameState.pickaxeYield += upgrade.value;
+                } else if (upgrade.effect === 'maxResources') { // 背包擴容效果
+                    gameState.maxResources += upgrade.value;
                 }
-            } else if (item === '2') { // 起點/NPC
-                showMessage('學者：你需要三塊藍色光華礦來修復動力爐。請在礦坑深處尋找它們！');
-            }
-        }
+                
+                // 升級等級
+                gameState[id] = currentLevel + 1;
 
-        /** 更新火把燃料和光照半徑 */
-        function updateTorch(dt) {
-            // 每秒消耗 FUEL_DRAIN_RATE
-            if (dt - lastFuelDrainTime >= 1000 / FUEL_DRAIN_RATE) {
-                if (player.fuel > 0) {
-                    player.fuel--;
-                    updateUI();
-                }
-                lastFuelDrainTime = dt;
-            }
+                alertMessage('升級成功！', 'green');
+                renderUpgrades();
+                updateStats();
+                updateHUD();
 
-            if (player.fuel > 0) {
-                // 燃料越多，光照半徑越大 (線性縮小)
-                player.lightRadiusLogic = 2 + Math.floor(LIGHT_RADIUS_MAX_LOGIC * (player.fuel / FUEL_MAX));
             } else {
-                player.lightRadiusLogic = 0;
-                // 燃料耗盡，開始黑暗傷害
-                if (dt - lastDarkDamageTime >= DARK_DAMAGE_TICK) {
-                    player.hp -= 5;
-                    showMessage('黑暗迷霧吞噬著你！ -5 HP', 1500);
-                    lastDarkDamageTime = dt;
-                    if (player.hp <= 0) {
-                        gameOver('火把燃料耗盡，你被黑暗吞噬了...');
-                    }
-                }
+                alertMessage(`資源不足！需要 ${currentCost.toLocaleString()} ${upgrade.costResource}`, 'red');
             }
         }
 
-        /** 繪製遊戲畫面 */
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 渲染製造列表 (鎬子)
+        function renderCrafting() {
+            $craftingList.innerHTML = '';
+            craftingData.forEach(item => {
+                const canCraft = item.effect.level > gameState.pickaxeLevel && 
+                                Object.entries(item.required).every(([res, amount]) => gameState.resources[res] >= amount || (res === 'money' && gameState.money >= amount));
+                
+                const isCurrent = item.effect.level === gameState.pickaxeLevel;
+                const isAvailable = item.effect.level === gameState.pickaxeLevel + 1; // 只能製造下一級
 
-            const activeLights = getAllLightRadii(player.x, player.y);
+                const requiredText = Object.entries(item.required).map(([res, amount]) => {
+                    const resDisplay = res === 'stone' ? '石頭' : (res === 'ore' ? '精煉金屬' : '金錢');
+                    const currentRes = res === 'money' ? gameState.money : gameState.resources[res];
+                    return `<span class="${currentRes < amount ? 'text-red-400' : 'text-green-400'}">${amount.toLocaleString()} ${resDisplay}</span>`;
+                }).join(' / ');
+                
+                const disabled = isCurrent || !isAvailable || !canCraft;
+                let btnText = isCurrent ? '已裝備' : (isAvailable ? (canCraft ? '製造' : '資源不足') : '鎖定');
 
-            for (let y = 0; y < MAP_HEIGHT; y++) {
-                for (let x = 0; x < MAP_WIDTH; x++) {
-                    const item = getItem(x, y);
-                    const isLit = isTileLit(x, y, activeLights);
-                    const sx = x * TILE_SIZE;
-                    const sy = y * TILE_SIZE;
-                    
-                    if (!isLit) {
-                        // 完全黑暗
-                        ctx.fillStyle = '#000000';
-                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                        continue;
-                    }
-                    
-                    // 繪製地板/牆壁
-                    if (item === '0') {
-                        ctx.fillStyle = '#4a4a4a'; // 牆壁
-                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                    } else {
-                        ctx.fillStyle = '#1e1e1e'; // 地板
-                        ctx.fillRect(sx, sy, TILE_SIZE, TILE_SIZE);
-                    }
-                    
-                    // 繪製物品
-                    const itemSize = TILE_SIZE / 2; // 物品大小
-                    const itemOffset = TILE_SIZE / 4; // 居中偏移
-
-                    ctx.fillStyle = '#e0e0e0';
-                    if (item === '3') {
-                        ctx.fillStyle = '#ffcc66'; // 燃料 (木材/油)
-                        ctx.fillRect(sx + itemOffset, sy + itemOffset, itemSize, itemSize);
-                    } else if (item === '4') {
-                        const staticLight = staticLights.find(l => l.x === x && l.y === y);
-                        ctx.fillStyle = staticLight && staticLight.isLit ? '#fffb00' : '#4a4a4a'; // 靜態火盆
-                        ctx.beginPath();
-                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else if (item === 'B') {
-                        ctx.fillStyle = '#00c3ff'; // 藍色礦石
-                        ctx.beginPath();
-                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else if (item === 'R') {
-                        ctx.fillStyle = '#ff4d4d'; // 紅色礦石
-                        ctx.beginPath();
-                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else if (item === 'G') {
-                        ctx.fillStyle = '#70ff70'; // 綠色礦石
-                        ctx.beginPath();
-                        ctx.arc(sx + TILE_SIZE / 2, sy + TILE_SIZE / 2, TILE_SIZE / 4, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
-                }
-            }
-
-            // 繪製敵人
-            enemies.forEach(enemy => {
-                 if (isTileLit(enemy.x, enemy.y, activeLights)) {
-                    ctx.fillStyle = '#ff00ff'; // 敵人 (紫色)
-                    ctx.beginPath();
-                    ctx.arc(enemy.x * TILE_SIZE + TILE_SIZE / 2, enemy.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xl font-bold">${item.name} (Lv. ${item.effect.level})</div>
+                        <div class="text-sm">${item.desc} (消耗/收益: ${item.effect.cost}/${item.effect.yield})</div>
+                        <div class="mt-1">需求: ${requiredText}</div>
+                    </div>
+                    <button data-craft-id="${item.id}" class="pixel-btn text-base ${canCraft && isAvailable ? 'bg-yellow-600' : 'bg-gray-500'}" ${disabled ? 'disabled' : ''}>
+                        ${btnText}
+                    </button>
+                `;
+                $craftingList.appendChild(card);
             });
-
-            // 繪製玩家
-            ctx.fillStyle = '#ffff00'; // 玩家 (黃色)
-            ctx.beginPath();
-            ctx.arc(player.x * TILE_SIZE + TILE_SIZE / 2, player.y * TILE_SIZE + TILE_SIZE / 2, TILE_SIZE / 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 繪製玩家火把光暈
-            const currentDrawLightRadius = player.lightRadiusLogic * TILE_SIZE * 0.8; // 乘以 TILE_SIZE 並微調
-            const lightGradient = ctx.createRadialGradient(
-                player.x * TILE_SIZE + TILE_SIZE / 2, 
-                player.y * TILE_SIZE + TILE_SIZE / 2, 
-                0, 
-                player.x * TILE_SIZE + TILE_SIZE / 2, 
-                player.y * TILE_SIZE + TILE_SIZE / 2, 
-                currentDrawLightRadius 
-            );
-            lightGradient.addColorStop(0, 'rgba(255, 255, 0, 0.2)');
-            lightGradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.1)');
-            lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
-            
-            ctx.fillStyle = lightGradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        /** 更新 UI 狀態面板 */
-        function updateUI() {
-            const uiPanel = document.getElementById('status-ui');
-            const hpColor = player.hp > 50 ? 'bg-green-500' : player.hp > 20 ? 'bg-yellow-500' : 'bg-red-500';
-            const fuelColor = player.fuel > 500 ? 'bg-yellow-500' : player.fuel > 200 ? 'bg-orange-500' : 'bg-red-500';
-
-            uiPanel.innerHTML = `
-                <div class="stat-item flex items-center">
-                    生命值 (HP): 
-                    <div class="stat-bar"><div class="stat-fill ${hpColor}" style="width: ${player.hp}%"></div></div>
-                    (${player.hp}/${HP_MAX})
-                </div>
-                <div class="stat-item flex items-center">
-                    燃料存量 (Fuel): 
-                    <div class="stat-bar"><div class="stat-fill ${fuelColor}" style="width: ${player.fuel / FUEL_MAX * 100}%"></div></div>
-                    (${player.fuel}/${FUEL_MAX})
-                </div>
-                <div class="stat-item">光照半徑: ${player.lightRadiusLogic}</div>
-                <div class="stat-item ore-count">
-                    礦石 (任務目標: 3 藍): 
-                    <span style="color:#00c3ff;">藍色: ${player.collectedOres.Blue}</span> 
-                    <span style="color:#ff4d4d;">紅色: ${player.collectedOres.Red}</span> 
-                    <span style="color:#70ff70;">綠色: ${player.collectedOres.Green}</span>
-                </div>
-                <div class="stat-item">角色 ID: ${window.userId || 'N/A'}</div>
-            `;
         }
         
-        /** 處理遊戲結束 */
-        function gameOver(message, victory = false) {
-            gameActive = false;
-            const modal = document.getElementById('game-over-modal');
-            const title = document.getElementById('modal-title');
-            const msg = document.getElementById('modal-message');
-            const button = modal.querySelector('button');
+        // 處理製造點擊事件
+        function handleCrafting(event) {
+            const btn = event.target.closest('button[data-craft-id]');
+            if (!btn || btn.disabled) return;
 
-            title.textContent = victory ? '任務成功！' : '遊戲結束！';
-            msg.textContent = message;
-            
-            if (victory) {
-                modal.classList.remove('bg-red-900', 'border-red-500');
-                modal.classList.add('bg-green-900', 'border-green-500');
-                button.classList.remove('bg-red-600', 'hover:bg-red-700');
-                button.classList.add('bg-green-600', 'hover:bg-green-700');
+            const id = btn.dataset.craftId;
+            const item = craftingData.find(c => c.id === id);
+
+            // 檢查資源是否足夠 (同時處理 money 和 resources)
+            const canCraft = Object.entries(item.required).every(([res, amount]) => {
+                const currentRes = res === 'money' ? gameState.money : gameState.resources[res];
+                return currentRes >= amount;
+            });
+
+            if (canCraft) {
+                // 扣除資源
+                Object.entries(item.required).forEach(([res, amount]) => {
+                    if (res === 'money') {
+                        gameState.money -= amount;
+                    } else {
+                        gameState.resources[res] -= amount;
+                    }
+                });
+
+                // 應用效果
+                gameState.pickaxeLevel = item.effect.level;
+                gameState.pickaxeCost = item.effect.cost;
+                gameState.pickaxeYield = item.effect.yield;
+
+                alertMessage(`成功製造並裝備 ${item.name}！`, 'yellow');
+                renderCrafting();
+                updateStats();
+                updateHUD();
             } else {
-                modal.classList.remove('bg-green-900', 'border-green-500');
-                modal.classList.add('bg-red-900', 'border-red-500');
-                button.classList.remove('bg-green-600', 'hover:bg-green-700');
-                button.classList.add('bg-red-600', 'hover:bg-red-700');
+                alertMessage('資源不足，無法製造！', 'red');
             }
+        }
+        
+        // 渲染消耗品列表 (Shop)
+        function renderConsumables() {
+             $consumablesList.innerHTML = '';
+             consumablesData.forEach(item => {
+                const canBuy = gameState.money >= item.cost;
 
-            modal.classList.remove('hidden');
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xl font-bold">${item.name}</div>
+                        <div class="text-sm">${item.desc}</div>
+                        <div class="mt-1 text-secondary-color">價格: ${item.cost.toLocaleString()} 金錢</div>
+                    </div>
+                    <button data-item-id="${item.id}" class="pixel-btn text-base ${canBuy ? 'bg-green-600' : 'bg-gray-500'}" ${canBuy ? '' : 'disabled'}>
+                        購買 & 使用
+                    </button>
+                `;
+                $consumablesList.appendChild(card);
+             });
         }
 
-        /** 主要遊戲循環 */
-        function gameLoop(dt) {
-            if (!gameActive) return;
+        // 處理消耗品購買點擊事件
+        function handleConsumables(event) {
+            const btn = event.target.closest('button[data-item-id]');
+            if (!btn || btn.disabled) return;
 
-            // 1. 處理移動
-            let nextX = player.x + player.movePending.x;
-            let nextY = player.y + player.movePending.y;
+            const id = btn.dataset.itemId;
+            const item = consumablesData.find(c => c.id === id);
 
-            if (player.movePending.x !== 0 || player.movePending.y !== 0) {
-                if (!isWall(nextX, nextY)) {
-                    player.x = nextX;
-                    player.y = nextY;
+            if (gameState.money >= item.cost) {
+                gameState.money -= item.cost;
+                
+                // 恢復能量
+                gameState.energy += item.energy;
+                
+                // 特殊處理超級能量飲，如果能量超上限，可以保持
+                if (item.energy !== 99999 && gameState.energy > gameState.maxEnergy) {
+                    gameState.energy = gameState.maxEnergy;
                 }
-                player.movePending.x = 0;
-                player.movePending.y = 0;
+
+                alertMessage(`已購買 ${item.name}，恢復了 ${item.energy.toLocaleString()} 能量！`, 'green');
+                renderConsumables();
+                updateHUD();
+            } else {
+                alertMessage('金錢不足，無法購買！', 'red');
+            }
+        }
+        
+        // 渲染稀有礦石列表 (保持不變)
+        function renderRareOres() {
+            $rareOreList.innerHTML = '';
+            
+            const collectedOres = Object.keys(gameState.rareOres)
+                .filter(id => gameState.rareOres[id] > 0)
+                .map(id => ({
+                    ...rareOresData.find(o => o.id === id),
+                    count: gameState.rareOres[id]
+                }))
+                .sort((a, b) => b.rarity - a.rarity);
+
+            if (collectedOres.length === 0) {
+                $rareOreList.innerHTML = '<p class="text-center col-span-full py-8 text-xl text-gray-400">尚未發現任何奇珍礦石。繼續挖掘！</p>';
+                return;
             }
 
-            // 2. 更新火把
-            updateTorch(dt);
-            
-            // 3. 敵人 AI 更新
-            enemies.forEach(enemy => enemy.update());
-
-            // 4. 繪製
-            draw();
-            
-            // 5. 循環
-            requestAnimationFrame(gameLoop);
+            collectedOres.forEach(ore => {
+                const card = document.createElement('div');
+                card.className = 'rare-ore-card';
+                card.innerHTML = `
+                    <div class="text-secondary-color text-2xl mb-1">✨</div>
+                    <div class="font-bold text-lg">${ore.name}</div>
+                    <div class="text-sm text-gray-300">數量: ${ore.count}</div>
+                    <div class="text-xs text-green-400">機率: 1/${ore.rarity.toLocaleString()}</div>
+                `;
+                $rareOreList.appendChild(card);
+            });
         }
 
-        // --- 輸入處理 ---
-        window.addEventListener('keydown', (e) => {
-            if (!gameActive) return;
+        // 更新狀態面板 (新增容量顯示)
+        function updateStats() {
+            document.getElementById('stat-pickaxe').textContent = gameState.pickaxeLevel;
+            document.getElementById('stat-energy-cost').textContent = gameState.pickaxeCost;
+            document.getElementById('stat-base-yield').textContent = gameState.pickaxeYield;
+            document.getElementById('stat-max-energy').textContent = gameState.maxEnergy;
+            document.getElementById('stat-max-resources').textContent = gameState.maxResources.toLocaleString();
+        }
 
-            if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
-                player.movePending = { x: 0, y: -1 };
-            } else if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
-                player.movePending = { x: 0, y: 1 };
-            } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
-                player.movePending = { x: -1, y: 0 };
-            } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
-                player.movePending = { x: 1, y: 0 };
-            } else if (e.key === 'e' || e.key === 'E') {
-                handleInteraction();
+
+        // 簡單的 UI 訊息（替代 alert）
+        function alertMessage(msg, color) {
+            const tempMsg = document.createElement('div');
+            tempMsg.textContent = msg;
+            tempMsg.className = `fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pixel-btn text-white p-4 shadow-xl z-50 transition-opacity duration-300`;
+            if (color === 'red') tempMsg.classList.add('bg-red-600', 'border-red-800');
+            else if (color === 'green') tempMsg.classList.add('bg-green-600', 'border-green-800');
+            else if (color === 'yellow') tempMsg.classList.add('bg-yellow-600', 'border-yellow-800', 'text-shadow-none');
+            
+            document.body.appendChild(tempMsg);
+            
+            setTimeout(() => {
+                tempMsg.style.opacity = '0';
+                setTimeout(() => tempMsg.remove(), 300);
+            }, 1500);
+        }
+
+        // --- 事件監聽器設定 ---
+
+        // Stage 1 -> Stage 2: 開啟元數據模式
+        $metaBtn.addEventListener('click', () => {
+            $metaModal.classList.remove('hidden');
+            document.getElementById('mining-view').classList.add('hidden');
+            
+            // 每次開啟時重新渲染 Meta 介面內容 (確保初始顯示第一個 tab 的內容)
+            const activeTabId = document.querySelector('.meta-tab.active').dataset.tab;
+            document.getElementById(activeTabId).classList.remove('hidden');
+            renderUpgrades();
+            renderCrafting();
+            renderConsumables(); // 渲染消耗品
+            renderRareOres();
+            updateStats();
+        });
+
+        // Stage 2 -> Stage 1: 關閉元數據模式
+        $closeMetaBtn.addEventListener('click', () => {
+            $metaModal.classList.add('hidden');
+            document.getElementById('mining-view').classList.remove('hidden');
+        });
+
+        // 挖礦動作
+        $mineBtn.addEventListener('click', mine);
+        
+        // 處理 Meta 介面中的 Tab 切換
+        $tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const targetTab = e.target.dataset.tab;
+
+                // 移除所有 active 狀態
+                $tabs.forEach(t => t.classList.remove('active'));
+                $tabContents.forEach(c => c.classList.add('hidden'));
+
+                // 設定 active 狀態
+                e.target.classList.add('active');
+                document.getElementById(targetTab).classList.remove('hidden');
+
+                // 根據切換的 Tab 渲染內容
+                if (targetTab === 'upgrades') renderUpgrades();
+                if (targetTab === 'crafting') renderCrafting();
+                if (targetTab === 'consumables') renderConsumables(); // 渲染消耗品
+                if (targetTab === 'rare_ores') renderRareOres();
+                if (targetTab === 'stats') updateStats();
+            });
+        });
+
+        // 處理 Meta 介面中的升級/製造/消耗品按鈕點擊
+        $upgradeList.addEventListener('click', handleUpgrade);
+        $craftingList.addEventListener('click', handleCrafting);
+        $consumablesList.addEventListener('click', handleConsumables); // 消耗品點擊事件
+
+        // --- 初始化 ---
+        window.onload = function() {
+            updateHUD();
+            startEnergyRegen();
+            try {
+                console.log("遊戲初始化完成：像素挖礦 RPG 啟動。");
+            } catch (e) {
+                console.warn("無法初始化 Firebase。遊戲將運行於非持久化模式。", e);
+            }
+        };
+
+        // 確保點擊非按鈕區域也能觸發挖礦（移動端友好）
+        document.getElementById('game-canvas').addEventListener('click', (e) => {
+            const btnRect = $mineBtn.getBoundingClientRect();
+            // 只有當點擊位置不在按鈕上時才執行 mine()
+            if (e.clientX < btnRect.left || e.clientX > btnRect.right || e.clientY < btnRect.top || e.clientY > btnRect.bottom) {
+                 mine();
             }
         });
 
-        // --- 遊戲啟動 ---
-        window.startGame = () => {
-            initializeEntities();
-            updateUI();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // 初始化 Firebase (如果存在) 並啟動遊戲
-        if (typeof window.firebaseInit === 'function') {
-            window.firebaseInit();
-        } else {
-            // Fallback for environments without Firebase bootstrapping
-            window.startGame();
-        }
     </script>
 </body>
 </html>
