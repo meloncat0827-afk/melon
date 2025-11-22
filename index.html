@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deeeep_miner.io</title>
+    <title>Deeeepminer.io</title>
     <!-- 載入 Tailwind CSS for modern structure and utility -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -237,7 +237,7 @@
             <!-- 資源/容量顯示 -->
             <div class="flex justify-around text-lg">
                 <span>石頭: <span id="res-stone">0</span> / <span id="max-res-stone">500</span></span>
-                <span>精煉金屬: <span id="res-ore">0</span> / <span id="max-res-ore">500</span></span>
+                <span>礦物: <span id="res-ore">0</span> / <span id="max-res-ore">500</span></span>
                 <span>金錢: <span id="res-money">0</span></span>
             </div>
         </div>
@@ -385,11 +385,11 @@
 
         // 核心升級數據 (包含背包擴容)
         const upgradesData = [
-            { id: 'maxEnergyUpgrade', name: '🔋 最大能量擴容', costResource: 'money', baseCost: 100, effect: 'maxEnergy', value: 20, desc: '永久增加最大能量值 20 點。', maxLevel: 10 },
-            { id: 'efficiency', name: '⚡ 挖礦效率提升', costResource: 'ore', baseCost: 10, effect: 'pickaxeCost', value: -1, desc: '每次挖礦消耗能量減少 1 點。', maxLevel: 5 },
-            { id: 'yield', name: '💎 基礎收益強化', costResource: 'stone', baseCost: 50, effect: 'pickaxeYield', value: 1, desc: '每次挖礦基礎收益增加 1 點。', maxLevel: 10 },
+            { id: 'maxEnergyUpgrade', name: '🔋 最大能量擴容', costResource: 'money', baseCost: 100, effect: 'maxEnergy', value: 20, desc: '永久增加最大能量值 20 點。', maxLevel: 100 },
+            { id: 'efficiency', name: '⚡ 挖礦效率提升', costResource: 'ore', baseCost: 10, effect: 'pickaxeCost', value: -1, desc: '每次挖礦消耗能量減少 1 點。', maxLevel: 50 },
+            { id: 'yield', name: '💎 基礎收益強化', costResource: 'stone', baseCost: 50, effect: 'pickaxeYield', value: 1, desc: '每次挖礦基礎收益增加 1 點。', maxLevel: 100 },
             // 新增背包升級 (共 5 個等級，從 Level 1 升級到 Level 6)
-            { id: 'bagUpgradeLevel', name: '🎒 背包空間擴展', costResource: 'money', baseCost: 500, effect: 'maxResources', value: 500, desc: '將資源儲存上限增加 500 點。', maxLevel: 6 }, 
+            { id: 'bagUpgradeLevel', name: '🎒 背包空間擴展', costResource: 'money', baseCost: 500, effect: 'maxResources', value: 500, desc: '將資源儲存上限增加 500 點。', maxLevel: 60 }, 
         ];
         
         // 裝備製造數據 (擴展至 8 級鎬)
@@ -398,16 +398,16 @@
             { id: 'pickaxe3', name: '鑽石鎬', required: { stone: 200, ore: 100 }, effect: { level: 3, cost: 1, yield: 5 }, desc: 'Lv. 3：達到頂級效率。' },
             { id: 'pickaxe4', name: '鈦合金鎬', required: { stone: 500, ore: 300, money: 1000 }, effect: { level: 4, cost: 1, yield: 10 }, desc: 'Lv. 4：增加基礎收益。' },
             { id: 'pickaxe5', name: '能量結晶鎬', required: { stone: 1000, ore: 500, money: 5000 }, effect: { level: 5, cost: 0, yield: 15 }, desc: 'Lv. 5：不再消耗能量！' },
-            { id: 'pickaxe6', name: '虛空熔爐鎬', required: { stone: 2000, ore: 1000, money: 15000 }, effect: { level: 6, cost: 0, yield: 25 }, desc: 'Lv. 6：極大地增加收益。' },
-            { id: 'pickaxe7', name: '宇宙鑽頭', required: { stone: 5000, ore: 3000, money: 50000 }, effect: { level: 7, cost: 0, yield: 50 }, desc: 'Lv. 7：開始挖掘更高階資源。' },
+            { id: 'pickaxe6', name: '星星採集鎬', required: { stone: 2000, ore: 1000, money: 15000 }, effect: { level: 6, cost: 0, yield: 25 }, desc: 'Lv. 6：極大地增加收益。' },
+            { id: 'pickaxe7', name: '宇宙分解者', required: { stone: 5000, ore: 3000, money: 50000 }, effect: { level: 7, cost: 0, yield: 50 }, desc: 'Lv. 7：開始挖掘更高階資源。' },
             { id: 'pickaxe8', name: '創世神之手', required: { stone: 10000, ore: 5000, money: 100000 }, effect: { level: 8, cost: 0, yield: 100 }, desc: 'Lv. 8：最終級別，挖掘效率達到極限。' },
         ];
         
         // 消耗品 (食物) 數據
         const consumablesData = [
             { id: 'food_small', name: '☕ 咖啡', cost: 100, energy: 50, desc: '立即恢復 50 點能量。' },
-            { id: 'food_medium', name: '🍔 能量餐', cost: 500, energy: 200, desc: '立即恢復 200 點能量。' },
-            { id: 'food_large', name: '🚀 超級能量飲', cost: 2000, energy: 99999, desc: '瞬間充滿能量，甚至超越上限。' },
+            { id: 'food_medium', name: '🍔 漢堡', cost: 500, energy: 300, desc: '立即恢復 200 點能量。' },
+            { id: 'food_large', name: '🚀 能量飲', cost: 2000, energy: 1500, desc: '瞬間充滿能量，甚至超越上限。' },
         ];
 
         // --- DOM 元素獲取 ---
@@ -530,7 +530,7 @@
                 gameState.resources.ore += oreGained;
                 if (gameState.resources.ore > maxRes) gameState.resources.ore = maxRes;
             } else {
-                alertMessage('精煉金屬容量已滿！', 'red');
+                alertMessage('礦物容量已滿！', 'red');
             }
             
             // 每挖 10 次，深度+1
@@ -668,7 +668,7 @@
                 const isAvailable = item.effect.level === gameState.pickaxeLevel + 1; // 只能製造下一級
 
                 const requiredText = Object.entries(item.required).map(([res, amount]) => {
-                    const resDisplay = res === 'stone' ? '石頭' : (res === 'ore' ? '精煉金屬' : '金錢');
+                    const resDisplay = res === 'stone' ? '石頭' : (res === 'ore' ? '礦物' : '金錢');
                     const currentRes = res === 'money' ? gameState.money : gameState.resources[res];
                     return `<span class="${currentRes < amount ? 'text-red-400' : 'text-green-400'}">${amount.toLocaleString()} ${resDisplay}</span>`;
                 }).join(' / ');
