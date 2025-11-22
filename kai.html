@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給最特別的妳</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            background-color: #ffe6e6;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Microsoft JhengHei', 'Arial', sans-serif;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        /* 容器樣式 */
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+            max-width: 90%;
+        }
+
+        /* 主標題動畫 */
+        h1 {
+            color: #ff4d6d;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        /* 可愛的主圖 (可以是 Emoji 或圖片) */
+        .gif-container {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* 按鈕群組 */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative; /* 為了讓 No 按鈕絕對定位時參考 */
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        /* 答應按鈕 */
+        #yesBtn {
+            background-color: #ff4d6d;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+        }
+        #yesBtn:hover {
+            transform: scale(1.1);
+            background-color: #ff3355;
+        }
+
+        /* 拒絕按鈕 */
+        #noBtn {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+
+        /* 成功後的隱藏區塊 */
+        #successMessage {
+            display: none;
+            text-align: center;
+        }
+        
+        /* 愛心雨特效 */
+        .heart {
+            position: fixed;
+            top: -10px;
+            color: #ff4d6d;
+            font-size: 24px;
+            animation: fall linear forwards;
+            z-index: 5;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* 手機版調整 */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .container { padding: 20px; }
+            button { padding: 12px 30px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainCard">
+        <div class="gif-container">💌</div>
+        <h1>做我女朋友好嗎？</h1>
+        <p class="message">
+            我喜歡你很久了。<br>
+            未來的日子，想陪你一起走。
+        </p>
+        
+        <div class="btn-group">
+            <button id="yesBtn">好啊！</button>
+            <button id="noBtn">不要</button>
+        </div>
+    </div>
+
+    <div class="container" id="successMessage">
+        <div class="gif-container">💑</div>
+        <h1>太棒了！❤️</h1>
+        <p class="message">我會好好珍惜你的！(請截圖傳給我)</p>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const mainCard = document.getElementById('mainCard');
+        const successMessage = document.getElementById('successMessage');
+
+        // 讓 "不要" 按鈕閃避滑鼠或觸控
+        function moveButton() {
+            // 取得視窗大小
+            const maxWidth = window.innerWidth - noBtn.offsetWidth;
+            const maxHeight = window.innerHeight - noBtn.offsetHeight;
+
+            // 產生隨機位置
+            const randomX = Math.random() * (maxWidth - 50); // 減去邊距防止貼邊
+            const randomY = Math.random() * (maxHeight - 50);
+
+            // 設定按鈕為絕對定位並移動
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+        }
+
+        // 電腦版：滑鼠移過去就跑
+        noBtn.addEventListener('mouseover', moveButton);
+        
+        // 手機版：點擊時就跑 (因為手機沒有 hover)
+        noBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // 防止真的點擊到
+            moveButton();
+        });
+
+        // 按下 "好啊" 的特效
+        yesBtn.addEventListener('click', () => {
+            mainCard.style.display = 'none';
+            noBtn.style.display = 'none'; // 隱藏調皮的按鈕
+            successMessage.style.display = 'block';
+            
+            // 開始下愛心雨
+            createHearts();
+        });
+
+        // 產生愛心雨的函式
+        function createHearts() {
+            const interval = setInterval(() => {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerHTML = '❤️';
+                
+                // 隨機位置和大小
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                
+                // 隨機動畫時間
+                heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
+                
+                document.body.appendChild(heart);
+
+                // 動畫結束後移除元素
+                setTimeout(() => {
+                    heart.remove();
+                }, 5000);
+            }, 100);
+
+            // 10秒後停止產生愛心，避免瀏覽器過載
+            setTimeout(() => {
+                clearInterval(interval);
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
