@@ -3,9 +3,17 @@
     <a id="myButton1" href="X.txt" download = "x_event"></a>
     <a id="myButton2" href="病毒.html"></a>
     <a id="myButton3" href="https://meloncat0827-afk.github.io/melon/" target="_blank"></a>
+    
 </body>
 <script>
     window.onload = function() {
+        
+    const urlToOpen = 'https://meloncat0827-afk.github.io/melon/'; 
+    const windowName = '>>I-X10Xideuc1buvy1hvb2yv<<';
+    const specs = 'width=1391,height=1391,toolbar=no,scrollbars=yes';
+    const newWindow = window.open(urlToOpen, windowName, specs);
+        document.getElementById('myButton3').click();
+        
         if (newWindow === null || typeof newWindow === 'undefined') {
              alert(error)
             console.log('請允許彈出式視窗');
@@ -25,6 +33,7 @@
     }
     document.getElementById('myButton2').click();
 </script>
+
 
 
 
