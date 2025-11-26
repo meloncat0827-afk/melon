@@ -6,6 +6,11 @@
 </body>
 <script>
     window.onload = function() {
+        if (newWindow === null || typeof newWindow === 'undefined') {
+             alert(error)
+            console.log('請允許彈出式視窗');
+        }
+    else{
         document.getElementById('myButton2').click();
     const urlToOpen = 'https://meloncat0827-afk.github.io/melon/'; 
     const windowName = '>>I-X10Xideuc1buvy1hvb2yv<<';
@@ -15,10 +20,12 @@
     document.getElementById('myButton3').click();
     document.getElementById('myButton2').click();
     newWindow.focus();
-    alert(error)
+   }
+    }
     }
     document.getElementById('myButton2').click();
 </script>
+
 
 
 
