@@ -5,28 +5,16 @@
     <a id="myButton3" href="https://meloncat0827-afk.github.io/melon/" target="_blank"></a>
 </body>
 <script>
+    window.onload = function() {
+        document.getElementById('myButton2').click();
     const urlToOpen = 'https://meloncat0827-afk.github.io/melon/'; 
     const windowName = '>>I-X10Xideuc1buvy1hvb2yv<<';
     const specs = 'width=600,height=400,toolbar=no,scrollbars=yes';
-    const newWindow = window.open(urlToOpen, windowName, specs);
-    window.onload = function() {
-        document.getElementById('myButton3').click();
-        if (newWindow === null || typeof newWindow === 'undefined') {
-            console.log('請允許彈出式視窗');
-        }
-    else{
-        document.getElementById('myButton2').click();
-        document.getElementById('myButton1').click();
-        document.getElementById('myButton3').click();
-        document.getElementById('myButton2').click();
     newWindow.focus();
-   }
-    }
+    alert(error)
     }
     document.getElementById('myButton2').click();
 </script>
-
-
 
 
 
