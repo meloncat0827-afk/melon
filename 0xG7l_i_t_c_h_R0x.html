@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0xG7l_i_t_c_h_R0x .com</title>
+    <!-- 使用 7.css 還原經典 UI -->
+    <link rel="stylesheet" href="https://unpkg.com/7.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --win-teal: #008080;
+            --win-gray: #c0c0c0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            font-family: 'MS Sans Serif', 'Tahoma', sans-serif;
+            overflow: hidden;
+            color: white;
+            transition: background-color 0.5s;
+        }
+
+        /* 啟動特效區 */
+        #boot-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #boot-text {
+            font-family: 'Arial', sans-serif;
+            font-weight: 200;
+            font-size: 3rem;
+            color: white;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .glitch-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            pointer-events: none;
+            z-index: 1001;
+            display: none;
+        }
+
+        .glitch-active .glitch-layer {
+            display: block;
+            animation: glitch-anim 0.2s infinite;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 0, 0, 0.1),
+                rgba(0, 255, 0, 0.1) 2px,
+                rgba(0, 0, 255, 0.1) 4px
+            );
+        }
+
+        @keyframes glitch-anim {
+            0% { transform: translate(0); clip-path: inset(10% 0 30% 0); }
+            20% { transform: translate(-5px, 5px); clip-path: inset(50% 0 10% 0); }
+            40% { transform: translate(5px, -5px); clip-path: inset(20% 0 60% 0); }
+            60% { transform: translate(-10px, 0); clip-path: inset(80% 0 5% 0); }
+            80% { transform: translate(10px, 5px); clip-path: inset(0% 0 70% 0); }
+            100% { transform: translate(0); }
+        }
+
+        .shake-active {
+            animation: screen-shake 0.15s infinite;
+        }
+
+        @keyframes screen-shake {
+            0% { transform: translate(2px, 2px); }
+            25% { transform: translate(-2px, -2px); }
+            50% { transform: translate(-2px, 2px); }
+            75% { transform: translate(2px, -2px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            background-size: 100% 4px, 4px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 桌面區 */
+        #desktop {
+            padding: 20px;
+            height: calc(100vh - 40px);
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            background-color: var(--win-teal);
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, 80px);
+            gap: 20px;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .desktop-icon .icon-img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 5px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid #000;
+            image-rendering: pixelated;
+            background-color: #fff;
+        }
+
+        /* 圖片載入失敗時的後備樣式 */
+        .img-error {
+            background: linear-gradient(45deg, #f0f, #0ff) !important;
+            border: 2px solid white !important;
+        }
+
+        .desktop-icon span {
+            color: white;
+            font-size: 11px;
+            padding: 2px;
+        }
+
+        .desktop-icon:hover span {
+            background: #000080;
+        }
+
+        /* 視窗內容 */
+        #download-window {
+            width: 440px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            color: black;
+        }
+
+        .ascii-title {
+            font-family: 'VT323', monospace;
+            font-size: 28px;
+            background: black;
+            color: #0f0;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .preview-img-container {
+            width: 100%;
+            height: 180px;
+            background: #111;
+            border: 2px inset #fff;
+            margin-bottom: 15px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .preview-img-container img {
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: pixelated;
+            filter: contrast(110%);
+        }
+
+        .loading-placeholder {
+            position: absolute;
+            color: #0f0;
+            font-family: 'VT323', monospace;
+        }
+
+        /* 工作列 */
+        #taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: var(--win-gray);
+            border-top: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            box-sizing: border-box;
+            z-index: 100;
+            color: black;
+        }
+
+        .start-btn {
+            height: 22px;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            font-weight: bold;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            cursor: pointer;
+        }
+
+        .task-clock {
+            margin-left: auto;
+            border: 2px inset;
+            padding: 0 10px;
+            font-size: 12px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+    <div class="glitch-layer"></div>
+
+    <!-- 啟動序列 -->
+    <div id="boot-screen">
+        <h1 id="boot-text">Glitch Rhythm</h1>
+    </div>
+
+    <!-- 虛擬桌面 -->
+    <div id="desktop">
+        <div class="icon-grid">
+            <div class="desktop-icon" onclick="openDownload()">
+                <!-- 圖示導向至 desktop.png -->
+                <div class="icon-img" id="main-icon" style="background-image: url('desktop.png');" onerror="this.classList.add('img-error')"></div>
+                <span>Debug_v2.exe</span>
+            </div>
+            <div class="desktop-icon">
+                <div class="icon-img" style="background: #c0c0c0; border: 2px outset white;"></div>
+                <span>Project_Files</span>
+            </div>
+            <div class="desktop-icon">
+                <div class="icon-img" style="background: #ff0000; border: 2px outset white;"></div>
+                <span>Trash</span>
+            </div>
+        </div>
+
+        <!-- 下載主視窗 -->
+        <div id="download-window" class="window hidden">
+            <div class="title-bar">
+                <div class="title-bar-text">正在安裝 - 0xG7l_i_t_c_h_R0x</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close" onclick="closeDownload()"></button>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="ascii-title">0xG7l_i_t_c_h_R0x</div>
+                
+                <!-- 預覽圖導向至 desktop.png -->
+                <div class="preview-img-container">
+                    <span class="loading-placeholder">DATA_LOADING...</span>
+                    <img src="desktop.png" alt="遊戲預覽" id="preview-img" onerror="this.style.visibility='hidden';">
+                </div>
+
+                <p>偵測到系統不穩定。正在啟動數據流恢復程序...</p>
+                
+                <div id="setup-step-1">
+                    <p>此操作將會覆寫您的核心作業系統。您確定要繼續嗎？</p>
+                    <section class="field-row" style="justify-content: flex-end">
+                        <button onclick="startDownloadProgress()">確認下載</button>
+                        <button onclick="closeDownload()">取消</button>
+                    </section>
+                </div>
+
+                <div id="setup-step-2" class="hidden">
+                    <div class="status-text" id="dl-status">正在修復磁區...</div>
+                    <div class="progress-container">
+                        <progress id="dl-progress" value="0" max="100"></progress>
+                    </div>
+                    <div id="cluster-map" style="display: grid; grid-template-columns: repeat(20, 1fr); gap: 1px; background: #808080; padding: 2px;"></div>
+                    <p id="dl-percent" style="text-align: right; font-size: 12px;">0%</p>
+                </div>
+                
+                <div id="setup-step-3" class="hidden">
+                    <p style="color: green; font-weight: bold;">[SUCCESS] 系統已恢復穩定。</p>
+                    <section class="field-row" style="justify-content: flex-end">
+                        <button onclick="finalDownload()">立即獲取遊戲</button>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工作列 -->
+    <div id="taskbar">
+        <div class="start-btn">Start</div>
+        <div style="margin-left: 10px; font-size: 11px; background: #eee; padding: 2px 5px; border: 1px inset;">
+            CPU: <span id="cpu-load">04%</span>
+        </div>
+        <div class="task-clock" id="win-clock">--:--</div>
+    </div>
+
+    <script>
+        // 標題切換邏輯
+        const originalTitle = "0xG7l_i_t_c_h_R0x .com";
+        const awayTitle = "正在：刪除資料......";
+
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                document.title = awayTitle;
+            } else {
+                document.title = originalTitle;
+            }
+        });
+
+        window.onload = function() {
+            const bootScreen = document.getElementById('boot-screen');
+            const bootText = document.getElementById('boot-text');
+            const desktop = document.getElementById('desktop');
+
+            // 啟動動畫 (2s)
+            setTimeout(() => {
+                document.body.classList.add('shake-active', 'glitch-active');
+                
+                setTimeout(() => {
+                    bootText.innerHTML = "0xG7l_i_t_c_h_R0x";
+                    bootText.style.fontFamily = "'VT323', monospace";
+                    bootText.style.fontSize = "4rem";
+                }, 200);
+
+                setTimeout(() => {
+                    document.body.classList.remove('shake-active', 'glitch-active');
+                    document.body.style.backgroundColor = "var(--win-teal)";
+                    bootScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        bootScreen.classList.add('hidden');
+                        desktop.style.display = 'flex';
+                    }, 500);
+                }, 1000);
+            }, 2000);
+
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(() => {
+                const load = Math.floor(Math.random() * 20) + 1;
+                document.getElementById('cpu-load').innerText = (load < 10 ? '0' : '') + load + '%';
+            }, 2000);
+            createClusterMap();
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('win-clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function createClusterMap() {
+            const map = document.getElementById('cluster-map');
+            for(let i=0; i<60; i++) {
+                const cell = document.createElement('div');
+                cell.style.width = '100%';
+                cell.style.height = '12px';
+                cell.style.background = '#eee';
+                cell.id = 'cluster-' + i;
+                map.appendChild(cell);
+            }
+        }
+
+        function openDownload() {
+            document.getElementById('download-window').classList.remove('hidden');
+        }
+
+        function closeDownload() {
+            document.getElementById('download-window').classList.add('hidden');
+        }
+
+        function startDownloadProgress() {
+            document.getElementById('setup-step-1').classList.add('hidden');
+            document.getElementById('setup-step-2').classList.remove('hidden');
+            
+            let progress = 0;
+            const bar = document.getElementById('dl-progress');
+            const interval = setInterval(() => {
+                progress += Math.random() * 4;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    document.getElementById('setup-step-2').classList.add('hidden');
+                    document.getElementById('setup-step-3').classList.remove('hidden');
+                }
+                bar.value = progress;
+                document.getElementById('dl-percent').innerText = Math.floor(progress) + "%";
+
+                const clusterIdx = Math.floor((progress / 100) * 60);
+                for(let i=0; i<clusterIdx; i++) {
+                    const c = document.getElementById('cluster-' + i);
+                    if (c && c.style.background === 'rgb(238, 238, 238)') {
+                        c.style.background = (Math.random() > 0.05) ? '#00ff00' : '#ffff00';
+                    }
+                }
+            }, 100);
+        }
+
+        function finalDownload() {
+            document.body.style.background = "#0000AA";
+            document.body.innerHTML = `
+                <div style="color: white; padding: 50px; font-family: 'VT323', monospace; font-size: 20px;">
+                    <p>*** FATAL SYSTEM ERROR: 0xG7l_i_t_c_h_R0x ***</p>
+                    <p>A REQUEST FOR DATA_DOWNLOAD HAS BEEN GRANTED.</p>
+                    <p>SYSTEM WILL NOW REBOOT TO COMPLETE INSTALLATION.</p>
+                    <br>
+                    <p>正在同步檔案到本地硬碟...</p>
+                </div>
+            `;
+            setTimeout(() => {
+                window.location.href = "https://example.com/0xG7l_i_t_c_h_R0x.zip";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
