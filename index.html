@@ -22,7 +22,7 @@
             font-family: 'MS Sans Serif', 'Tahoma', sans-serif;
             overflow: hidden;
             color: white;
-            transition: background-color 0.5s;
+            transition: background-color 0.1s;
         }
 
         /* 啟動特效區 */
@@ -32,20 +32,93 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: black;
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            cursor: pointer; /* 提示可點擊 */
         }
 
         #boot-text {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
             font-weight: 200;
-            font-size: 3rem;
-            color: white;
-            letter-spacing: 2px;
+            font-size: 3.5rem;
+            color: #fff;
+            letter-spacing: 4px;
             text-align: center;
+            transition: all 0.05s;
+            z-index: 1003;
+        }
+
+        .click-to-start {
+            position: absolute;
+            bottom: 20%;
+            font-size: 1rem;
+            color: #666;
+            letter-spacing: 2px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* 前奏微弱閃爍動畫 */
+        @keyframes pre-strobe {
+            0%, 80%, 100% { background: #000; }
+            85% { background: #080808; }
+            90% { background: #030303; }
+            95% { background: #0a0a0a; }
+        }
+
+        .pre-glitch-active {
+            animation: pre-strobe 0.4s infinite;
+        }
+
+        .pre-text-shake {
+            animation: pre-text-anim 0.2s infinite;
+        }
+
+        @keyframes pre-text-anim {
+            0% { transform: translate(0,0); }
+            50% { transform: translate(1px, -1px); opacity: 0.95; }
+            100% { transform: translate(-1px, 1px); }
+        }
+
+        /* 強烈閃爍動畫 */
+        @keyframes strobe-dark {
+            0% { background: #000; }
+            10% { background: #111; }
+            20% { background: #000; }
+            30% { background: #222; }
+            40% { background: #050505; }
+            50% { background: #444; }
+            60% { background: #000; }
+            70% { background: #1a0000; }
+            80% { background: #000; }
+            90% { background: #333; }
+            100% { background: #000; }
+        }
+
+        .strobe-active {
+            animation: strobe-dark 0.15s steps(1) infinite !important;
+        }
+
+        /* 標題損壞動畫 */
+        @keyframes text-corrupt {
+            0% { transform: scale(1) skew(0deg); opacity: 1; }
+            20% { transform: scale(1.1) skew(10deg); opacity: 0.8; }
+            40% { transform: scale(0.9) skew(-20deg) translate(10px, -5px); }
+            60% { transform: scale(1.3) skew(50deg) translate(-20px, 10px); color: #f0f; }
+            80% { transform: scale(0.5) skew(-10deg); color: #0ff; }
+            100% { transform: scale(1) skew(0deg); }
+        }
+
+        .text-glitch {
+            animation: text-corrupt 0.1s infinite;
+            text-shadow: 3px 0 red, -3px 0 blue;
         }
 
         .glitch-layer {
@@ -62,34 +135,49 @@
 
         .glitch-active .glitch-layer {
             display: block;
-            animation: glitch-anim 0.2s infinite;
+            animation: glitch-anim 0.15s infinite;
             background: repeating-linear-gradient(
                 0deg,
-                rgba(255, 0, 0, 0.1),
-                rgba(0, 255, 0, 0.1) 2px,
-                rgba(0, 0, 255, 0.1) 4px
+                rgba(255, 255, 255, 0.05) 0px,
+                rgba(255, 255, 255, 0.05) 1px,
+                transparent 1px,
+                transparent 2px
             );
         }
 
         @keyframes glitch-anim {
             0% { transform: translate(0); clip-path: inset(10% 0 30% 0); }
-            20% { transform: translate(-5px, 5px); clip-path: inset(50% 0 10% 0); }
-            40% { transform: translate(5px, -5px); clip-path: inset(20% 0 60% 0); }
-            60% { transform: translate(-10px, 0); clip-path: inset(80% 0 5% 0); }
-            80% { transform: translate(10px, 5px); clip-path: inset(0% 0 70% 0); }
+            20% { transform: translate(-15px, 10px); clip-path: inset(50% 0 10% 0); }
+            40% { transform: translate(15px, -10px); clip-path: inset(20% 0 60% 0); }
+            60% { transform: translate(-20px, 0); clip-path: inset(80% 0 5% 0); }
+            80% { transform: translate(20px, 15px); clip-path: inset(0% 0 70% 0); }
             100% { transform: translate(0); }
         }
 
         .shake-active {
-            animation: screen-shake 0.15s infinite;
+            animation: screen-shake 0.1s infinite;
         }
 
         @keyframes screen-shake {
-            0% { transform: translate(2px, 2px); }
-            25% { transform: translate(-2px, -2px); }
-            50% { transform: translate(-2px, 2px); }
-            75% { transform: translate(2px, -2px); }
+            0% { transform: translate(5px, 5px); }
+            25% { transform: translate(-5px, -5px); }
+            50% { transform: translate(-5px, 5px); }
+            75% { transform: translate(5px, -5px); }
             100% { transform: translate(0, 0); }
+        }
+
+        #bsod-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0000AA;
+            z-index: 1002;
+            display: none;
+            color: white;
+            padding: 40px;
+            font-family: 'VT323', monospace;
         }
 
         .crt-overlay {
@@ -104,7 +192,6 @@
             z-index: 999;
         }
 
-        /* 桌面區 */
         #desktop {
             padding: 20px;
             height: calc(100vh - 40px);
@@ -139,7 +226,6 @@
             background-color: #fff;
         }
 
-        /* 圖片載入失敗時的後備樣式 */
         .img-error {
             background: linear-gradient(45deg, #f0f, #0ff) !important;
             border: 2px solid white !important;
@@ -155,92 +241,13 @@
             background: #000080;
         }
 
-        /* 視窗內容 */
-        #download-window {
-            width: 440px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            color: black;
-        }
-
-        .ascii-title {
-            font-family: 'VT323', monospace;
-            font-size: 28px;
-            background: black;
-            color: #0f0;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 2px solid #0f0;
-            text-shadow: 0 0 5px #0f0;
-        }
-
-        .preview-img-container {
-            width: 100%;
-            height: 180px;
-            background: #111;
-            border: 2px inset #fff;
-            margin-bottom: 15px;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .preview-img-container img {
-            max-width: 100%;
-            max-height: 100%;
-            image-rendering: pixelated;
-            filter: contrast(110%);
-        }
-
-        .loading-placeholder {
-            position: absolute;
-            color: #0f0;
-            font-family: 'VT323', monospace;
-        }
-
-        /* 工作列 */
-        #taskbar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 30px;
-            background: var(--win-gray);
-            border-top: 2px solid #ffffff;
-            display: flex;
-            align-items: center;
-            padding: 2px;
-            box-sizing: border-box;
-            z-index: 100;
-            color: black;
-        }
-
-        .start-btn {
-            height: 22px;
-            display: flex;
-            align-items: center;
-            padding: 0 5px;
-            font-weight: bold;
-            border: 2px solid;
-            border-color: #ffffff #808080 #808080 #ffffff;
-            cursor: pointer;
-        }
-
-        .task-clock {
-            margin-left: auto;
-            border: 2px inset;
-            padding: 0 10px;
-            font-size: 12px;
-            height: 22px;
-            display: flex;
-            align-items: center;
-        }
-
+        #download-window { width: 440px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; color: black; }
+        .ascii-title { font-family: 'VT323', monospace; font-size: 28px; background: black; color: #0f0; padding: 10px; border: 2px solid #0f0; }
+        .preview-img-container { width: 100%; height: 180px; background: #111; border: 2px inset #fff; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; position: relative; }
+        .preview-img-container img { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
+        #taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 30px; background: var(--win-gray); border-top: 2px solid #ffffff; display: flex; align-items: center; padding: 2px; z-index: 100; color: black; }
+        .start-btn { height: 22px; font-weight: bold; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; padding: 0 5px; cursor: pointer; }
+        .task-clock { margin-left: auto; border: 2px inset; padding: 0 10px; font-size: 12px; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -248,17 +255,22 @@
 
     <div class="crt-overlay"></div>
     <div class="glitch-layer"></div>
+    <div id="bsod-flash">
+        <h1>A problem has been detected and windows has been shut down to prevent damage...</h1>
+        <p>*** STOP: 0x00000050 (0xFD3094C2, 0x00000001, 0xFBFE7617, 0x00000000)</p>
+        <p>*** GLITCH_RHYTHM_CORE.SYS - Address FBFE7617 base at FBFE5000</p>
+    </div>
 
     <!-- 啟動序列 -->
-    <div id="boot-screen">
+    <div id="boot-screen" onclick="startBootSequence()">
         <h1 id="boot-text">Glitch Rhythm</h1>
+        <div id="start-prompt" class="click-to-start">點擊以初始化系統</div>
     </div>
 
     <!-- 虛擬桌面 -->
     <div id="desktop">
         <div class="icon-grid">
             <div class="desktop-icon" onclick="openDownload()">
-                <!-- 圖示導向至 desktop.png -->
                 <div class="icon-img" id="main-icon" style="background-image: url('desktop.png');" onerror="this.classList.add('img-error')"></div>
                 <span>Debug_v2.exe</span>
             </div>
@@ -272,7 +284,6 @@
             </div>
         </div>
 
-        <!-- 下載主視窗 -->
         <div id="download-window" class="window hidden">
             <div class="title-bar">
                 <div class="title-bar-text">正在安裝 - 0xG7l_i_t_c_h_R0x</div>
@@ -282,15 +293,10 @@
             </div>
             <div class="window-body">
                 <div class="ascii-title">0xG7l_i_t_c_h_R0x</div>
-                
-                <!-- 預覽圖導向至 desktop.png -->
                 <div class="preview-img-container">
-                    <span class="loading-placeholder">DATA_LOADING...</span>
                     <img src="desktop.png" alt="遊戲預覽" id="preview-img" onerror="this.style.visibility='hidden';">
                 </div>
-
                 <p>偵測到系統不穩定。正在啟動數據流恢復程序...</p>
-                
                 <div id="setup-step-1">
                     <p>此操作將會覆寫您的核心作業系統。您確定要繼續嗎？</p>
                     <section class="field-row" style="justify-content: flex-end">
@@ -298,80 +304,98 @@
                         <button onclick="closeDownload()">取消</button>
                     </section>
                 </div>
-
                 <div id="setup-step-2" class="hidden">
-                    <div class="status-text" id="dl-status">正在修復磁區...</div>
-                    <div class="progress-container">
-                        <progress id="dl-progress" value="0" max="100"></progress>
-                    </div>
+                    <div class="status-text">正在修復磁區...</div>
+                    <progress id="dl-progress" value="0" max="100"></progress>
                     <div id="cluster-map" style="display: grid; grid-template-columns: repeat(20, 1fr); gap: 1px; background: #808080; padding: 2px;"></div>
                     <p id="dl-percent" style="text-align: right; font-size: 12px;">0%</p>
                 </div>
-                
                 <div id="setup-step-3" class="hidden">
                     <p style="color: green; font-weight: bold;">[SUCCESS] 系統已恢復穩定。</p>
-                    <section class="field-row" style="justify-content: flex-end">
-                        <button onclick="finalDownload()">立即獲取遊戲</button>
-                    </section>
+                    <button onclick="finalDownload()">立即獲取遊戲</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 工作列 -->
     <div id="taskbar">
         <div class="start-btn">Start</div>
-        <div style="margin-left: 10px; font-size: 11px; background: #eee; padding: 2px 5px; border: 1px inset;">
-            CPU: <span id="cpu-load">04%</span>
-        </div>
         <div class="task-clock" id="win-clock">--:--</div>
     </div>
 
     <script>
-        // 標題切換邏輯
         const originalTitle = "0xG7l_i_t_c_h_R0x .com";
         const awayTitle = "正在：刪除資料......";
+        let bootStarted = false;
 
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                document.title = awayTitle;
-            } else {
-                document.title = originalTitle;
-            }
+        // 預載音效
+        const bootAudio = new Audio('open.mp3');
+
+        document.addEventListener('visibilitychange', () => {
+            document.title = document.hidden ? awayTitle : originalTitle;
         });
 
-        window.onload = function() {
+        function startBootSequence() {
+            if (bootStarted) return;
+            bootStarted = true;
+
             const bootScreen = document.getElementById('boot-screen');
             const bootText = document.getElementById('boot-text');
             const desktop = document.getElementById('desktop');
+            const bsod = document.getElementById('bsod-flash');
+            const prompt = document.getElementById('start-prompt');
 
-            // 啟動動畫 (2s)
+            prompt.style.display = 'none';
+            bootScreen.style.cursor = 'default';
+
+            // --- 啟動序列 ---
+            
+            // 0.2秒：開啟「微弱閃爍」前奏
             setTimeout(() => {
-                document.body.classList.add('shake-active', 'glitch-active');
+                bootScreen.classList.add('pre-glitch-active');
+                bootText.classList.add('pre-text-shake');
+            }, 200);
+
+            // 1.5秒後：進入強烈閃爍
+            setTimeout(() => {
+                bootScreen.classList.remove('pre-glitch-active');
+                bootScreen.classList.add('strobe-active');
+                
+                bootText.classList.remove('pre-text-shake');
+                bootText.classList.add('text-glitch');
+                bootText.style.color = "#ff3333"; 
+                document.body.classList.add('shake-active');
+            }, 1500);
+
+            // 2.2秒時：文字突然變換為像素風格
+            setTimeout(() => {
+                bootText.innerHTML = "_0xG7l_i_t_c_h_R0x_";
+                bootText.style.fontFamily = "'VT323', monospace";
+                bootText.style.fontSize = "5rem";
+                bootText.style.color = "#ffffff";
+                document.body.classList.add('glitch-active');
+            }, 2200);
+
+            // 3.0秒時：瞬閃藍屏並進入桌面，播放開機音效
+            setTimeout(() => {
+                bsod.style.display = 'block'; 
                 
                 setTimeout(() => {
-                    bootText.innerHTML = "0xG7l_i_t_c_h_R0x";
-                    bootText.style.fontFamily = "'VT323', monospace";
-                    bootText.style.fontSize = "4rem";
-                }, 200);
-
-                setTimeout(() => {
-                    document.body.classList.remove('shake-active', 'glitch-active');
+                    // 在這裡播放音效
+                    bootAudio.play().catch(e => console.log("Audio play blocked", e));
+                    
+                    bsod.style.display = 'none';
+                    bootScreen.style.display = 'none';
+                    document.body.classList.remove('glitch-active', 'shake-active');
                     document.body.style.backgroundColor = "var(--win-teal)";
-                    bootScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        bootScreen.classList.add('hidden');
-                        desktop.style.display = 'flex';
-                    }, 500);
-                }, 1000);
-            }, 2000);
+                    desktop.style.display = 'flex';
+                }, 80); 
+            }, 3000);
+        }
 
+        window.onload = function() {
             updateClock();
             setInterval(updateClock, 1000);
-            setInterval(() => {
-                const load = Math.floor(Math.random() * 20) + 1;
-                document.getElementById('cpu-load').innerText = (load < 10 ? '0' : '') + load + '%';
-            }, 2000);
             createClusterMap();
         };
 
@@ -384,63 +408,41 @@
             const map = document.getElementById('cluster-map');
             for(let i=0; i<60; i++) {
                 const cell = document.createElement('div');
-                cell.style.width = '100%';
-                cell.style.height = '12px';
-                cell.style.background = '#eee';
+                cell.style.width = '100%'; cell.style.height = '12px'; cell.style.background = '#eee';
                 cell.id = 'cluster-' + i;
                 map.appendChild(cell);
             }
         }
 
-        function openDownload() {
-            document.getElementById('download-window').classList.remove('hidden');
-        }
-
-        function closeDownload() {
-            document.getElementById('download-window').classList.add('hidden');
-        }
+        function openDownload() { document.getElementById('download-window').classList.remove('hidden'); }
+        function closeDownload() { document.getElementById('download-window').classList.add('hidden'); }
 
         function startDownloadProgress() {
             document.getElementById('setup-step-1').classList.add('hidden');
             document.getElementById('setup-step-2').classList.remove('hidden');
-            
             let progress = 0;
             const bar = document.getElementById('dl-progress');
             const interval = setInterval(() => {
-                progress += Math.random() * 4;
+                progress += Math.random() * 5;
                 if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
+                    progress = 100; clearInterval(interval);
                     document.getElementById('setup-step-2').classList.add('hidden');
                     document.getElementById('setup-step-3').classList.remove('hidden');
                 }
                 bar.value = progress;
                 document.getElementById('dl-percent').innerText = Math.floor(progress) + "%";
-
                 const clusterIdx = Math.floor((progress / 100) * 60);
                 for(let i=0; i<clusterIdx; i++) {
                     const c = document.getElementById('cluster-' + i);
-                    if (c && c.style.background === 'rgb(238, 238, 238)') {
-                        c.style.background = (Math.random() > 0.05) ? '#00ff00' : '#ffff00';
-                    }
+                    if (c && c.style.background === 'rgb(238, 238, 238)') c.style.background = '#00ff00';
                 }
             }, 100);
         }
 
         function finalDownload() {
             document.body.style.background = "#0000AA";
-            document.body.innerHTML = `
-                <div style="color: white; padding: 50px; font-family: 'VT323', monospace; font-size: 20px;">
-                    <p>*** FATAL SYSTEM ERROR: 0xG7l_i_t_c_h_R0x ***</p>
-                    <p>A REQUEST FOR DATA_DOWNLOAD HAS BEEN GRANTED.</p>
-                    <p>SYSTEM WILL NOW REBOOT TO COMPLETE INSTALLATION.</p>
-                    <br>
-                    <p>正在同步檔案到本地硬碟...</p>
-                </div>
-            `;
-            setTimeout(() => {
-                window.location.href = "https://example.com/0xG7l_i_t_c_h_R0x.zip";
-            }, 2000);
+            document.body.innerHTML = `<div style="color: white; padding: 50px; font-family: 'VT323', monospace;"><h1>FATAL ERROR</h1><p>REBOOTING...</p></div>`;
+            setTimeout(() => { window.location.href = "https://example.com/0xG7l_i_t_c_h_R0x.zip"; }, 1500);
         }
     </script>
 </body>
