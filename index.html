@@ -1,450 +1,374 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>0xG7l_i_t_c_h_R0x </title>
-    <!-- 使用 7.css 還原經典 UI -->
-    <link rel="stylesheet" href="https://unpkg.com/7.css">
+    <title>2D Metroidvania - Parkour & Boss</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
-        :root {
-            --win-teal: #008080;
-            --win-gray: #c0c0c0;
-        }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background-color: #000;
-            font-family: 'MS Sans Serif', 'Tahoma', sans-serif;
-            overflow: hidden;
-            color: white;
-            transition: background-color 0.1s;
-        }
-
-        /* 啟動特效區 */
-        #boot-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            cursor: pointer; /* 提示可點擊 */
-        }
-
-        #boot-text {
-            font-family: 'Segoe UI', 'Arial', sans-serif;
-            font-weight: 200;
-            font-size: 3.5rem;
-            color: #fff;
-            letter-spacing: 4px;
-            text-align: center;
-            transition: all 0.05s;
-            z-index: 1003;
-        }
-
-        .click-to-start {
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        canvas { display: block; }
+        
+        #ui {
             position: absolute;
-            bottom: 20%;
-            font-size: 1rem;
-            color: #666;
-            letter-spacing: 2px;
-            animation: pulse 1.5s infinite;
+            top: 20px; left: 20px;
+            color: white; pointer-events: none;
+            text-shadow: 2px 2px 2px #000;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
-
-        /* 前奏微弱閃爍動畫 */
-        @keyframes pre-strobe {
-            0%, 80%, 100% { background: #000; }
-            85% { background: #080808; }
-            90% { background: #030303; }
-            95% { background: #0a0a0a; }
-        }
-
-        .pre-glitch-active {
-            animation: pre-strobe 0.4s infinite;
-        }
-
-        .pre-text-shake {
-            animation: pre-text-anim 0.2s infinite;
-        }
-
-        @keyframes pre-text-anim {
-            0% { transform: translate(0,0); }
-            50% { transform: translate(1px, -1px); opacity: 0.95; }
-            100% { transform: translate(-1px, 1px); }
-        }
-
-        /* 強烈閃爍動畫 */
-        @keyframes strobe-dark {
-            0% { background: #000; }
-            10% { background: #111; }
-            20% { background: #000; }
-            30% { background: #222; }
-            40% { background: #050505; }
-            50% { background: #444; }
-            60% { background: #000; }
-            70% { background: #1a0000; }
-            80% { background: #000; }
-            90% { background: #333; }
-            100% { background: #000; }
-        }
-
-        .strobe-active {
-            animation: strobe-dark 0.15s steps(1) infinite !important;
-        }
-
-        /* 標題損壞動畫 */
-        @keyframes text-corrupt {
-            0% { transform: scale(1) skew(0deg); opacity: 1; }
-            20% { transform: scale(1.1) skew(10deg); opacity: 0.8; }
-            40% { transform: scale(0.9) skew(-20deg) translate(10px, -5px); }
-            60% { transform: scale(1.3) skew(50deg) translate(-20px, 10px); color: #f0f; }
-            80% { transform: scale(0.5) skew(-10deg); color: #0ff; }
-            100% { transform: scale(1) skew(0deg); }
-        }
-
-        .text-glitch {
-            animation: text-corrupt 0.1s infinite;
-            text-shadow: 3px 0 red, -3px 0 blue;
-        }
-
-        .glitch-layer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
+        #tutorial-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             pointer-events: none;
-            z-index: 1001;
-            display: none;
         }
 
-        .glitch-active .glitch-layer {
-            display: block;
-            animation: glitch-anim 0.15s infinite;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(255, 255, 255, 0.05) 0px,
-                rgba(255, 255, 255, 0.05) 1px,
-                transparent 1px,
-                transparent 2px
-            );
-        }
-
-        @keyframes glitch-anim {
-            0% { transform: translate(0); clip-path: inset(10% 0 30% 0); }
-            20% { transform: translate(-15px, 10px); clip-path: inset(50% 0 10% 0); }
-            40% { transform: translate(15px, -10px); clip-path: inset(20% 0 60% 0); }
-            60% { transform: translate(-20px, 0); clip-path: inset(80% 0 5% 0); }
-            80% { transform: translate(20px, 15px); clip-path: inset(0% 0 70% 0); }
-            100% { transform: translate(0); }
-        }
-
-        .shake-active {
-            animation: screen-shake 0.1s infinite;
-        }
-
-        @keyframes screen-shake {
-            0% { transform: translate(5px, 5px); }
-            25% { transform: translate(-5px, -5px); }
-            50% { transform: translate(-5px, 5px); }
-            75% { transform: translate(5px, -5px); }
-            100% { transform: translate(0, 0); }
-        }
-
-        #bsod-flash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0000AA;
-            z-index: 1002;
-            display: none;
-            color: white;
-            padding: 40px;
-            font-family: 'VT323', monospace;
-        }
-
-        .crt-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
-            background-size: 100% 4px, 4px 100%;
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        #desktop {
-            padding: 20px;
-            height: calc(100vh - 40px);
-            display: none;
-            flex-direction: column;
-            gap: 20px;
-            background-color: var(--win-teal);
-        }
-
-        .icon-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 80px);
-            gap: 20px;
-        }
-
-        .desktop-icon {
+        .key-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: pointer;
+            gap: 5px;
+            min-width: 50px;
+        }
+
+        .key {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.1s;
+        }
+
+        .key.active {
+            background: #00d4ff;
+            color: #000;
+            transform: scale(0.9);
+            box-shadow: 0 0 15px #00d4ff;
+        }
+
+        .key-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #aaa;
+        }
+
+        #hp-bar { width: 200px; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; margin-top: 5px; }
+        #hp-fill { width: 100%; height: 100%; background: #ff4d4d; border-radius: 5px; transition: width 0.3s; }
+        
+        #boss-ui {
+            position: absolute;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            display: none;
             text-align: center;
         }
+        #boss-hp-bar { width: 400px; height: 15px; background: rgba(0,0,0,0.5); border: 1px solid #ff0000; border-radius: 3px; }
+        #boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(to right, #660000, #ff0000); }
 
-        .desktop-icon .icon-img {
-            width: 32px;
-            height: 32px;
-            margin-bottom: 5px;
-            background-size: cover;
-            background-position: center;
-            border: 1px solid #000;
-            image-rendering: pixelated;
-            background-color: #fff;
+        #msg {
+            position: absolute;
+            bottom: 100px; width: 100%;
+            text-align: center; color: #fff;
+            font-size: 24px; font-weight: bold;
+            transition: opacity 0.5s;
+            pointer-events: none;
         }
-
-        .img-error {
-            background: linear-gradient(45deg, #f0f, #0ff) !important;
-            border: 2px solid white !important;
-        }
-
-        .desktop-icon span {
-            color: white;
-            font-size: 11px;
-            padding: 2px;
-        }
-
-        .desktop-icon:hover span {
-            background: #000080;
-        }
-
-        #download-window { width: 440px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; color: black; }
-        .ascii-title { font-family: 'VT323', monospace; font-size: 28px; background: black; color: #0f0; padding: 10px; border: 2px solid #0f0; }
-        .preview-img-container { width: 100%; height: 180px; background: #111; border: 2px inset #fff; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; position: relative; }
-        .preview-img-container img { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
-        #taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 30px; background: var(--win-gray); border-top: 2px solid #ffffff; display: flex; align-items: center; padding: 2px; z-index: 100; color: black; }
-        .start-btn { height: 22px; font-weight: bold; border: 2px solid; border-color: #ffffff #808080 #808080 #ffffff; padding: 0 5px; cursor: pointer; }
-        .task-clock { margin-left: auto; border: 2px inset; padding: 0 10px; font-size: 12px; }
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="crt-overlay"></div>
-    <div class="glitch-layer"></div>
-    <div id="bsod-flash">
-        <h1>A problem has been detected and windows has been shut down to prevent damage...</h1>
-        <p>*** STOP: 0x00000050 (0xFD3094C2, 0x00000001, 0xFBFE7617, 0x00000000)</p>
-        <p>*** GLITCH_RHYTHM_CORE.SYS - Address FBFE7617 base at FBFE5000</p>
-    </div>
-
-    <!-- 啟動序列 -->
-    <div id="boot-screen" onclick="startBootSequence()">
-        <h1 id="boot-text">Glitch Rhythm</h1>
-        <div id="start-prompt" class="click-to-start">點擊以初始化系統</div>
-    </div>
-
-    <!-- 虛擬桌面 -->
-    <div id="desktop">
-        <div class="icon-grid">
-            <div class="desktop-icon" onclick="openDownload()">
-                <div class="icon-img" id="main-icon" style="background-image: url('desktop.png');" onerror="this.classList.add('img-error')"></div>
-                <span>Debug_v2.exe</span>
-            </div>
-            <div class="desktop-icon">
-                <div class="icon-img" style="background: #c0c0c0; border: 2px outset white;"></div>
-                <span>Project_Files</span>
-            </div>
-            <div class="desktop-icon">
-                <div class="icon-img" style="background: #ff0000; border: 2px outset white;"></div>
-                <span>Trash</span>
-            </div>
-        </div>
-
-        <div id="download-window" class="window hidden">
-            <div class="title-bar">
-                <div class="title-bar-text">正在安裝 - 0xG7l_i_t_c_h_R0x</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Close" onclick="closeDownload()"></button>
-                </div>
-            </div>
-            <div class="window-body">
-                <div class="ascii-title">0xG7l_i_t_c_h_R0x</div>
-                <div class="preview-img-container">
-                    <img src="desktop.png" alt="遊戲預覽" id="preview-img" onerror="this.style.visibility='hidden';">
-                </div>
-                <p>偵測到系統不穩定。正在啟動數據流恢復程序...</p>
-                <div id="setup-step-1">
-                    <p>此操作將會覆寫您的核心作業系統。您確定要繼續嗎？</p>
-                    <section class="field-row" style="justify-content: flex-end">
-                        <button onclick="startDownloadProgress()">確認下載</button>
-                        <button onclick="closeDownload()">取消</button>
-                    </section>
-                </div>
-                <div id="setup-step-2" class="hidden">
-                    <div class="status-text">正在修復磁區...</div>
-                    <progress id="dl-progress" value="0" max="100"></progress>
-                    <div id="cluster-map" style="display: grid; grid-template-columns: repeat(20, 1fr); gap: 1px; background: #808080; padding: 2px;"></div>
-                    <p id="dl-percent" style="text-align: right; font-size: 12px;">0%</p>
-                </div>
-                <div id="setup-step-3" class="hidden">
-                    <p style="color: green; font-weight: bold;">[SUCCESS] 系統已恢復穩定。</p>
-                    <button onclick="finalDownload()">立即獲取遊戲</button>
-                </div>
-            </div>
+    <div id="ui">
+        <div style="font-size: 20px; font-weight: bold;">玩家生命值</div>
+        <div id="hp-bar"><div id="hp-fill"></div></div>
+        <div id="abilities" style="margin-top: 15px;">
+            <div id="tag-doublejump" style="color: rgba(255,255,255,0.3);">● 二段跳</div>
+            <div id="tag-dash" style="color: rgba(255,255,255,0.3);">● 衝刺</div>
         </div>
     </div>
 
-    <div id="taskbar">
-        <div class="start-btn">Start</div>
-        <div class="task-clock" id="win-clock">--:--</div>
+    <div id="boss-ui">
+        <div style="color: #ff0000; font-weight: bold; margin-bottom: 5px;">最終守衛者的核心</div>
+        <div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
     </div>
+
+    <div id="tutorial-overlay">
+        <div class="key-box"><div id="key-W" class="key">W</div><div class="key-label">跳躍</div></div>
+        <div class="key-box"><div id="key-A" class="key">A</div><div class="key-label">向左</div></div>
+        <div class="key-box"><div id="key-D" class="key">D</div><div class="key-label">向右</div></div>
+        <div class="key-box"><div id="key-Shift" class="key" style="width: 70px;">SHIFT</div><div class="key-label">衝刺</div></div>
+    </div>
+
+    <div id="msg"></div>
+
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const originalTitle = "0xG7l_i_t_c_h_R0x .com";
-        const awayTitle = "正在：刪除資料......";
-        let bootStarted = false;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-        // 預載音效
-        const bootAudio = new Audio('open.mp3');
+        const GRAVITY = 0.6;
+        const FRICTION = 0.85;
+        const WORLD_WIDTH = 5000; // 擴大地圖寬度
+        const WORLD_HEIGHT = 1500;
 
-        document.addEventListener('visibilitychange', () => {
-            document.title = document.hidden ? awayTitle : originalTitle;
-        });
-
-        function startBootSequence() {
-            if (bootStarted) return;
-            bootStarted = true;
-
-            const bootScreen = document.getElementById('boot-screen');
-            const bootText = document.getElementById('boot-text');
-            const desktop = document.getElementById('desktop');
-            const bsod = document.getElementById('bsod-flash');
-            const prompt = document.getElementById('start-prompt');
-
-            prompt.style.display = 'none';
-            bootScreen.style.cursor = 'default';
-
-            // --- 啟動序列 ---
-            
-            // 0.2秒：開啟「微弱閃爍」前奏
-            setTimeout(() => {
-                bootScreen.classList.add('pre-glitch-active');
-                bootText.classList.add('pre-text-shake');
-            }, 200);
-
-            // 1.5秒後：進入強烈閃爍
-            setTimeout(() => {
-                bootScreen.classList.remove('pre-glitch-active');
-                bootScreen.classList.add('strobe-active');
-                
-                bootText.classList.remove('pre-text-shake');
-                bootText.classList.add('text-glitch');
-                bootText.style.color = "#ff3333"; 
-                document.body.classList.add('shake-active');
-            }, 1500);
-
-            // 2.2秒時：文字突然變換為像素風格
-            setTimeout(() => {
-                bootText.innerHTML = "_0xG7l_i_t_c_h_R0x_";
-                bootText.style.fontFamily = "'VT323', monospace";
-                bootText.style.fontSize = "5rem";
-                bootText.style.color = "#ffffff";
-                document.body.classList.add('glitch-active');
-            }, 2200);
-
-            // 3.0秒時：瞬閃藍屏並進入桌面，播放開機音效
-            setTimeout(() => {
-                bsod.style.display = 'block'; 
-                
-                setTimeout(() => {
-                    // 在這裡播放音效
-                    bootAudio.play().catch(e => console.log("Audio play blocked", e));
-                    
-                    bsod.style.display = 'none';
-                    bootScreen.style.display = 'none';
-                    document.body.classList.remove('glitch-active', 'shake-active');
-                    document.body.style.backgroundColor = "var(--win-teal)";
-                    desktop.style.display = 'flex';
-                }, 80); 
-            }, 3000);
-        }
-
-        window.onload = function() {
-            updateClock();
-            setInterval(updateClock, 1000);
-            createClusterMap();
+        let gameActive = true;
+        
+        const player = {
+            x: 100, y: 1300,
+            vx: 0, vy: 0,
+            width: 30, height: 45,
+            speed: 5,
+            jumpForce: 13,
+            isGrounded: false,
+            canDoubleJump: false,
+            isOnWall: false,
+            wallDir: 0, 
+            hasDoubleJumpSkill: false,
+            hasDashSkill: false,
+            dashCooldown: 0,
+            hp: 100,
+            color: '#00d4ff'
         };
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('win-clock').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const boss = {
+            x: 4300, y: 1100,
+            width: 120, height: 120,
+            hp: 100, maxHp: 100,
+            active: false,
+            shootTimer: 0,
+            color: '#ff0044'
+        };
+
+        const camera = { x: 0, y: 0 };
+
+        const platforms = [
+            // 起點區
+            { x: 0, y: 1400, w: 1000, h: 100 },
+            { x: 450, y: 1250, w: 40, h: 40, type: 'skill_jump', label: '二段跳核心', color: '#00ffcc' },
+            { x: 700, y: 1100, w: 40, h: 40, type: 'skill_dash', label: '衝刺模組', color: '#ff00ff' },
+            { x: 650, y: 1200, w: 150, h: 20 },
+            
+            // 跑酷銜接區
+            { x: 1100, y: 1200, w: 100, h: 20 },
+            { x: 1350, y: 1100, w: 80, h: 20 },
+            { x: 1600, y: 950, w: 60, h: 20 }, // 小跳台
+            
+            // 牆跳跑酷區 (需要二段跳)
+            { x: 1800, y: 700, w: 30, h: 700 }, // 牆1
+            { x: 2050, y: 500, w: 30, h: 700 }, // 牆2
+            { x: 2300, y: 400, w: 30, h: 600 }, // 牆3
+            
+            // 長距離衝刺區
+            { x: 2450, y: 450, w: 200, h: 20 },
+            { x: 3000, y: 550, w: 150, h: 20 },
+            { x: 3400, y: 750, w: 100, h: 20 },
+            
+            // Boss 戰場入口
+            { x: 3800, y: 1300, w: 1200, h: 200 }
+        ];
+
+        let bullets = [];
+        let enemyBullets = [];
+        let particles = [];
+        const keys = {};
+
+        window.addEventListener('keydown', e => { keys[e.code] = true; updateKeyVisuals(e.code, true); });
+        window.addEventListener('keyup', e => { keys[e.code] = false; updateKeyVisuals(e.code, false); });
+        window.addEventListener('mousedown', (e) => shoot(e));
+
+        function updateKeyVisuals(code, isActive) {
+            let id = "";
+            if (code === 'KeyW' || code === 'ArrowUp' || code === 'Space') id = "key-W";
+            if (code === 'KeyA' || code === 'ArrowLeft') id = "key-A";
+            if (code === 'KeyD' || code === 'ArrowRight') id = "key-D";
+            if (code === 'ShiftLeft' || code === 'ShiftRight') id = "key-Shift";
+            const el = document.getElementById(id);
+            if (el) isActive ? el.classList.add('active') : el.classList.remove('active');
         }
 
-        function createClusterMap() {
-            const map = document.getElementById('cluster-map');
-            for(let i=0; i<60; i++) {
-                const cell = document.createElement('div');
-                cell.style.width = '100%'; cell.style.height = '12px'; cell.style.background = '#eee';
-                cell.id = 'cluster-' + i;
-                map.appendChild(cell);
+        function showMsg(text) {
+            const m = document.getElementById('msg');
+            m.innerText = text; m.style.opacity = 1;
+            setTimeout(() => { m.style.opacity = 0; }, 3000);
+        }
+
+        function shoot(e) {
+            if (!gameActive) return;
+            const angle = Math.atan2(
+                (e.clientY - (player.y - camera.y + player.height/2)),
+                (e.clientX - (player.x - camera.x + player.width/2))
+            );
+            bullets.push({ x: player.x + player.width/2, y: player.y + player.height/2, vx: Math.cos(angle) * 15, vy: Math.sin(angle) * 15, life: 100 });
+        }
+
+        function bossShoot() {
+            if (boss.hp <= 0) return;
+            // 擴散彈
+            for (let i = -1; i <= 1; i++) {
+                const angle = Math.atan2(player.y - boss.y, player.x - boss.x) + (i * 0.2);
+                enemyBullets.push({ x: boss.x + boss.width/2, y: boss.y + boss.height/2, vx: Math.cos(angle) * 7, vy: Math.sin(angle) * 7, life: 200 });
             }
         }
 
-        function openDownload() { document.getElementById('download-window').classList.remove('hidden'); }
-        function closeDownload() { document.getElementById('download-window').classList.add('hidden'); }
+        function update() {
+            if (!gameActive) return;
 
-        function startDownloadProgress() {
-            document.getElementById('setup-step-1').classList.add('hidden');
-            document.getElementById('setup-step-2').classList.remove('hidden');
-            let progress = 0;
-            const bar = document.getElementById('dl-progress');
-            const interval = setInterval(() => {
-                progress += Math.random() * 5;
-                if (progress >= 100) {
-                    progress = 100; clearInterval(interval);
-                    document.getElementById('setup-step-2').classList.add('hidden');
-                    document.getElementById('setup-step-3').classList.remove('hidden');
+            // 玩家物理
+            if (keys['KeyA'] || keys['ArrowLeft']) player.vx -= 0.8;
+            if (keys['KeyD'] || keys['ArrowRight']) player.vx += 0.8;
+            player.vx *= FRICTION;
+            let currentGravity = GRAVITY;
+            if (player.isOnWall && player.vy > 0) currentGravity = GRAVITY * 0.3;
+            player.vy += currentGravity;
+
+            if (keys['KeyW'] || keys['Space'] || keys['ArrowUp']) {
+                if (player.isGrounded) { player.vy = -player.jumpForce; player.isGrounded = false; keys['KeyW'] = keys['Space'] = keys['ArrowUp'] = false; } 
+                else if (player.isOnWall) { player.vy = -player.jumpForce * 0.9; player.vx = -player.wallDir * 12; player.isOnWall = false; keys['KeyW'] = keys['Space'] = keys['ArrowUp'] = false; }
+                else if (player.hasDoubleJumpSkill && player.canDoubleJump) { player.vy = -player.jumpForce * 0.8; player.canDoubleJump = false; keys['KeyW'] = keys['Space'] = keys['ArrowUp'] = false; createParticles(player.x + 15, player.y + 40, '#fff'); }
+            }
+
+            if (keys['ShiftLeft'] && player.hasDashSkill && player.dashCooldown <= 0) {
+                player.vx = (player.vx >= 0 ? 1 : -1) * 25;
+                player.dashCooldown = 60;
+                createParticles(player.x, player.y, '#ff00ff');
+            }
+            if (player.dashCooldown > 0) player.dashCooldown--;
+
+            player.x += player.vx; player.y += player.vy;
+            player.isGrounded = false;
+            let touchingWall = false;
+            let wallDirection = 0;
+
+            // 平台與核心碰撞
+            for (let i = platforms.length - 1; i >= 0; i--) {
+                const p = platforms[i];
+                if (player.x < p.x + p.w && player.x + player.width > p.x && player.y < p.y + p.h && player.y + player.height > p.y) {
+                    if (p.type) {
+                        if (p.type === 'skill_jump') { player.hasDoubleJumpSkill = true; document.getElementById('tag-doublejump').style.color = '#00ffcc'; showMsg("獲得能力：二段跳！"); }
+                        else if (p.type === 'skill_dash') { player.hasDashSkill = true; document.getElementById('tag-dash').style.color = '#ff00ff'; showMsg("獲得能力：衝刺！"); }
+                        createParticles(p.x + p.w/2, p.y + p.h/2, p.color, 15); platforms.splice(i, 1); continue;
+                    }
+                    if (player.vy > 0 && player.y + player.height - player.vy <= p.y) { player.y = p.y - player.height; player.vy = 0; player.isGrounded = true; player.canDoubleJump = true; } 
+                    else if (player.x + player.width - player.vx <= p.x) { player.x = p.x - player.width; player.vx = 0; if (!player.isGrounded) { touchingWall = true; wallDirection = 1; } }
+                    else if (player.x - player.vx >= p.x + p.w) { player.x = p.x + p.w; player.vx = 0; if (!player.isGrounded) { touchingWall = true; wallDirection = -1; } }
+                    else { player.y = p.y + p.h; player.vy = 0; }
                 }
-                bar.value = progress;
-                document.getElementById('dl-percent').innerText = Math.floor(progress) + "%";
-                const clusterIdx = Math.floor((progress / 100) * 60);
-                for(let i=0; i<clusterIdx; i++) {
-                    const c = document.getElementById('cluster-' + i);
-                    if (c && c.style.background === 'rgb(238, 238, 238)') c.style.background = '#00ff00';
+            }
+            player.isOnWall = touchingWall; player.wallDir = wallDirection;
+
+            // Boss 啟動與邏輯
+            if (player.x > 3800) {
+                boss.active = true;
+                document.getElementById('boss-ui').style.display = 'block';
+            }
+            if (boss.active && boss.hp > 0) {
+                boss.shootTimer++;
+                if (boss.shootTimer > 60) { bossShoot(); boss.shootTimer = 0; }
+            }
+
+            // 子彈碰撞
+            bullets.forEach((b, bi) => {
+                b.x += b.vx; b.y += b.vy; b.life--;
+                if (boss.active && b.x > boss.x && b.x < boss.x + boss.width && b.y > boss.y && b.y < boss.y + boss.height) {
+                    boss.hp -= 2; createParticles(b.x, b.y, '#ff0044'); bullets.splice(bi, 1);
+                    if (boss.hp <= 0) { showMsg("你成功守護了世界！勝利！"); gameActive = false; }
                 }
-            }, 100);
+                if (b.life <= 0) bullets.splice(bi, 1);
+            });
+
+            // 敵方子彈碰撞
+            enemyBullets.forEach((eb, ei) => {
+                eb.x += eb.vx; eb.y += eb.vy; eb.life--;
+                if (eb.x > player.x && eb.x < player.x + player.width && eb.y > player.y && eb.y < player.y + player.height) {
+                    player.hp -= 10; createParticles(eb.x, eb.y, '#ff0000'); enemyBullets.splice(ei, 1);
+                    if (player.hp <= 0) { showMsg("你被核心守衛擊敗了..."); gameActive = false; }
+                }
+                if (eb.life <= 0) enemyBullets.splice(ei, 1);
+            });
+
+            // 世界邊界
+            if (player.x < 0) player.x = 0;
+            if (player.x > WORLD_WIDTH - player.width) player.x = WORLD_WIDTH - player.width;
+            if (player.y > WORLD_HEIGHT) { player.x = 100; player.y = 1300; player.hp = Math.max(0, player.hp - 10); }
+
+            // 攝像機
+            camera.x += (player.x - canvas.width / 2 - camera.x) * 0.1;
+            camera.y += (player.y - canvas.height / 2 - camera.y) * 0.1;
+            camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
+            camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
+
+            // UI 更新
+            document.getElementById('hp-fill').style.width = player.hp + '%';
+            document.getElementById('boss-hp-fill').style.width = (boss.hp / boss.maxHp * 100) + '%';
+            particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life -= 0.02; if (p.life <= 0) particles.splice(i, 1); });
         }
 
-        function finalDownload() {
-            document.body.style.background = "#0000AA";
-            document.body.innerHTML = `<div style="color: white; padding: 50px; font-family: 'VT323', monospace;"><h1>FATAL ERROR</h1><p>REBOOTING...</p></div>`;
-            setTimeout(() => { window.location.href = "https://example.com/0xG7l_i_t_c_h_R0x.zip"; }, 1500);
+        function createParticles(x, y, color, count = 8) {
+            for(let i=0; i<count; i++) { particles.push({ x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, life: 1, color }); }
         }
+
+        function draw() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save(); ctx.translate(-camera.x, -camera.y);
+
+            // 繪製背景裝飾 (遠景)
+            ctx.fillStyle = '#151525';
+            for(let i=0; i<WORLD_WIDTH; i+=600) ctx.fillRect(i, 200, 300, 1300);
+
+            // 繪製平台
+            platforms.forEach(p => {
+                if (p.type) {
+                    ctx.fillStyle = p.color; ctx.shadowBlur = 25; ctx.shadowColor = p.color;
+                    const offset = Math.sin(Date.now() / 200) * 5; ctx.fillRect(p.x, p.y + offset, p.w, p.h);
+                    ctx.font = "bold 12px Arial"; ctx.fillStyle = "#fff"; ctx.fillText(p.label, p.x - 10, p.y - 10 + offset);
+                } else {
+                    ctx.shadowBlur = 0; ctx.fillStyle = '#222'; ctx.fillRect(p.x, p.y, p.w, p.h);
+                    ctx.strokeStyle = '#444'; ctx.strokeRect(p.x, p.y, p.w, p.h);
+                }
+            });
+
+            // 繪製 Boss
+            if (boss.active && boss.hp > 0) {
+                ctx.fillStyle = boss.color; ctx.shadowBlur = 30; ctx.shadowColor = '#ff0044';
+                const bOffset = Math.sin(Date.now() / 150) * 10;
+                ctx.fillRect(boss.x, boss.y + bOffset, boss.width, boss.height);
+                // Boss 眼睛
+                ctx.fillStyle = '#000';
+                ctx.fillRect(boss.x + 30, boss.y + 40 + bOffset, 20, 20);
+                ctx.fillRect(boss.x + 70, boss.y + 40 + bOffset, 20, 20);
+            }
+
+            // 繪製玩家
+            ctx.shadowBlur = 15; ctx.shadowColor = player.color; ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            if (player.isOnWall) { ctx.fillStyle = '#fff'; ctx.fillRect(player.x + (player.wallDir === 1 ? player.width : -5), player.y, 5, player.height); }
+
+            // 子彈
+            ctx.shadowBlur = 0; ctx.fillStyle = '#ffff00';
+            bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); });
+            ctx.fillStyle = '#ff0000';
+            enemyBullets.forEach(eb => { ctx.beginPath(); ctx.arc(eb.x, eb.y, 6, 0, Math.PI*2); ctx.fill(); });
+            
+            // 粒子
+            particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill(); });
+
+            ctx.restore();
+            update();
+            requestAnimationFrame(draw);
+        }
+        draw();
     </script>
 </body>
 </html>
-
