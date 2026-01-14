@@ -3,126 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>光芒戰線：特技覺醒</title>
+    <title>光芒戰線：90張牌庫</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #020617; color: #f8fafc; overflow: hidden; }
         
+        .elem-fire { background: linear-gradient(135deg, #ef4444, #7f1d1d); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .elem-water { background: linear-gradient(135deg, #3b82f6, #1e3a8a); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .elem-thunder { background: linear-gradient(135deg, #eab308, #713f12); box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+        .elem-ice { background: linear-gradient(135deg, #67e8f9, #0e7490); box-shadow: 0 0 15px rgba(103, 232, 249, 0.4); }
+        
         .speed-slot {
-            width: 90px; height: 120px;
-            background: rgba(30, 41, 59, 0.5);
-            border: 2px dashed #475569;
-            border-radius: 14px;
+            width: 95px; height: 125px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed #334155;
+            border-radius: 16px;
             display: flex; flex-direction: column; items: center; justify-content: center;
             transition: all 0.3s; position: relative;
         }
-        .speed-slot.active { border-color: #eab308; background: rgba(234, 179, 8, 0.1); box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
-        .speed-slot.filled { border-style: solid; border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .speed-slot.active { border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); transform: scale(1.05); }
+        .speed-slot.filled { border-style: solid; border-color: #64748b; }
 
         .speed-badge {
-            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            background: #eab308; color: black; font-weight: 900;
-            padding: 2px 12px; border-radius: 999px; text-xs; z-index: 10;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            background: #fbbf24; color: #000; font-weight: 900;
+            padding: 1px 12px; border-radius: 999px; text-[10px]; z-index: 10;
         }
 
         .card-mini {
-            width: 100%; height: 100%; border-radius: 12px;
+            width: 100%; height: 100%; border-radius: 14px;
             display: flex; flex-direction: column; items: center; justify-content: center;
-            font-size: 0.7rem; cursor: pointer; animation: popIn 0.2s ease-out;
-            border: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.7rem; cursor: pointer; animation: cardIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.2);
         }
         
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes cardIn { from { transform: translateY(20px) rotate(5deg); opacity: 0; } to { transform: translateY(0) rotate(0); opacity: 1; } }
 
         .die { 
-            width: 55px; height: 55px; background: white; color: black; 
+            width: 60px; height: 60px; background: #fff; color: #000; 
             display: flex; align-items: center; justify-content: center;
-            border-radius: 10px; font-weight: bold; font-size: 1.6rem;
-            box-shadow: 0 0 20px rgba(255,255,255,0.4); border: 2px solid #cbd5e1;
+            border-radius: 12px; font-weight: 800; font-size: 1.8rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 2px solid #e2e8f0;
         }
         
-        .rolling { animation: shake 0.1s infinite; }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            50% { transform: translate(-1px, -1px) rotate(-5deg); }
-            100% { transform: translate(1px, 1px) rotate(0deg); }
-        }
+        .rolling { animation: diceRoll 0.15s infinite; }
+        @keyframes diceRoll { 0% { transform: scale(1) rotate(0); } 50% { transform: scale(0.9) rotate(5deg); } 100% { transform: scale(1) rotate(-5deg); } }
 
         .damage-pop {
-            position: absolute; animation: flyUp 1.2s ease-out forwards;
-            font-weight: 900; pointer-events: none; z-index: 100; text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+            position: absolute; animation: popFloat 1.2s ease-out forwards;
+            font-weight: 900; pointer-events: none; z-index: 100;
         }
-        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-120px) scale(1.2); opacity: 0; } }
+        @keyframes popFloat { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-150px); opacity: 0; } }
 
-        .skill-tag {
-            font-size: 0.6rem; background: rgba(0,0,0,0.5); padding: 1px 4px; border-radius: 4px; color: #fbbf24; border: 1px solid #fbbf24; margin-top: 2px;
+        .elem-tag {
+            font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.6); 
+            border: 1px solid rgba(255,255,255,0.3); margin-top: 4px;
+        }
+
+        .advantage-badge {
+            position: absolute; top: -20px; color: #fbbf24; font-weight: 900; font-style: italic;
+            font-size: 12px; animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .deck-counter {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #94a3b8;
         }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center h-screen w-screen p-4">
 
-    <div class="max-w-5xl w-full h-[95vh] bg-slate-900 rounded-3xl shadow-2xl border border-slate-700 flex flex-col relative overflow-hidden">
+    <div class="max-w-6xl w-full h-[95vh] bg-slate-950 rounded-[40px] shadow-[0_0_100px_rgba(0,0,0,1)] border border-slate-800 flex flex-col relative overflow-hidden">
         
-        <!-- 頂部狀態 -->
-        <div class="z-10 p-4 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
-            <div class="flex gap-4 items-center">
-                <div class="text-yellow-500 font-bold tracking-tighter text-xl">光芒戰線</div>
-                <div id="turn-display" class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded text-xs border border-blue-800 font-mono">ROUND 01</div>
+        <!-- UI Header -->
+        <div class="z-20 p-6 flex justify-between items-center bg-slate-900/60 backdrop-blur-xl border-b border-white/5">
+            <div class="flex gap-6 items-center">
+                <div class="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">ELEMENTAL FRONT</div>
+                <div id="turn-display" class="bg-white/5 text-slate-400 px-4 py-1 rounded-full text-xs font-mono tracking-widest border border-white/10">TURN 01</div>
             </div>
             
-            <div class="flex gap-10 text-sm">
-                <div class="flex flex-col items-end">
-                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Health (HP)</span>
-                    <span id="p-hp" class="font-mono text-red-400 text-2xl font-bold">100</span>
+            <div class="flex gap-12">
+                <div class="text-right">
+                    <div class="text-[10px] text-red-500 font-bold uppercase tracking-[0.2em]">Vitality</div>
+                    <div id="p-hp" class="text-3xl font-mono font-bold text-red-400">100</div>
                 </div>
-                <div class="flex flex-col items-end">
-                    <span class="text-[10px] text-purple-500 font-bold uppercase tracking-widest">Mind (SP)</span>
-                    <span id="p-sp" class="font-mono text-purple-400 text-2xl font-bold">80</span>
+                <div class="text-right">
+                    <div class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em]">Ether Mind</div>
+                    <div id="p-sp" class="text-3xl font-mono font-bold text-cyan-400">80</div>
                 </div>
             </div>
         </div>
 
-        <!-- 戰鬥區域 -->
-        <div class="flex-1 flex flex-col items-center justify-start p-8 relative overflow-hidden" id="battle-field">
-            <!-- 敵人 -->
-            <div id="enemy-zone" class="flex flex-col items-center mt-2 transition-all duration-500">
-                <div class="relative group">
-                    <div id="enemy-sprite" class="text-8xl mb-4 transition-all drop-shadow-[0_0_40px_rgba(239,68,68,0.4)]">👾</div>
-                    <div id="enemy-info" class="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-                        <div id="enemy-intent" class="bg-red-950/95 text-red-100 text-[10px] px-3 py-1.5 rounded-lg border border-red-500 whitespace-nowrap shadow-2xl">意圖：載入中...</div>
-                        <div id="enemy-speed-tag" class="bg-yellow-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-md">SPD: 5</div>
+        <!-- Battlefield -->
+        <div class="flex-1 flex flex-col items-center justify-start p-10 relative" id="battle-field">
+            
+            <!-- Enemy View -->
+            <div id="enemy-zone" class="flex flex-col items-center gap-4 transition-all duration-700">
+                <div class="relative">
+                    <div id="enemy-sprite" class="text-9xl filter drop-shadow-[0_0_50px_rgba(239,68,68,0.5)]">👹</div>
+                    <div class="absolute -top-16 left-1/2 -translate-x-1/2 w-max">
+                        <div id="enemy-intent" class="bg-black/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-red-500/50 text-red-200 text-xs font-bold shadow-2xl flex items-center gap-2">
+                            載入中...
+                        </div>
                     </div>
                 </div>
-                <!-- 敵人血條 -->
-                <div class="w-72 space-y-2">
-                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700 shadow-inner">
-                        <div id="e-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500" style="width: 100%"></div>
+                
+                <div class="w-80 space-y-3">
+                    <div class="relative h-3 bg-slate-900 rounded-full border border-white/5 overflow-hidden shadow-inner">
+                        <div id="e-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-rose-400 transition-all duration-1000" style="width: 100%"></div>
                     </div>
-                    <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                        <div id="e-sp-bar" class="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-500" style="width: 100%"></div>
+                    <div class="flex justify-between px-1">
+                        <div id="status-icons" class="flex gap-1"></div>
+                        <div id="enemy-speed-tag" class="text-[10px] font-black text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/30">SPD: 4</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 行動規劃區（速度骰槽位） -->
-            <div id="planning-zone" class="flex gap-6 mt-12 items-center justify-center transition-all duration-500">
-                <!-- 由 JS 生成 speed-slot -->
-            </div>
+            <!-- Slots -->
+            <div id="planning-zone" class="flex gap-8 mt-16 items-center justify-center"></div>
 
-            <!-- 衝突對決區域 -->
-            <div id="clash-zone" class="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none z-40 bg-slate-950/70 backdrop-blur-md transition-all duration-300">
-                <div id="intercept-msg" class="text-4xl font-black italic text-yellow-400 tracking-tight mb-8 uppercase drop-shadow-2xl">攔截成功！</div>
-                <div class="flex gap-24 items-center justify-center">
-                    <div class="flex flex-col items-center gap-6">
+            <!-- Clash Overlay -->
+            <div id="clash-zone" class="absolute inset-0 z-50 flex flex-col items-center justify-center opacity-0 pointer-events-none bg-slate-950/90 backdrop-blur-2xl transition-all duration-500">
+                <div id="clash-title" class="text-6xl font-black italic mb-12 text-white">INTERCEPTED</div>
+                <div class="flex gap-32 items-center">
+                    <div class="flex flex-col items-center gap-8 relative">
+                        <div id="p-advantage" class="advantage-badge hidden">ELEMENT ADVANTAGE</div>
                         <div id="p-dice-container" class="flex flex-col gap-4"></div>
-                        <div class="text-sm text-blue-400 font-bold uppercase tracking-widest border-b-2 border-blue-500 pb-1">Player</div>
+                        <div class="text-xs font-black tracking-widest text-cyan-400 uppercase border-b-2 border-cyan-400 pb-2">User Interface</div>
                     </div>
-                    <div class="text-6xl animate-pulse">⚔️</div>
-                    <div class="flex flex-col items-center gap-6">
+                    <div class="text-7xl opacity-50">VS</div>
+                    <div class="flex flex-col items-center gap-8 relative">
+                        <div id="e-advantage" class="advantage-badge hidden">ELEMENT ADVANTAGE</div>
                         <div id="e-dice-container" class="flex flex-col gap-4"></div>
-                        <div class="text-sm text-red-400 font-bold uppercase tracking-widest border-b-2 border-red-500 pb-1">Enemy</div>
+                        <div class="text-xs font-black tracking-widest text-red-500 uppercase border-b-2 border-red-500 pb-2">Anomaly Data</div>
                     </div>
                 </div>
             </div>
@@ -130,355 +150,309 @@
             <div id="player-zone" class="absolute bottom-10"></div>
         </div>
 
-        <!-- 操作區 -->
-        <div class="bg-slate-950/98 p-6 border-t border-slate-800 relative shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
-            <div class="flex justify-between items-center mb-6 px-4">
-                <div class="flex flex-col">
-                    <div id="tutorial-msg" class="text-base text-slate-200 font-bold">階段：規劃行動</div>
-                    <div class="text-xs text-slate-500 italic">特殊能力卡牌在右下角標註有 [★]</div>
+        <!-- Control Bar -->
+        <div class="p-8 bg-slate-900/40 border-t border-white/5 backdrop-blur-3xl">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h3 id="phase-label" class="text-lg font-bold text-slate-100">核心規劃階段</h3>
+                    <div class="flex gap-4 mt-2">
+                        <div class="deck-counter">DECK: <span id="deck-count" class="text-white">90</span> / 90</div>
+                        <span class="text-[10px] text-slate-500 self-center">克制：🔥➔❄️, ❄️➔⚡, ⚡➔🌊, 🌊➔🔥</span>
+                    </div>
                 </div>
-                <button id="start-clash-btn" disabled class="px-12 py-3 bg-slate-700 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl">
-                    啟動衝突流程 (Clash)
+                <button id="clash-btn" disabled class="px-16 py-4 rounded-2xl bg-slate-800 text-slate-500 font-black text-sm tracking-[0.3em] transition-all uppercase disabled:opacity-30">
+                    EXE CLASH
                 </button>
             </div>
-            <!-- 手牌區域 -->
-            <div id="hand" class="flex justify-center gap-4 h-48 overflow-x-auto pb-4 px-10"></div>
+            <div id="hand" class="flex gap-5 justify-center h-48 overflow-x-auto px-4 custom-scrollbar"></div>
         </div>
     </div>
 
     <script>
-        // 帶有特殊能力的卡牌庫
-        const CARD_POOL = [
-            // --- 特殊能力卡 ---
-            { name: '光芒凝結', type: 'UTILITY', dice: {count: 1, min: 10, max: 15}, color: 'from-amber-400 to-amber-700', icon: '✨', skill: 'RECOVERY', desc: '結算後回復 15 精神', skillLabel: '回光' },
-            { name: '快速預判', type: 'UTILITY', dice: {count: 2, min: 4, max: 10}, color: 'from-blue-400 to-blue-600', icon: '⚡', skill: 'CYCLE', desc: '使用後額外抽一張牌', skillLabel: '洗牌' },
-            { name: '侵蝕指令', type: 'MIND', dice: {count: 2, min: 8, max: 12}, color: 'from-indigo-600 to-indigo-900', icon: '👾', skill: 'WEAKEN', desc: '命中降低目標速度', skillLabel: '弱化' },
-            { name: '終結執行', type: 'PHYSICAL', dice: {count: 1, min: 15, max: 20}, color: 'from-slate-800 to-black', icon: '💀', skill: 'FINISHER', desc: '敵SP<50%時傷害+50%', skillLabel: '絕技' },
-            
-            // --- 基礎卡 ---
-            { name: '連環突刺', type: 'PHYSICAL', dice: {count: 3, min: 4, max: 8}, color: 'from-red-500 to-red-800', icon: '🗡️', desc: '快速三次打擊' },
-            { name: '重錘破防', type: 'PHYSICAL', dice: {count: 1, min: 14, max: 24}, color: 'from-orange-600 to-orange-900', icon: '🔨', desc: '高威力單次打擊' },
-            { name: '鐵壁防禦', type: 'DEFEND', dice: {count: 2, min: 8, max: 14}, color: 'from-blue-600 to-blue-900', icon: '🛡️', desc: '兩次堅固防禦' },
-            { name: '能量護盾', type: 'DEFEND', dice: {count: 1, min: 15, max: 25}, color: 'from-cyan-600 to-cyan-800', icon: '💠', desc: '單次大額防護' },
-            { name: '思維干涉', type: 'MIND', dice: {count: 2, min: 6, max: 12}, color: 'from-purple-500 to-purple-800', icon: '🧠', desc: '攻擊敵方精神' },
-            { name: '散彈掃射', type: 'PHYSICAL', dice: {count: 4, min: 2, max: 6}, color: 'from-rose-700 to-rose-900', icon: '🔫', desc: '多段輕量壓制' },
-            { name: '精密計算', type: 'DEFEND', dice: {count: 2, min: 10, max: 12}, color: 'from-slate-500 to-slate-700', icon: '🔢', desc: '穩定的格擋' }
+        const PROTOS = [
+            { name: '烈焰迸發', elem: 'fire', dice: {c: 2, min: 6, max: 12}, icon: '🔥', skill: 'BURN', desc: '克制 ❄️: 造成 1.5倍 傷害' },
+            { name: '紅蓮重擊', elem: 'fire', dice: {c: 1, min: 18, max: 28}, icon: '💥', skill: 'BURN', desc: '極高威力火屬性打擊' },
+            { name: '水流斬擊', elem: 'water', dice: {c: 3, min: 4, max: 9}, icon: '🌊', skill: 'WET', desc: '克制 🔥: 造成 1.5倍 傷害' },
+            { name: '淨化之泉', elem: 'water', dice: {c: 1, min: 10, max: 15}, icon: '⛲', skill: 'RECOVER', desc: '命中時回復 10 SP' },
+            { name: '迅雷一閃', elem: 'thunder', dice: {c: 2, min: 8, max: 14}, icon: '⚡', skill: 'SHOCK', desc: '克制 🌊: 造成 1.5倍 傷害' },
+            { name: '雷霆審判', elem: 'thunder', dice: {c: 1, min: 20, max: 30}, icon: '⛈️', skill: 'PARALYZE', desc: '對潮濕目標額外加成' },
+            { name: '寒冰尖刺', elem: 'ice', dice: {c: 2, min: 7, max: 11}, icon: '❄️', skill: 'CHILL', desc: '克制 ⚡: 造成 1.5倍 傷害' },
+            { name: '絕對零度', elem: 'ice', dice: {c: 1, min: 15, max: 25}, icon: '🧊', skill: 'FREEZE', desc: '高點數冰屬性防禦' }
         ];
 
-        let state = {
+        const ELEMENT_CHART = { 'fire': 'ice', 'ice': 'thunder', 'thunder': 'water', 'water': 'fire' };
+
+        let game = {
             turn: 1,
-            isGameOver: false,
-            isClashing: false,
-            player: { hp: 100, maxHp: 100, sp: 80, maxSp: 80 },
-            enemy: { hp: 250, maxHp: 250, sp: 200, maxSp: 200, intent: 'PHYSICAL', dice: {count: 1, min: 10, max: 18}, speed: 4 },
+            player: { hp: 100, sp: 80, maxSp: 80 },
+            enemy: { hp: 300, maxHp: 300, speed: 4, sprite: '👺', status: [], intentElem: 'fire' },
+            slots: [],
             hand: [],
-            speedSlots: [],
-            selectedSlotIdx: 0,
-            speedDieCount: 2
+            deck: [], // 牌庫
+            discard: [], // 棄牌堆
+            selectedIdx: 0,
+            active: true
         };
 
-        function init() {
-            rollSpeedDice();
-            drawCards(7);
-            setEnemyIntent();
-            updateUI();
+        // 初始化 90 張牌庫
+        function initDeck() {
+            game.deck = [];
+            for(let i=0; i<90; i++) {
+                const proto = PROTOS[Math.floor(Math.random()*PROTOS.length)];
+                game.deck.push({...proto, instId: Math.random()});
+            }
+            shuffle(game.deck);
         }
 
-        function rollSpeedDice() {
-            state.speedDieCount = 2 + Math.floor((state.turn - 1) / 3);
-            state.speedSlots = Array.from({length: state.speedDieCount}, () => ({
-                speed: Math.floor(Math.random() * 6) + 1,
-                card: null
-            }));
-            state.selectedSlotIdx = 0;
-            renderSpeedSlots();
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
         }
 
-        function renderSpeedSlots() {
-            const container = document.getElementById('planning-zone');
-            container.innerHTML = '';
-            state.speedSlots.forEach((slot, idx) => {
-                const el = document.createElement('div');
-                el.className = `speed-slot ${state.selectedSlotIdx === idx ? 'active' : ''} ${slot.card ? 'filled shadow-xl shadow-blue-900/40' : ''}`;
+        function draw() {
+            if (game.deck.length === 0) {
+                if (game.discard.length === 0) return; // 無牌可抽
+                game.deck = [...game.discard];
+                game.discard = [];
+                shuffle(game.deck);
+            }
+            game.hand.push(game.deck.pop());
+        }
+
+        function start() {
+            initDeck();
+            game.hand = [];
+            for(let i=0; i<7; i++) draw();
+            refreshTurn();
+        }
+
+        function refreshTurn() {
+            const count = 2 + Math.floor(game.turn / 4);
+            game.slots = Array.from({length: count}, () => ({ spd: Math.floor(Math.random()*6)+1, card: null }));
+            game.selectedIdx = 0;
+            setEnemy();
+            render();
+        }
+
+        function setEnemy() {
+            const bosses = [
+                { s: '👺', i: '熔岩衝擊', d: {c:1, min:15, max:25}, spd: 3, e: 'fire' },
+                { s: '🐙', i: '深海束縛', d: {c:3, min:5, max:12}, spd: 5, e: 'water' },
+                { s: '🧿', i: '雷鳴閃光', d: {c:2, min:10, max:18}, spd: 4, e: 'thunder' },
+                { s: '❄️', i: '絕對零度', d: {c:1, min:20, max:30}, spd: 2, e: 'ice' }
+            ];
+            const b = bosses[Math.floor(Math.random()*bosses.length)];
+            game.enemy.sprite = b.s;
+            game.enemy.intent = b.i;
+            game.enemy.dice = b.d;
+            game.enemy.speed = b.spd;
+            game.enemy.intentElem = b.e;
+        }
+
+        function render() {
+            // 更新牌庫計數
+            document.getElementById('deck-count').innerText = game.deck.length;
+
+            const sz = document.getElementById('planning-zone');
+            sz.innerHTML = '';
+            game.slots.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = `speed-slot ${game.selectedIdx === i ? 'active' : ''} ${s.card ? 'filled' : ''}`;
+                div.onclick = () => { if(game.active) { game.selectedIdx = i; render(); } };
                 
-                let content = `<div class="speed-badge">${slot.speed}</div>`;
-                if (slot.card) {
-                    content += `
-                        <div class="card-mini bg-gradient-to-br ${slot.card.color} text-white p-2" onclick="unplanCard(event, ${idx})">
-                            <div class="text-2xl mb-1">${slot.card.icon}</div>
-                            <div class="text-[9px] font-bold text-center leading-tight">${slot.card.name}</div>
-                            ${slot.card.skillLabel ? `<div class="skill-tag">${slot.card.skillLabel}</div>` : ''}
-                        </div>
-                    `;
+                let html = `<div class="speed-badge">SPD ${s.spd}</div>`;
+                if(s.card) {
+                    html += `<div class="card-mini elem-${s.card.elem}" onclick="removeCard(event, ${i})">
+                        <div class="text-3xl mb-1">${s.card.icon}</div>
+                        <div class="font-black text-[9px] uppercase">${s.card.name}</div>
+                    </div>`;
                 } else {
-                    content += `<div class="text-slate-600 text-[10px] font-bold uppercase tracking-widest">槽位 ${idx+1}</div>`;
+                    html += `<div class="text-[9px] font-black text-slate-700">VOID ${i+1}</div>`;
                 }
-                
-                el.innerHTML = content;
-                el.onclick = () => { if(!state.isClashing) { state.selectedSlotIdx = idx; renderSpeedSlots(); } };
-                container.appendChild(el);
+                div.innerHTML = html;
+                sz.appendChild(div);
             });
-            checkReadyState();
-        }
 
-        function unplanCard(e, idx) {
-            e.stopPropagation();
-            if (state.isClashing) return;
-            const removedCard = state.speedSlots[idx].card;
-            if (removedCard) {
-                state.hand.push(removedCard);
-                state.speedSlots[idx].card = null;
-                renderSpeedSlots();
-                renderHand();
-            }
-        }
-
-        function drawCards(count) {
-            for(let i=0; i<count; i++) {
-                const randomCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
-                state.hand.push({...randomCard, instanceId: Math.random()});
-            }
-            renderHand();
-        }
-
-        function renderHand() {
-            const handEl = document.getElementById('hand');
-            handEl.innerHTML = '';
-            state.hand.forEach(card => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = `min-w-[110px] h-[160px] bg-gradient-to-br ${card.color} rounded-2xl border border-white/20 p-3 flex flex-col items-center justify-between text-center cursor-pointer shadow-2xl hover:-translate-y-6 transition-all duration-300 relative group shrink-0`;
-                cardDiv.onclick = () => planCard(card);
-                cardDiv.innerHTML = `
-                    <div class="text-3xl mt-1 group-hover:scale-125 transition-transform duration-500">${card.icon}</div>
-                    <div class="flex flex-col gap-1">
-                        <div class="text-[10px] font-black leading-tight uppercase tracking-tighter">${card.name}</div>
-                        ${card.skillLabel ? `<div class="skill-tag self-center font-bold px-2 uppercase">[★ ${card.skillLabel}]</div>` : ''}
-                        <div class="text-[7px] text-white/60 italic px-1">${card.desc}</div>
+            const hz = document.getElementById('hand');
+            hz.innerHTML = '';
+            game.hand.forEach(c => {
+                const div = document.createElement('div');
+                div.className = `min-w-[120px] h-full rounded-2xl p-4 flex flex-col justify-between cursor-pointer border border-white/10 hover:-translate-y-4 transition-all elem-${c.elem} relative group`;
+                div.onclick = () => pickCard(c);
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-2xl group-hover:scale-125 transition-transform">${c.icon}</span>
+                        <span class="text-[9px] opacity-60 font-mono">${c.dice.c}D</span>
                     </div>
-                    <div class="bg-black/50 w-full py-1.5 rounded-xl text-[10px] font-mono border border-white/10 font-bold">
-                        ${card.dice.count}D [${card.dice.min}-${card.dice.max}]
+                    <div class="text-center">
+                        <div class="text-[10px] font-black tracking-tighter uppercase">${c.name}</div>
+                        <div class="elem-tag">${c.elem.toUpperCase()}</div>
+                    </div>
+                    <div class="text-[8px] opacity-70 leading-tight mt-1 text-center italic">${c.desc}</div>
+                    <div class="mt-2 py-1 bg-black/40 rounded-lg text-[10px] font-mono text-center font-bold">
+                        ${c.dice.min}-${c.dice.max}
                     </div>
                 `;
-                handEl.appendChild(cardDiv);
+                hz.appendChild(div);
             });
+
+            document.getElementById('p-hp').innerText = Math.ceil(game.player.hp);
+            document.getElementById('p-sp').innerText = Math.ceil(game.player.sp);
+            document.getElementById('e-hp-bar').style.width = (game.enemy.hp / game.enemy.maxHp * 100) + '%';
+            document.getElementById('enemy-sprite').innerText = game.enemy.sprite;
+            
+            const elemIcon = game.enemy.intentElem === 'fire' ? '🔥' : game.enemy.intentElem === 'water' ? '🌊' : game.enemy.intentElem === 'thunder' ? '⚡' : '❄️';
+            document.getElementById('enemy-intent').innerHTML = `<span>${elemIcon}</span> 意圖: ${game.enemy.intent} (${game.enemy.dice.min}-${game.enemy.dice.max})`;
+            document.getElementById('enemy-speed-tag').innerText = `SPD: ${game.enemy.speed}`;
+            document.getElementById('turn-display').innerText = `TURN ${game.turn.toString().padStart(2, '0')}`;
+
+            const btn = document.getElementById('clash-btn');
+            const ready = game.slots.every(s => s.card);
+            btn.disabled = !ready || !game.active;
+            if(ready && game.active) btn.className = "px-16 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm tracking-[0.3em] shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:scale-105 active:scale-95 transition-all";
+            else btn.className = "px-16 py-4 rounded-2xl bg-slate-800 text-slate-500 font-black text-sm tracking-[0.3em] transition-all opacity-30 cursor-not-allowed";
         }
 
-        function planCard(card) {
-            if (state.isClashing || state.selectedSlotIdx === -1) return;
-            
-            if (state.speedSlots[state.selectedSlotIdx].card) {
-                state.hand.push(state.speedSlots[state.selectedSlotIdx].card);
-            }
-            
-            state.speedSlots[state.selectedSlotIdx].card = card;
-            state.hand = state.hand.filter(c => c.instanceId !== card.instanceId);
-            
-            const nextEmpty = state.speedSlots.findIndex(s => !s.card);
-            state.selectedSlotIdx = nextEmpty !== -1 ? nextEmpty : state.selectedSlotIdx;
-            
-            renderSpeedSlots();
-            renderHand();
+        function pickCard(c) {
+            if(!game.active) return;
+            if(game.slots[game.selectedIdx].card) game.hand.push(game.slots[game.selectedIdx].card);
+            game.slots[game.selectedIdx].card = c;
+            game.hand = game.hand.filter(h => h.instId !== c.instId);
+            game.selectedIdx = (game.selectedIdx + 1) % game.slots.length;
+            render();
         }
 
-        function checkReadyState() {
-            const isAllFilled = state.speedSlots.every(s => s.card);
-            const btn = document.getElementById('start-clash-btn');
-            btn.disabled = !isAllFilled;
-            btn.className = isAllFilled 
-                ? "px-12 py-3 bg-blue-600 text-white font-black rounded-2xl transition-all uppercase tracking-widest text-sm shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:bg-blue-500 hover:scale-105 active:scale-95"
-                : "px-12 py-3 bg-slate-700 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed";
+        function removeCard(e, i) {
+            e.stopPropagation();
+            if(!game.active) return;
+            game.hand.push(game.slots[i].card);
+            game.slots[i].card = null;
+            game.selectedIdx = i;
+            render();
         }
 
-        document.getElementById('start-clash-btn').onclick = async function() {
-            state.isClashing = true;
-            this.disabled = true;
-            document.getElementById('tutorial-msg').innerText = "系統結算中：卡牌效果觸發...";
+        document.getElementById('clash-btn').onclick = async function() {
+            game.active = false;
+            document.getElementById('phase-label').innerText = "衝突序列執行中...";
+            render();
             
-            document.getElementById('planning-zone').classList.add('opacity-0', 'scale-90', 'pointer-events-none');
-            document.getElementById('enemy-zone').classList.add('translate-y-[-10px]');
-
-            for (const slot of state.speedSlots) {
-                if (state.isGameOver) break;
-                
-                // 執行洗牌效果 (結算前抽牌)
-                if (slot.card.skill === 'CYCLE') {
-                    drawCards(1);
-                    showFloatingText('手牌補給！', '#3b82f6', 'player');
-                }
-
-                await executeClash(slot.card, slot.speed);
-                
-                // 執行回光效果 (結算後回復)
-                if (slot.card.skill === 'RECOVERY') {
-                    state.player.sp = Math.min(state.player.maxSp, state.player.sp + 15);
-                    showFloatingText('+15 SP', '#fbbf24', 'player');
-                    updateUI();
-                }
-
-                await new Promise(r => setTimeout(r, 1000));
+            for(let slot of game.slots) {
+                await runClash(slot);
+                // 使用過的卡牌進入棄牌堆
+                game.discard.push(slot.card);
+                if(game.enemy.hp <= 0 || game.player.hp <= 0) break;
             }
 
-            if (!state.isGameOver) {
-                state.isClashing = false;
-                state.turn++;
-                document.getElementById('planning-zone').classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
-                document.getElementById('enemy-zone').classList.remove('translate-y-[-10px]');
-                rollSpeedDice();
-                drawCards(state.speedDieCount);
-                setEnemyIntent();
-                updateUI();
-                document.getElementById('tutorial-msg').innerText = "階段：規劃行動";
+            if(game.enemy.hp > 0 && game.player.hp > 0) {
+                game.turn++;
+                game.active = true;
+                // 每回合固定補滿手牌至7張或直至牌抽完
+                while(game.hand.length < 7 && (game.deck.length > 0 || game.discard.length > 0)) draw();
+                document.getElementById('phase-label').innerText = "核心規劃階段";
+                refreshTurn();
+            } else {
+                alert(game.enemy.hp <= 0 ? "勝利！目標數據已清除。" : "系統崩潰。你戰敗了。");
+                location.reload();
             }
         };
 
-        async function executeClash(card, playerSpeed) {
-            const clashZone = document.getElementById('clash-zone');
-            const pContainer = document.getElementById('p-dice-container');
-            const eContainer = document.getElementById('e-dice-container');
-            const interceptEl = document.getElementById('intercept-msg');
+        async function runClash(slot) {
+            const cz = document.getElementById('clash-zone');
+            const pc = document.getElementById('p-dice-container');
+            const ec = document.getElementById('e-dice-container');
+            const padv = document.getElementById('p-advantage');
+            const eadv = document.getElementById('e-advantage');
             
-            pContainer.innerHTML = ''; eContainer.innerHTML = '';
-            clashZone.classList.add('opacity-100', 'pointer-events-auto');
+            pc.innerHTML = ''; ec.innerHTML = '';
+            padv.classList.add('hidden'); eadv.classList.add('hidden');
+            cz.classList.add('opacity-100', 'pointer-events-auto');
 
-            const isIntercepted = playerSpeed > state.enemy.speed;
-            interceptEl.innerText = isIntercepted ? "攔截成功！" : "被動接戰";
-            interceptEl.className = `text-5xl font-black italic tracking-tighter mb-10 ${isIntercepted ? 'text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,0.8)]' : 'text-slate-500'}`;
+            const pElem = slot.card.elem;
+            const eElem = game.enemy.intentElem;
+            let pMult = 1, eMult = 1;
 
-            const pRolls = Array.from({length: card.dice.count}, () => Math.floor(Math.random() * (card.dice.max - card.dice.min + 1)) + card.dice.min);
-            const eRolls = Array.from({length: state.enemy.dice.count}, () => Math.floor(Math.random() * (state.enemy.dice.max - state.enemy.dice.min + 1)) + state.enemy.dice.min);
+            if(ELEMENT_CHART[pElem] === eElem) {
+                pMult = 1.5;
+                padv.classList.remove('hidden');
+            } else if(ELEMENT_CHART[eElem] === pElem) {
+                eMult = 1.5;
+                eadv.classList.remove('hidden');
+            }
 
-            const pDiceEls = pRolls.map(() => {
-                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?';
-                pContainer.appendChild(d); return d;
+            const pRolls = Array.from({length: slot.card.dice.c}, () => Math.floor(Math.random()*(slot.card.dice.max - slot.card.dice.min + 1)) + slot.card.dice.min);
+            const eRolls = Array.from({length: game.enemy.dice.c}, () => Math.floor(Math.random()*(game.enemy.dice.max - game.enemy.dice.min + 1)) + game.enemy.dice.min);
+
+            const pD = pRolls.map(() => { const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?'; pc.appendChild(d); return d; });
+            const eD = eRolls.map(() => { const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?'; ec.appendChild(d); return d; });
+
+            await new Promise(r => setTimeout(r, 700));
+            pD.forEach((d, i) => { 
+                d.classList.remove('rolling'); d.innerText = pRolls[i]; 
+                d.classList.add(pElem === 'fire' ? 'bg-red-100' : pElem === 'water' ? 'bg-blue-100' : pElem === 'thunder' ? 'bg-yellow-100' : 'bg-cyan-100'); 
             });
-            const eDiceEls = eRolls.map(() => {
-                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?';
-                eContainer.appendChild(d); return d;
+            eD.forEach((d, i) => { 
+                d.classList.remove('rolling'); d.innerText = eRolls[i]; 
+                d.classList.add(eElem === 'fire' ? 'bg-red-100' : eElem === 'water' ? 'bg-blue-100' : eElem === 'thunder' ? 'bg-yellow-100' : 'bg-cyan-100');
             });
-
-            await new Promise(r => setTimeout(r, 600));
-            pDiceEls.forEach((el, i) => { el.classList.remove('rolling'); el.innerText = pRolls[i]; el.classList.add('bg-blue-50', 'border-blue-400'); });
-            eDiceEls.forEach((el, i) => { el.classList.remove('rolling'); el.innerText = eRolls[i]; el.classList.add('bg-red-50', 'border-red-400'); });
-            await new Promise(r => setTimeout(r, 400));
+            
+            await new Promise(r => setTimeout(r, 500));
 
             const rounds = Math.max(pRolls.length, eRolls.length);
-            for (let i = 0; i < rounds; i++) {
-                const pv = pRolls[i] || 0;
-                const ev = eRolls[i] || 0;
+            for(let i=0; i<rounds; i++) {
+                const pv = (pRolls[i] || 0);
+                const ev = (eRolls[i] || 0);
                 
-                if (pv > ev) {
-                    let damage = pv - ev;
-                    // 絕技效果：敵 SP 低於 50% 增傷
-                    if (card.skill === 'FINISHER' && (state.enemy.sp / state.enemy.maxSp < 0.5)) {
-                        damage *= 1.5;
-                        showFloatingText('絕技觸發！', '#ef4444', 'enemy');
-                    }
-                    
-                    applyDamage('enemy', damage, card.type);
-                    
-                    // 弱化效果：降低敵速
-                    if (card.skill === 'WEAKEN') {
-                        state.enemy.speed = Math.max(1, state.enemy.speed - 1);
-                        showFloatingText('速度降低 ↓', '#a855f7', 'enemy');
-                    }
-                    
-                    if (pDiceEls[i]) pDiceEls[i].classList.add('scale-125', 'shadow-blue-500/80');
-                } else if (ev > pv) {
-                    applyDamage('player', ev - pv, state.enemy.intent);
-                    if (eDiceEls[i]) eDiceEls[i].classList.add('scale-125', 'shadow-red-500/80');
+                if(pv > ev) {
+                    let dmg = (pv - ev) * pMult;
+                    if(slot.card.elem === 'thunder' && game.enemy.status.includes('WET')) dmg *= 2;
+                    game.enemy.hp -= dmg;
+                    pop(document.getElementById('enemy-zone'), `${pMult > 1 ? 'CRITICAL ' : ''}-${Math.ceil(dmg)}`, pMult > 1 ? "#fbbf24" : "#f87171");
+                    if(slot.card.skill === 'WET' && !game.enemy.status.includes('WET')) game.enemy.status.push('WET');
+                    if(slot.card.skill === 'RECOVER') game.player.sp = Math.min(game.player.maxSp, game.player.sp + 10);
+                } else if(ev > pv) {
+                    const dmg = (ev - pv) * eMult;
+                    game.player.hp -= dmg;
+                    pop(document.getElementById('player-zone'), `${eMult > 1 ? 'WEAKENED ' : ''}-${Math.ceil(dmg)}`, "#ef4444");
                 }
-                
-                await new Promise(r => setTimeout(r, 500));
-                if(state.isGameOver) break;
+                updateStatusUI();
+                render();
+                await new Promise(r => setTimeout(r, 600));
+                if(game.enemy.hp <= 0 || game.player.hp <= 0) break;
             }
 
             await new Promise(r => setTimeout(r, 800));
-            clashZone.classList.remove('opacity-100', 'pointer-events-auto');
+            cz.classList.remove('opacity-100', 'pointer-events-auto');
         }
 
-        function showFloatingText(text, color, target) {
-            const rect = document.getElementById(target === 'player' ? 'player-zone' : 'enemy-zone').getBoundingClientRect();
-            const pop = document.createElement('div');
-            pop.className = 'damage-pop text-xl font-bold italic';
-            pop.style.left = (rect.left + rect.width/2 + (Math.random()*40-20)) + 'px';
-            pop.style.top = (rect.top - 40) + 'px';
-            pop.style.color = color;
-            pop.innerText = text;
-            document.body.appendChild(pop);
-            setTimeout(() => pop.remove(), 1200);
+        function updateStatusUI() {
+            const sz = document.getElementById('status-icons');
+            sz.innerHTML = '';
+            game.enemy.status.forEach(s => {
+                const span = document.createElement('span');
+                span.className = 'text-[10px] bg-blue-900 text-blue-200 px-1.5 py-0.5 rounded border border-blue-500';
+                span.innerText = s;
+                sz.appendChild(span);
+            });
         }
 
-        function applyDamage(target, amount, type) {
-            const isPlayer = target === 'player';
-            const rect = document.getElementById(isPlayer ? 'player-zone' : 'enemy-zone').getBoundingClientRect();
-            const pop = document.createElement('div');
-            pop.className = 'damage-pop text-4xl font-black';
-            pop.style.left = (rect.left + rect.width/2 + (Math.random()*60-30)) + 'px';
-            pop.style.top = (rect.top + (Math.random()*30)) + 'px';
-            pop.style.color = type === 'MIND' ? '#c084fc' : '#f87171';
-            pop.innerText = `-${Math.round(amount)}`;
-            document.body.appendChild(pop);
-            setTimeout(() => pop.remove(), 1200);
-
-            if (isPlayer) {
-                if (type === 'MIND') state.player.sp -= amount;
-                else state.player.hp -= amount;
-                shakeElement('battle-field', 12);
-            } else {
-                if (type === 'MIND') state.enemy.sp -= amount;
-                else state.enemy.hp -= amount;
-                shakeElement('enemy-zone', 18);
-            }
-            updateUI();
-            checkGameOver();
+        function pop(target, text, color) {
+            const r = target.getBoundingClientRect();
+            const p = document.createElement('div');
+            p.className = 'damage-pop text-4xl font-black italic';
+            p.style.left = (r.left + r.width/2 + (Math.random()*40-20)) + 'px';
+            p.style.top = (r.top + 20) + 'px';
+            p.style.color = color;
+            p.innerText = text;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1200);
+            target.style.transform = 'translateX(10px)';
+            setTimeout(() => target.style.transform = 'translateX(-10px)', 50);
+            setTimeout(() => target.style.transform = 'translateX(0)', 100);
         }
 
-        function setEnemyIntent() {
-            const intents = [
-                { type: 'PHYSICAL', dice: {count: 1, min: 14, max: 26}, text: '狂暴撕咬 [14-26]', speed: 3, sprite: '👺' },
-                { type: 'PHYSICAL', dice: {count: 2, min: 10, max: 16}, text: '二連暗影擊 2d[10-16]', speed: 5, sprite: '🦇' },
-                { type: 'MIND', dice: {count: 1, min: 18, max: 30}, text: '噩夢恐嚇 [18-30]', speed: 2, sprite: '👁️' },
-                { type: 'PHYSICAL', dice: {count: 3, min: 6, max: 12}, text: '觸手鞭打 3d[6-12]', speed: 4, sprite: '🐙' }
-            ];
-            const pick = intents[Math.floor(Math.random() * intents.length)];
-            state.enemy.intent = pick.type;
-            state.enemy.dice = pick.dice;
-            state.enemy.speed = pick.speed;
-            
-            document.getElementById('enemy-sprite').innerText = pick.sprite;
-            document.getElementById('enemy-intent').innerText = `意圖：${pick.text}`;
-            document.getElementById('enemy-speed-tag').innerText = `SPD: ${pick.speed}`;
-        }
-
-        function shakeElement(id, intensity) {
-            const el = document.getElementById(id);
-            el.style.transform = `translateX(${intensity}px)`;
-            setTimeout(() => el.style.transform = `translateX(-${intensity}px)`, 50);
-            setTimeout(() => el.style.transform = `translateX(0px)`, 100);
-        }
-
-        function updateUI() {
-            document.getElementById('p-hp').innerText = Math.max(0, Math.ceil(state.player.hp));
-            document.getElementById('p-sp').innerText = Math.max(0, Math.ceil(state.player.sp));
-            document.getElementById('e-hp-bar').style.width = (state.enemy.hp / state.enemy.maxHp * 100) + '%';
-            document.getElementById('e-sp-bar').style.width = (state.enemy.sp / state.enemy.maxSp * 100) + '%';
-            document.getElementById('turn-display').innerText = `ROUND ${state.turn.toString().padStart(2, '0')}`;
-        }
-
-        function checkGameOver() {
-            if (state.enemy.hp <= 0 || state.enemy.sp <= 0) { 
-                state.isGameOver = true; 
-                alert("目標徹底沉默... 戰鬥勝利！"); 
-                location.reload(); 
-            }
-            else if (state.player.hp <= 0 || state.player.sp <= 0) { 
-                state.isGameOver = true; 
-                alert("意識開始消散... 你戰敗了。"); 
-                location.reload(); 
-            }
-        }
-
-        window.onload = init;
+        window.onload = start;
     </script>
 </body>
 </html>
