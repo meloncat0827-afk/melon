@@ -1,495 +1,484 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2D Metroidvania - Combat Overhaul</title>
+    <title>光芒戰線：特技覺醒</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
-        canvas { display: block; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #020617; color: #f8fafc; overflow: hidden; }
         
-        #ui {
-            position: absolute;
-            top: 20px; left: 20px;
-            color: white; pointer-events: none;
-            text-shadow: 2px 2px 2px #000;
-            z-index: 10;
+        .speed-slot {
+            width: 90px; height: 120px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px dashed #475569;
+            border-radius: 14px;
+            display: flex; flex-direction: column; items: center; justify-content: center;
+            transition: all 0.3s; position: relative;
+        }
+        .speed-slot.active { border-color: #eab308; background: rgba(234, 179, 8, 0.1); box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+        .speed-slot.filled { border-style: solid; border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+
+        .speed-badge {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: #eab308; color: black; font-weight: 900;
+            padding: 2px 12px; border-radius: 999px; text-xs; z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
         }
 
-        #tutorial-overlay {
-            position: absolute;
-            top: 20px; right: 20px;
-            display: flex; gap: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            pointer-events: none;
-            z-index: 10;
+        .card-mini {
+            width: 100%; height: 100%; border-radius: 12px;
+            display: flex; flex-direction: column; items: center; justify-content: center;
+            font-size: 0.7rem; cursor: pointer; animation: popIn 0.2s ease-out;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .key-box { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 45px; }
-        .key { width: 35px; height: 35px; border: 2px solid #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; transition: all 0.1s; }
-        .key.active { background: #00d4ff; color: #000; transform: scale(0.9); box-shadow: 0 0 15px #00d4ff; }
-        .key-label { font-size: 9px; text-transform: uppercase; color: #aaa; }
-
-        #hp-bar-container { margin-top: 10px; }
-        #hp-bar { width: 250px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 7px; border: 1px solid rgba(255,255,255,0.3); overflow: hidden; position: relative; }
-        #hp-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff0000); transition: width 0.3s; box-shadow: 0 0 10px #ff4d4d; }
-        #hp-text { position: absolute; width: 100%; text-align: center; font-size: 10px; line-height: 14px; font-weight: bold; color: white; }
-
-        #boss-ui {
-            position: absolute;
-            bottom: 30px; left: 50%;
-            transform: translateX(-50%);
-            display: none; text-align: center;
-            z-index: 10;
-        }
-        #boss-hp-bar { width: 600px; height: 20px; background: rgba(0,0,0,0.8); border: 2px solid #ff0044; border-radius: 10px; box-shadow: 0 0 30px rgba(255,0,0,0.4); overflow: hidden; }
-        #boss-hp-fill { width: 100%; height: 100%; background: linear-gradient(to right, #990000, #ff0044, #ff6666); transition: width 0.1s; }
         
-        #chapter-announcement {
-            position: absolute;
-            top: 40%; width: 100%;
-            text-align: center; color: #fff;
-            font-size: 50px; font-weight: 900;
-            letter-spacing: 15px;
-            opacity: 0; pointer-events: none;
-            text-shadow: 0 0 30px #fff, 0 0 60px #ff0044;
-            z-index: 20;
-            transition: opacity 1s, transform 1s;
-            transform: scale(0.8);
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .die { 
+            width: 55px; height: 55px; background: white; color: black; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; font-weight: bold; font-size: 1.6rem;
+            box-shadow: 0 0 20px rgba(255,255,255,0.4); border: 2px solid #cbd5e1;
+        }
+        
+        .rolling { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            50% { transform: translate(-1px, -1px) rotate(-5deg); }
+            100% { transform: translate(1px, 1px) rotate(0deg); }
         }
 
-        #msg {
-            position: absolute;
-            bottom: 180px; width: 100%;
-            text-align: center; color: #fff;
-            font-size: 24px; font-weight: bold;
-            transition: opacity 0.5s; pointer-events: none;
-            text-shadow: 0 0 15px #ff0000;
-            z-index: 10;
+        .damage-pop {
+            position: absolute; animation: flyUp 1.2s ease-out forwards;
+            font-weight: 900; pointer-events: none; z-index: 100; text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+        }
+        @keyframes flyUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-120px) scale(1.2); opacity: 0; } }
+
+        .skill-tag {
+            font-size: 0.6rem; background: rgba(0,0,0,0.5); padding: 1px 4px; border-radius: 4px; color: #fbbf24; border: 1px solid #fbbf24; margin-top: 2px;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center h-screen w-screen p-4">
 
-    <div id="ui">
-        <div id="current-chapter-name" style="font-size: 14px; color: #00ffcc; margin-bottom: 5px; letter-spacing: 1px;">區域: 幽暗森林</div>
-        <div style="font-size: 18px; font-weight: bold; letter-spacing: 1px;">狀態監測</div>
-        <div id="hp-bar-container">
-            <div id="hp-bar"><div id="hp-fill"></div><div id="hp-text">100 / 100</div></div>
+    <div class="max-w-5xl w-full h-[95vh] bg-slate-900 rounded-3xl shadow-2xl border border-slate-700 flex flex-col relative overflow-hidden">
+        
+        <!-- 頂部狀態 -->
+        <div class="z-10 p-4 flex justify-between items-center bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
+            <div class="flex gap-4 items-center">
+                <div class="text-yellow-500 font-bold tracking-tighter text-xl">光芒戰線</div>
+                <div id="turn-display" class="bg-blue-900/30 text-blue-400 px-3 py-1 rounded text-xs border border-blue-800 font-mono">ROUND 01</div>
+            </div>
+            
+            <div class="flex gap-10 text-sm">
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Health (HP)</span>
+                    <span id="p-hp" class="font-mono text-red-400 text-2xl font-bold">100</span>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] text-purple-500 font-bold uppercase tracking-widest">Mind (SP)</span>
+                    <span id="p-sp" class="font-mono text-purple-400 text-2xl font-bold">80</span>
+                </div>
+            </div>
         </div>
-        <div id="abilities" style="margin-top: 20px; font-size: 13px;">
-            <div id="tag-doublejump" style="color: rgba(255,255,255,0.2);">[ 二段跳躍 ]</div>
-            <div id="tag-dash" style="color: rgba(255,255,255,0.2);">[ 瞬間衝刺 ]</div>
-            <div id="tag-parry" style="color: #ffcc00;">[ 戰鬥格擋 - Q / RMB ]</div>
-            <div id="tag-heal" style="color: #00ff88;">[ 能量回溯 - E ]</div>
+
+        <!-- 戰鬥區域 -->
+        <div class="flex-1 flex flex-col items-center justify-start p-8 relative overflow-hidden" id="battle-field">
+            <!-- 敵人 -->
+            <div id="enemy-zone" class="flex flex-col items-center mt-2 transition-all duration-500">
+                <div class="relative group">
+                    <div id="enemy-sprite" class="text-8xl mb-4 transition-all drop-shadow-[0_0_40px_rgba(239,68,68,0.4)]">👾</div>
+                    <div id="enemy-info" class="absolute -top-14 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+                        <div id="enemy-intent" class="bg-red-950/95 text-red-100 text-[10px] px-3 py-1.5 rounded-lg border border-red-500 whitespace-nowrap shadow-2xl">意圖：載入中...</div>
+                        <div id="enemy-speed-tag" class="bg-yellow-600 text-white text-[10px] px-2 py-0.5 rounded font-bold shadow-md">SPD: 5</div>
+                    </div>
+                </div>
+                <!-- 敵人血條 -->
+                <div class="w-72 space-y-2">
+                    <div class="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700 shadow-inner">
+                        <div id="e-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="e-sp-bar" class="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行動規劃區（速度骰槽位） -->
+            <div id="planning-zone" class="flex gap-6 mt-12 items-center justify-center transition-all duration-500">
+                <!-- 由 JS 生成 speed-slot -->
+            </div>
+
+            <!-- 衝突對決區域 -->
+            <div id="clash-zone" class="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none z-40 bg-slate-950/70 backdrop-blur-md transition-all duration-300">
+                <div id="intercept-msg" class="text-4xl font-black italic text-yellow-400 tracking-tight mb-8 uppercase drop-shadow-2xl">攔截成功！</div>
+                <div class="flex gap-24 items-center justify-center">
+                    <div class="flex flex-col items-center gap-6">
+                        <div id="p-dice-container" class="flex flex-col gap-4"></div>
+                        <div class="text-sm text-blue-400 font-bold uppercase tracking-widest border-b-2 border-blue-500 pb-1">Player</div>
+                    </div>
+                    <div class="text-6xl animate-pulse">⚔️</div>
+                    <div class="flex flex-col items-center gap-6">
+                        <div id="e-dice-container" class="flex flex-col gap-4"></div>
+                        <div class="text-sm text-red-400 font-bold uppercase tracking-widest border-b-2 border-red-500 pb-1">Enemy</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="player-zone" class="absolute bottom-10"></div>
+        </div>
+
+        <!-- 操作區 -->
+        <div class="bg-slate-950/98 p-6 border-t border-slate-800 relative shadow-[0_-10px_50px_rgba(0,0,0,0.5)]">
+            <div class="flex justify-between items-center mb-6 px-4">
+                <div class="flex flex-col">
+                    <div id="tutorial-msg" class="text-base text-slate-200 font-bold">階段：規劃行動</div>
+                    <div class="text-xs text-slate-500 italic">特殊能力卡牌在右下角標註有 [★]</div>
+                </div>
+                <button id="start-clash-btn" disabled class="px-12 py-3 bg-slate-700 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl">
+                    啟動衝突流程 (Clash)
+                </button>
+            </div>
+            <!-- 手牌區域 -->
+            <div id="hand" class="flex justify-center gap-4 h-48 overflow-x-auto pb-4 px-10"></div>
         </div>
     </div>
-
-    <div id="boss-ui">
-        <div id="boss-name" style="color: #ff0044; font-weight: 900; margin-bottom: 8px; font-size: 22px; letter-spacing: 8px; text-shadow: 0 0 15px #ff0044;">古代守衛者：厄瑞玻斯</div>
-        <div id="boss-hp-bar"><div id="boss-hp-fill"></div></div>
-    </div>
-
-    <div id="tutorial-overlay">
-        <div class="key-box"><div id="key-W" class="key">W</div><div class="key-label">JUMP</div></div>
-        <div class="key-box"><div id="key-Shift" class="key">SHIFT</div><div class="key-label">DASH</div></div>
-        <div class="key-box"><div id="key-Q" class="key">Q</div><div class="key-label">PARRY</div></div>
-        <div class="key-box"><div id="key-E" class="key">E</div><div class="key-label">HEAL</div></div>
-    </div>
-
-    <div id="chapter-announcement">第二章：厄瑞玻斯聖殿</div>
-    <div id="msg"></div>
-    <canvas id="gameCanvas"></canvas>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-
-        const GRAVITY = 0.6;
-        const FRICTION = 0.85;
-        let WORLD_WIDTH = 3500; 
-        let WORLD_HEIGHT = 1500;
-
-        let gameActive = true;
-        let currentChapter = 1;
-        let screenShake = 0;
-        let hitStop = 0; // 畫面凍結幀數
-        
-        const player = {
-            x: 100, y: 1300, vx: 0, vy: 0,
-            width: 30, height: 45,
-            jumpForce: 13, isGrounded: false, canDoubleJump: false,
-            isOnWall: false, wallDir: 0, 
-            hasDoubleJumpSkill: false, hasDashSkill: false,
-            dashCooldown: 0, hp: 100, maxHp: 100, color: '#00d4ff',
-            ghosts: [], 
-            isDashing: false,
-            // 戰鬥新狀態
-            isParrying: false, parryTimer: 0, 
-            isHealing: false, healTimer: 0
-        };
-
-        const boss = {
-            x: 1200, y: 1100,
-            width: 140, height: 140,
-            hp: 800, maxHp: 800,
-            active: false,
-            state: 'idle',
-            timer: 0,
-            color: '#ff0044',
-            powerLevel: 0, 
-            recoveryDuration: 100 
-        };
-
-        const camera = { x: 0, y: 0 };
-        const chapter1Platforms = [
-            { x: 0, y: 1400, w: 1000, h: 100 },
-            { x: 450, y: 1250, w: 40, h: 40, type: 'skill_jump', color: '#00ffcc' },
-            { x: 800, y: 1150, w: 40, h: 40, type: 'skill_dash', color: '#ff00ff' },
-            { x: 650, y: 1200, w: 150, h: 20 },
-            { x: 1100, y: 1250, w: 200, h: 20 },
-            { x: 1400, y: 1100, w: 100, h: 20 },
-            { x: 1600, y: 950, w: 80, h: 20 }, 
-            { x: 1850, y: 800, w: 30, h: 700 }, 
-            { x: 2100, y: 650, w: 150, h: 20 },
-            { x: 2400, y: 550, w: 30, h: 1000 },
-            { x: 2600, y: 1400, w: 900, h: 100 }
+        // 帶有特殊能力的卡牌庫
+        const CARD_POOL = [
+            // --- 特殊能力卡 ---
+            { name: '光芒凝結', type: 'UTILITY', dice: {count: 1, min: 10, max: 15}, color: 'from-amber-400 to-amber-700', icon: '✨', skill: 'RECOVERY', desc: '結算後回復 15 精神', skillLabel: '回光' },
+            { name: '快速預判', type: 'UTILITY', dice: {count: 2, min: 4, max: 10}, color: 'from-blue-400 to-blue-600', icon: '⚡', skill: 'CYCLE', desc: '使用後額外抽一張牌', skillLabel: '洗牌' },
+            { name: '侵蝕指令', type: 'MIND', dice: {count: 2, min: 8, max: 12}, color: 'from-indigo-600 to-indigo-900', icon: '👾', skill: 'WEAKEN', desc: '命中降低目標速度', skillLabel: '弱化' },
+            { name: '終結執行', type: 'PHYSICAL', dice: {count: 1, min: 15, max: 20}, color: 'from-slate-800 to-black', icon: '💀', skill: 'FINISHER', desc: '敵SP<50%時傷害+50%', skillLabel: '絕技' },
+            
+            // --- 基礎卡 ---
+            { name: '連環突刺', type: 'PHYSICAL', dice: {count: 3, min: 4, max: 8}, color: 'from-red-500 to-red-800', icon: '🗡️', desc: '快速三次打擊' },
+            { name: '重錘破防', type: 'PHYSICAL', dice: {count: 1, min: 14, max: 24}, color: 'from-orange-600 to-orange-900', icon: '🔨', desc: '高威力單次打擊' },
+            { name: '鐵壁防禦', type: 'DEFEND', dice: {count: 2, min: 8, max: 14}, color: 'from-blue-600 to-blue-900', icon: '🛡️', desc: '兩次堅固防禦' },
+            { name: '能量護盾', type: 'DEFEND', dice: {count: 1, min: 15, max: 25}, color: 'from-cyan-600 to-cyan-800', icon: '💠', desc: '單次大額防護' },
+            { name: '思維干涉', type: 'MIND', dice: {count: 2, min: 6, max: 12}, color: 'from-purple-500 to-purple-800', icon: '🧠', desc: '攻擊敵方精神' },
+            { name: '散彈掃射', type: 'PHYSICAL', dice: {count: 4, min: 2, max: 6}, color: 'from-rose-700 to-rose-900', icon: '🔫', desc: '多段輕量壓制' },
+            { name: '精密計算', type: 'DEFEND', dice: {count: 2, min: 10, max: 12}, color: 'from-slate-500 to-slate-700', icon: '🔢', desc: '穩定的格擋' }
         ];
 
-        const chapter2Platforms = [
-            { x: 0, y: 1350, w: 2000, h: 200 },
-            { x: 300, y: 1150, w: 200, h: 20 },
-            { x: 1500, y: 1150, w: 200, h: 20 },
-            { x: 900, y: 1000, w: 200, h: 20 },
-            { x: 600, y: 850, w: 150, h: 20 },
-            { x: 1250, y: 850, w: 150, h: 20 },
-            { x: 900, y: 700, w: 200, h: 20 },
-            { x: -50, y: 0, w: 50, h: 1500 },
-            { x: 2000, y: 0, w: 50, h: 1500 }
-        ];
+        let state = {
+            turn: 1,
+            isGameOver: false,
+            isClashing: false,
+            player: { hp: 100, maxHp: 100, sp: 80, maxSp: 80 },
+            enemy: { hp: 250, maxHp: 250, sp: 200, maxSp: 200, intent: 'PHYSICAL', dice: {count: 1, min: 10, max: 18}, speed: 4 },
+            hand: [],
+            speedSlots: [],
+            selectedSlotIdx: 0,
+            speedDieCount: 2
+        };
 
-        let platforms = [...chapter1Platforms];
-        let bullets = [];
-        let enemyBullets = []; 
-        let particles = [];
-        let bloodMists = []; 
-        let minions = [];    
-        let bgParticles = []; 
-        const keys = {};
+        function init() {
+            rollSpeedDice();
+            drawCards(7);
+            setEnemyIntent();
+            updateUI();
+        }
 
-        // 初始化環境粒子
-        for(let i=0; i<60; i++) {
-            bgParticles.push({
-                x: Math.random() * 3500, y: Math.random() * 1500,
-                vx: (Math.random() - 0.5) * 0.8, vy: 0.3 + Math.random() * 0.7,
-                size: 1 + Math.random() * 2, color: '#2d4d2d'
+        function rollSpeedDice() {
+            state.speedDieCount = 2 + Math.floor((state.turn - 1) / 3);
+            state.speedSlots = Array.from({length: state.speedDieCount}, () => ({
+                speed: Math.floor(Math.random() * 6) + 1,
+                card: null
+            }));
+            state.selectedSlotIdx = 0;
+            renderSpeedSlots();
+        }
+
+        function renderSpeedSlots() {
+            const container = document.getElementById('planning-zone');
+            container.innerHTML = '';
+            state.speedSlots.forEach((slot, idx) => {
+                const el = document.createElement('div');
+                el.className = `speed-slot ${state.selectedSlotIdx === idx ? 'active' : ''} ${slot.card ? 'filled shadow-xl shadow-blue-900/40' : ''}`;
+                
+                let content = `<div class="speed-badge">${slot.speed}</div>`;
+                if (slot.card) {
+                    content += `
+                        <div class="card-mini bg-gradient-to-br ${slot.card.color} text-white p-2" onclick="unplanCard(event, ${idx})">
+                            <div class="text-2xl mb-1">${slot.card.icon}</div>
+                            <div class="text-[9px] font-bold text-center leading-tight">${slot.card.name}</div>
+                            ${slot.card.skillLabel ? `<div class="skill-tag">${slot.card.skillLabel}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    content += `<div class="text-slate-600 text-[10px] font-bold uppercase tracking-widest">槽位 ${idx+1}</div>`;
+                }
+                
+                el.innerHTML = content;
+                el.onclick = () => { if(!state.isClashing) { state.selectedSlotIdx = idx; renderSpeedSlots(); } };
+                container.appendChild(el);
+            });
+            checkReadyState();
+        }
+
+        function unplanCard(e, idx) {
+            e.stopPropagation();
+            if (state.isClashing) return;
+            const removedCard = state.speedSlots[idx].card;
+            if (removedCard) {
+                state.hand.push(removedCard);
+                state.speedSlots[idx].card = null;
+                renderSpeedSlots();
+                renderHand();
+            }
+        }
+
+        function drawCards(count) {
+            for(let i=0; i<count; i++) {
+                const randomCard = CARD_POOL[Math.floor(Math.random() * CARD_POOL.length)];
+                state.hand.push({...randomCard, instanceId: Math.random()});
+            }
+            renderHand();
+        }
+
+        function renderHand() {
+            const handEl = document.getElementById('hand');
+            handEl.innerHTML = '';
+            state.hand.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `min-w-[110px] h-[160px] bg-gradient-to-br ${card.color} rounded-2xl border border-white/20 p-3 flex flex-col items-center justify-between text-center cursor-pointer shadow-2xl hover:-translate-y-6 transition-all duration-300 relative group shrink-0`;
+                cardDiv.onclick = () => planCard(card);
+                cardDiv.innerHTML = `
+                    <div class="text-3xl mt-1 group-hover:scale-125 transition-transform duration-500">${card.icon}</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="text-[10px] font-black leading-tight uppercase tracking-tighter">${card.name}</div>
+                        ${card.skillLabel ? `<div class="skill-tag self-center font-bold px-2 uppercase">[★ ${card.skillLabel}]</div>` : ''}
+                        <div class="text-[7px] text-white/60 italic px-1">${card.desc}</div>
+                    </div>
+                    <div class="bg-black/50 w-full py-1.5 rounded-xl text-[10px] font-mono border border-white/10 font-bold">
+                        ${card.dice.count}D [${card.dice.min}-${card.dice.max}]
+                    </div>
+                `;
+                handEl.appendChild(cardDiv);
             });
         }
 
-        window.addEventListener('keydown', e => { 
-            keys[e.code] = true; 
-            updateKeyVisuals(e.code, true);
-            if (e.code === 'KeyQ') startParry();
-            if (e.code === 'KeyE') player.isHealing = true;
-        });
-        window.addEventListener('keyup', e => { 
-            keys[e.code] = false; 
-            updateKeyVisuals(e.code, false);
-            if (e.code === 'KeyQ') stopParry();
-            if (e.code === 'KeyE') player.isHealing = false;
-        });
-        window.addEventListener('mousedown', e => {
-            if (e.button === 0) shoot(e);
-            if (e.button === 2) { startParry(); updateKeyVisuals('KeyQ', true); }
-        });
-        window.addEventListener('mouseup', e => {
-            if (e.button === 2) { stopParry(); updateKeyVisuals('KeyQ', false); }
-        });
-        window.addEventListener('contextmenu', e => e.preventDefault());
-
-        function startParry() { if (!player.isParrying) { player.isParrying = true; player.parryTimer = 0; } }
-        function stopParry() { player.isParrying = false; }
-
-        function updateKeyVisuals(code, isActive) {
-            let id = "";
-            if (code === 'KeyW' || code === 'Space') id = "key-W";
-            if (code === 'ShiftLeft') id = "key-Shift";
-            if (code === 'KeyQ') id = "key-Q";
-            if (code === 'KeyE') id = "key-E";
-            const el = document.getElementById(id);
-            if (el) isActive ? el.classList.add('active') : el.classList.remove('active');
-        }
-
-        function showMsg(text) {
-            const m = document.getElementById('msg');
-            m.innerText = text; m.style.opacity = 1;
-            setTimeout(() => { m.style.opacity = 0; }, 3000);
-        }
-
-        function switchChapter() {
-            currentChapter = 2;
-            WORLD_WIDTH = 2000;
-            platforms = [...chapter2Platforms];
-            player.x = 100; player.y = 1200;
-            screenShake = 30;
-            document.getElementById('current-chapter-name').innerText = "區域: 厄瑞玻斯聖殿";
-            document.getElementById('current-chapter-name').style.color = "#ff4444";
-            const ann = document.getElementById('chapter-announcement');
-            ann.style.opacity = 1; ann.style.transform = "scale(1)";
-            setTimeout(() => { ann.style.opacity = 0; ann.style.transform = "scale(0.8)"; }, 3000);
-            bgParticles.forEach(p => { p.color = '#ff4400'; p.vy = - (0.8 + Math.random()); });
-            boss.active = true; boss.x = 1000; boss.y = 1100;
-            document.getElementById('boss-ui').style.display = 'block';
-        }
-
-        function shoot(e) {
-            if (!gameActive || player.isParrying || player.isHealing) return;
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            const angle = Math.atan2(mouseY - (player.y - camera.y + player.height/2), mouseX - (player.x - camera.x + player.width/2));
-            bullets.push({ x: player.x + player.width/2, y: player.y + player.height/2, vx: Math.cos(angle) * 16, vy: Math.sin(angle) * 16, life: 100 });
-        }
-
-        function handlePlayerDamage(dmg, isProjectile = false, projObj = null) {
-            if (player.isParrying) {
-                if (player.parryTimer < 12) { // 完美格擋窗口
-                    createParticles(player.x + 15, player.y + 22, '#ffcc00', 30);
-                    screenShake = 15; hitStop = 8;
-                    showMsg("PERFECT PARRY!");
-                    if (isProjectile && projObj) {
-                        projObj.vx *= -1.5; projObj.vy *= -1.5; projObj.color = '#00ffff'; // 反彈子彈
-                        return false; 
-                    }
-                    return false;
-                } else { // 普通格擋 (減傷 70%)
-                    player.hp -= dmg * 0.3;
-                    createParticles(player.x + 15, player.y + 22, '#ffffff', 5);
-                    screenShake = 5;
-                    return true;
-                }
-            }
-            player.hp -= dmg;
-            screenShake = 15;
-            createParticles(player.x + 15, player.y + 22, '#ff0000', 15);
-            return true;
-        }
-
-        function updateBoss() {
-            if (!boss.active || boss.hp <= 0) return;
-            boss.timer++;
-            if (boss.state === 'idle' && boss.timer > 70) {
-                const states = ['mirage', 'bloodMist', 'power', 'starRain', 'nova'];
-                boss.state = states[Math.floor(Math.random() * states.length)];
-                boss.timer = 0;
-            }
-            // (Boss 邏輯保持原樣，但在 Nova 等攻擊中會調用 handlePlayerDamage)
-            switch (boss.state) {
-                case 'recovery':
-                    boss.color = '#1a0005';
-                    if (boss.timer > boss.recoveryDuration) { boss.state = 'idle'; boss.timer = 0; }
-                    break;
-                case 'starRain':
-                    if (boss.timer % 8 === 0 && boss.timer < 100) {
-                        const startX = Math.random() * WORLD_WIDTH;
-                        enemyBullets.push({ type: 'meteor', x: startX, y: -100, vx: (player.x - startX) * 0.005, vy: 10, radius: 30, life: 300, color: '#bc13fe', trail: [] });
-                    }
-                    if (boss.timer > 160) { boss.state = 'recovery'; boss.timer = 0; }
-                    break;
-                case 'mirage':
-                    if (boss.timer % 40 === 0) {
-                        boss.x = player.x + (Math.random() > 0.5 ? 180 : -180); boss.y = player.y - 40;
-                        const dist = Math.sqrt(Math.pow(player.x - (boss.x + 70), 2) + Math.pow(player.y - (boss.y + 70), 2));
-                        if (dist < 180) handlePlayerDamage(15);
-                        if (++boss.mirageCount >= 4) { boss.state = 'recovery'; boss.timer = 0; boss.mirageCount = 0; }
-                    }
-                    break;
-                case 'nova':
-                    if (boss.timer === 40) {
-                        for (let i = 0; i < 24; i++) {
-                            const a = (i / 24) * Math.PI * 2;
-                            enemyBullets.push({ x: boss.x + 70, y: boss.y + 70, vx: Math.cos(a) * 10, vy: Math.sin(a) * 10, life: 120, color: '#ff0000' });
-                        }
-                    }
-                    if (boss.timer > 90) boss.state = 'recovery';
-                    break;
-                case 'idle':
-                    boss.y = 900 + Math.sin(Date.now() / 400) * 50;
-                    break;
-            }
-        }
-
-        function update() {
-            if (!gameActive) return;
-            if (hitStop > 0) { hitStop--; return; }
-
-            if (screenShake > 0) screenShake *= 0.9;
-            if (player.dashCooldown > 0) player.dashCooldown--;
+        function planCard(card) {
+            if (state.isClashing || state.selectedSlotIdx === -1) return;
             
-            // 格擋計時
-            if (player.isParrying) player.parryTimer++;
+            if (state.speedSlots[state.selectedSlotIdx].card) {
+                state.hand.push(state.speedSlots[state.selectedSlotIdx].card);
+            }
+            
+            state.speedSlots[state.selectedSlotIdx].card = card;
+            state.hand = state.hand.filter(c => c.instanceId !== card.instanceId);
+            
+            const nextEmpty = state.speedSlots.findIndex(s => !s.card);
+            state.selectedSlotIdx = nextEmpty !== -1 ? nextEmpty : state.selectedSlotIdx;
+            
+            renderSpeedSlots();
+            renderHand();
+        }
 
-            // 回血邏輯
-            if (player.isHealing && player.hp < player.maxHp) {
-                player.healTimer++;
-                if (player.healTimer % 10 === 0) {
-                    player.hp = Math.min(player.maxHp, player.hp + 1.5);
-                    createParticles(player.x + 15, player.y + 22, '#00ff88', 2);
+        function checkReadyState() {
+            const isAllFilled = state.speedSlots.every(s => s.card);
+            const btn = document.getElementById('start-clash-btn');
+            btn.disabled = !isAllFilled;
+            btn.className = isAllFilled 
+                ? "px-12 py-3 bg-blue-600 text-white font-black rounded-2xl transition-all uppercase tracking-widest text-sm shadow-[0_0_25px_rgba(59,130,246,0.6)] hover:bg-blue-500 hover:scale-105 active:scale-95"
+                : "px-12 py-3 bg-slate-700 text-slate-400 font-black rounded-2xl transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed";
+        }
+
+        document.getElementById('start-clash-btn').onclick = async function() {
+            state.isClashing = true;
+            this.disabled = true;
+            document.getElementById('tutorial-msg').innerText = "系統結算中：卡牌效果觸發...";
+            
+            document.getElementById('planning-zone').classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+            document.getElementById('enemy-zone').classList.add('translate-y-[-10px]');
+
+            for (const slot of state.speedSlots) {
+                if (state.isGameOver) break;
+                
+                // 執行洗牌效果 (結算前抽牌)
+                if (slot.card.skill === 'CYCLE') {
+                    drawCards(1);
+                    showFloatingText('手牌補給！', '#3b82f6', 'player');
                 }
-                player.vx *= 0.5; // 回血時減速
+
+                await executeClash(slot.card, slot.speed);
+                
+                // 執行回光效果 (結算後回復)
+                if (slot.card.skill === 'RECOVERY') {
+                    state.player.sp = Math.min(state.player.maxSp, state.player.sp + 15);
+                    showFloatingText('+15 SP', '#fbbf24', 'player');
+                    updateUI();
+                }
+
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            if (!state.isGameOver) {
+                state.isClashing = false;
+                state.turn++;
+                document.getElementById('planning-zone').classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+                document.getElementById('enemy-zone').classList.remove('translate-y-[-10px]');
+                rollSpeedDice();
+                drawCards(state.speedDieCount);
+                setEnemyIntent();
+                updateUI();
+                document.getElementById('tutorial-msg').innerText = "階段：規劃行動";
+            }
+        };
+
+        async function executeClash(card, playerSpeed) {
+            const clashZone = document.getElementById('clash-zone');
+            const pContainer = document.getElementById('p-dice-container');
+            const eContainer = document.getElementById('e-dice-container');
+            const interceptEl = document.getElementById('intercept-msg');
+            
+            pContainer.innerHTML = ''; eContainer.innerHTML = '';
+            clashZone.classList.add('opacity-100', 'pointer-events-auto');
+
+            const isIntercepted = playerSpeed > state.enemy.speed;
+            interceptEl.innerText = isIntercepted ? "攔截成功！" : "被動接戰";
+            interceptEl.className = `text-5xl font-black italic tracking-tighter mb-10 ${isIntercepted ? 'text-yellow-400 drop-shadow-[0_0_20px_rgba(234,179,8,0.8)]' : 'text-slate-500'}`;
+
+            const pRolls = Array.from({length: card.dice.count}, () => Math.floor(Math.random() * (card.dice.max - card.dice.min + 1)) + card.dice.min);
+            const eRolls = Array.from({length: state.enemy.dice.count}, () => Math.floor(Math.random() * (state.enemy.dice.max - state.enemy.dice.min + 1)) + state.enemy.dice.min);
+
+            const pDiceEls = pRolls.map(() => {
+                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?';
+                pContainer.appendChild(d); return d;
+            });
+            const eDiceEls = eRolls.map(() => {
+                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?';
+                eContainer.appendChild(d); return d;
+            });
+
+            await new Promise(r => setTimeout(r, 600));
+            pDiceEls.forEach((el, i) => { el.classList.remove('rolling'); el.innerText = pRolls[i]; el.classList.add('bg-blue-50', 'border-blue-400'); });
+            eDiceEls.forEach((el, i) => { el.classList.remove('rolling'); el.innerText = eRolls[i]; el.classList.add('bg-red-50', 'border-red-400'); });
+            await new Promise(r => setTimeout(r, 400));
+
+            const rounds = Math.max(pRolls.length, eRolls.length);
+            for (let i = 0; i < rounds; i++) {
+                const pv = pRolls[i] || 0;
+                const ev = eRolls[i] || 0;
+                
+                if (pv > ev) {
+                    let damage = pv - ev;
+                    // 絕技效果：敵 SP 低於 50% 增傷
+                    if (card.skill === 'FINISHER' && (state.enemy.sp / state.enemy.maxSp < 0.5)) {
+                        damage *= 1.5;
+                        showFloatingText('絕技觸發！', '#ef4444', 'enemy');
+                    }
+                    
+                    applyDamage('enemy', damage, card.type);
+                    
+                    // 弱化效果：降低敵速
+                    if (card.skill === 'WEAKEN') {
+                        state.enemy.speed = Math.max(1, state.enemy.speed - 1);
+                        showFloatingText('速度降低 ↓', '#a855f7', 'enemy');
+                    }
+                    
+                    if (pDiceEls[i]) pDiceEls[i].classList.add('scale-125', 'shadow-blue-500/80');
+                } else if (ev > pv) {
+                    applyDamage('player', ev - pv, state.enemy.intent);
+                    if (eDiceEls[i]) eDiceEls[i].classList.add('scale-125', 'shadow-red-500/80');
+                }
+                
+                await new Promise(r => setTimeout(r, 500));
+                if(state.isGameOver) break;
+            }
+
+            await new Promise(r => setTimeout(r, 800));
+            clashZone.classList.remove('opacity-100', 'pointer-events-auto');
+        }
+
+        function showFloatingText(text, color, target) {
+            const rect = document.getElementById(target === 'player' ? 'player-zone' : 'enemy-zone').getBoundingClientRect();
+            const pop = document.createElement('div');
+            pop.className = 'damage-pop text-xl font-bold italic';
+            pop.style.left = (rect.left + rect.width/2 + (Math.random()*40-20)) + 'px';
+            pop.style.top = (rect.top - 40) + 'px';
+            pop.style.color = color;
+            pop.innerText = text;
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1200);
+        }
+
+        function applyDamage(target, amount, type) {
+            const isPlayer = target === 'player';
+            const rect = document.getElementById(isPlayer ? 'player-zone' : 'enemy-zone').getBoundingClientRect();
+            const pop = document.createElement('div');
+            pop.className = 'damage-pop text-4xl font-black';
+            pop.style.left = (rect.left + rect.width/2 + (Math.random()*60-30)) + 'px';
+            pop.style.top = (rect.top + (Math.random()*30)) + 'px';
+            pop.style.color = type === 'MIND' ? '#c084fc' : '#f87171';
+            pop.innerText = `-${Math.round(amount)}`;
+            document.body.appendChild(pop);
+            setTimeout(() => pop.remove(), 1200);
+
+            if (isPlayer) {
+                if (type === 'MIND') state.player.sp -= amount;
+                else state.player.hp -= amount;
+                shakeElement('battle-field', 12);
             } else {
-                player.healTimer = 0;
+                if (type === 'MIND') state.enemy.sp -= amount;
+                else state.enemy.hp -= amount;
+                shakeElement('enemy-zone', 18);
             }
-
-            // 殘影
-            if (Math.abs(player.vx) > 10 || player.isDashing || player.isParrying) {
-                player.ghosts.push({ x: player.x, y: player.y, alpha: 0.5, color: player.isParrying ? '#ffcc00' : player.color });
-                if (player.ghosts.length > 10) player.ghosts.shift();
-            } else if (player.ghosts.length > 0) player.ghosts.shift();
-
-            // 環境粒子
-            bgParticles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.y > WORLD_HEIGHT) p.y = -10; if (p.y < -10) p.y = WORLD_HEIGHT;
-            });
-
-            // 移動 (格擋或回血時限制移動)
-            if (!player.isHealing) {
-                if (keys['KeyA']) player.vx -= 0.8;
-                if (keys['KeyD']) player.vx += 0.8;
-            }
-            player.vx *= FRICTION;
-            player.vy += (player.isOnWall && player.vy > 0) ? GRAVITY * 0.3 : GRAVITY;
-
-            if ((keys['KeyW'] || keys['Space']) && !player.isHealing) {
-                if (player.isGrounded) { player.vy = -player.jumpForce; player.isGrounded = false; keys['KeyW'] = keys['Space'] = false; }
-                else if (player.hasDoubleJumpSkill && player.canDoubleJump) { player.vy = -player.jumpForce * 0.8; player.canDoubleJump = false; keys['KeyW'] = keys['Space'] = false; }
-            }
-
-            if (keys['ShiftLeft'] && player.hasDashSkill && player.dashCooldown <= 0 && !player.isHealing) { 
-                player.vx = (player.vx >= 0 ? 1 : -1) * 28; player.dashCooldown = 50; player.isDashing = true;
-                setTimeout(() => player.isDashing = false, 200);
-            }
-
-            player.x += player.vx; player.y += player.vy;
-            player.isGrounded = false; let touchingWall = false;
-
-            platforms.forEach((p, i) => {
-                if (player.x < p.x + p.w && player.x + player.width > p.x && player.y < p.y + p.h && player.y + player.height > p.y) {
-                    if (p.type) {
-                        if (p.type === 'skill_jump') { player.hasDoubleJumpSkill = true; document.getElementById('tag-doublejump').style.color = '#00ffcc'; }
-                        else if (p.type === 'skill_dash') { player.hasDashSkill = true; document.getElementById('tag-dash').style.color = '#ff00ff'; }
-                        platforms.splice(i, 1); return;
-                    }
-                    if (player.vy > 0 && player.y + player.height - player.vy <= p.y) { player.y = p.y - player.height; player.vy = 0; player.isGrounded = true; player.canDoubleJump = true; } 
-                    else if (player.x + player.width - player.vx <= p.x) { player.x = p.x - player.width; touchingWall = true; }
-                    else if (player.x - player.vx >= p.x + p.w) { player.x = p.x + p.w; touchingWall = true; }
-                }
-            });
-            player.isOnWall = touchingWall;
-
-            if (currentChapter === 1 && player.x > 3400) switchChapter();
-            updateBoss();
-            
-            enemyBullets.forEach((eb, ei) => {
-                eb.x += eb.vx; eb.y += eb.vy; eb.life--;
-                const dist = Math.sqrt(Math.pow(player.x + 15 - eb.x, 2) + Math.pow(player.y + 22 - eb.y, 2));
-                if (dist < (eb.radius || 10) + 15) {
-                    if (handlePlayerDamage(10, true, eb)) { enemyBullets.splice(ei, 1); }
-                }
-                if (eb.life <= 0 || eb.y > 1400) enemyBullets.splice(ei, 1);
-            });
-
-            bullets.forEach((b, bi) => {
-                b.x += b.vx; b.y += b.vy; b.life--;
-                if (boss.active && b.x > boss.x && b.x < boss.x + boss.width && b.y > boss.y && b.y < boss.y + boss.height) {
-                    boss.hp -= (boss.state === 'recovery' ? 5 : 2); 
-                    createParticles(b.x, b.y, '#ffffff', 5); bullets.splice(bi, 1);
-                    if (boss.hp <= 0) { gameActive = false; screenShake = 50; showMsg("厄瑞玻斯已被擊敗！"); }
-                }
-                if (b.life <= 0) bullets.splice(bi, 1);
-            });
-
-            camera.x += (player.x - canvas.width / 2 - camera.x) * 0.1;
-            camera.y += (player.y - canvas.height / 2 - camera.y) * 0.1;
-            camera.x = Math.max(0, Math.min(camera.x, WORLD_WIDTH - canvas.width));
-            camera.y = Math.max(0, Math.min(camera.y, WORLD_HEIGHT - canvas.height));
-
-            document.getElementById('hp-fill').style.width = (player.hp / player.maxHp * 100) + '%';
-            document.getElementById('hp-text').innerText = `${Math.ceil(player.hp)} / ${player.maxHp}`;
-            document.getElementById('boss-hp-fill').style.width = (boss.hp / boss.maxHp * 100) + '%';
-            particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; p.life -= 0.02; if (p.life <= 0) particles.splice(i, 1); });
-            
-            if (player.hp <= 0 && gameActive) { gameActive = false; showMsg("任務失敗..."); screenShake = 40; }
+            updateUI();
+            checkGameOver();
         }
 
-        function createParticles(x, y, color, count = 8) {
-            for(let i=0; i<count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12, life: 1, color });
-        }
-
-        function draw() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            ctx.fillStyle = currentChapter === 1 ? '#050a05' : '#0a0505';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.save();
-            if (screenShake > 0) ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
-
-            bgParticles.forEach(p => {
-                ctx.fillStyle = p.color; ctx.globalAlpha = 0.2;
-                ctx.beginPath(); ctx.arc(p.x - camera.x, p.y - camera.y, p.size, 0, Math.PI*2); ctx.fill();
-            });
-            ctx.globalAlpha = 1;
-
-            ctx.translate(-camera.x, -camera.y);
-
-            platforms.forEach(p => {
-                ctx.fillStyle = p.type ? p.color : (currentChapter === 1 ? '#1a2e1a' : '#331a1a');
-                ctx.shadowBlur = p.type ? 20 : 0; ctx.shadowColor = p.color;
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-            });
-
-            enemyBullets.forEach(eb => {
-                ctx.fillStyle = eb.color || '#f00'; ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
-                ctx.beginPath(); ctx.arc(eb.x, eb.y, eb.radius || 7, 0, Math.PI*2); ctx.fill();
-            });
-
-            if (boss.active && boss.hp > 0) {
-                ctx.fillStyle = boss.color; ctx.shadowBlur = 40; ctx.shadowColor = boss.color;
-                ctx.fillRect(boss.x, boss.y, boss.width, boss.height);
-            }
-
-            // 玩家殘影
-            player.ghosts.forEach((g, i) => {
-                ctx.globalAlpha = g.alpha * (i / player.ghosts.length);
-                ctx.fillStyle = g.color;
-                ctx.fillRect(g.x, g.y, player.width, player.height);
-            });
-            ctx.globalAlpha = 1;
-
-            // 繪製格擋護盾
-            if (player.isParrying) {
-                ctx.strokeStyle = player.parryTimer < 12 ? '#ffcc00' : '#ffffff';
-                ctx.lineWidth = 4; ctx.beginPath();
-                ctx.arc(player.x + 15, player.y + 22, 40, 0, Math.PI*2); ctx.stroke();
-                ctx.fillStyle = player.parryTimer < 12 ? 'rgba(255, 204, 0, 0.2)' : 'rgba(255, 255, 255, 0.1)';
-                ctx.fill();
-            }
-
-            // 玩家本體
-            ctx.shadowBlur = 20; ctx.shadowColor = player.color; ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
+        function setEnemyIntent() {
+            const intents = [
+                { type: 'PHYSICAL', dice: {count: 1, min: 14, max: 26}, text: '狂暴撕咬 [14-26]', speed: 3, sprite: '👺' },
+                { type: 'PHYSICAL', dice: {count: 2, min: 10, max: 16}, text: '二連暗影擊 2d[10-16]', speed: 5, sprite: '🦇' },
+                { type: 'MIND', dice: {count: 1, min: 18, max: 30}, text: '噩夢恐嚇 [18-30]', speed: 2, sprite: '👁️' },
+                { type: 'PHYSICAL', dice: {count: 3, min: 6, max: 12}, text: '觸手鞭打 3d[6-12]', speed: 4, sprite: '🐙' }
+            ];
+            const pick = intents[Math.floor(Math.random() * intents.length)];
+            state.enemy.intent = pick.type;
+            state.enemy.dice = pick.dice;
+            state.enemy.speed = pick.speed;
             
-            bullets.forEach(b => { ctx.fillStyle = '#ff0'; ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI*2); ctx.fill(); });
-            particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill(); });
-
-            ctx.restore();
-            if (gameActive) update();
-            requestAnimationFrame(draw);
+            document.getElementById('enemy-sprite').innerText = pick.sprite;
+            document.getElementById('enemy-intent').innerText = `意圖：${pick.text}`;
+            document.getElementById('enemy-speed-tag').innerText = `SPD: ${pick.speed}`;
         }
-        draw();
+
+        function shakeElement(id, intensity) {
+            const el = document.getElementById(id);
+            el.style.transform = `translateX(${intensity}px)`;
+            setTimeout(() => el.style.transform = `translateX(-${intensity}px)`, 50);
+            setTimeout(() => el.style.transform = `translateX(0px)`, 100);
+        }
+
+        function updateUI() {
+            document.getElementById('p-hp').innerText = Math.max(0, Math.ceil(state.player.hp));
+            document.getElementById('p-sp').innerText = Math.max(0, Math.ceil(state.player.sp));
+            document.getElementById('e-hp-bar').style.width = (state.enemy.hp / state.enemy.maxHp * 100) + '%';
+            document.getElementById('e-sp-bar').style.width = (state.enemy.sp / state.enemy.maxSp * 100) + '%';
+            document.getElementById('turn-display').innerText = `ROUND ${state.turn.toString().padStart(2, '0')}`;
+        }
+
+        function checkGameOver() {
+            if (state.enemy.hp <= 0 || state.enemy.sp <= 0) { 
+                state.isGameOver = true; 
+                alert("目標徹底沉默... 戰鬥勝利！"); 
+                location.reload(); 
+            }
+            else if (state.player.hp <= 0 || state.player.sp <= 0) { 
+                state.isGameOver = true; 
+                alert("意識開始消散... 你戰敗了。"); 
+                location.reload(); 
+            }
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
