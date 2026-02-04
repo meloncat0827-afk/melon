@@ -1,35 +1,509 @@
-<head><title>X_EVENT</title></head>
-<body>
-    <a id="myButton1" href="X.txt" download = "x_event"></a>
-    <a id="myButton2" href="病毒.html"></a>
-    <a id="myButton3" href="https://meloncat0827-afk.github.io/melon/" target="_blank"></a>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>光芒戰線：全面擴張</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #020617; color: #f8fafc; overflow: hidden; }
+        
+        /* 元素背景顏色與光影 */
+        .elem-fire { background: linear-gradient(135deg, #ef4444, #7f1d1d); box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .elem-water { background: linear-gradient(135deg, #3b82f6, #1e3a8a); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .elem-thunder { background: linear-gradient(135deg, #eab308, #713f12); box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+        .elem-ice { background: linear-gradient(135deg, #67e8f9, #0e7490); box-shadow: 0 0 15px rgba(103, 232, 249, 0.4); }
+        .elem-arcane { background: linear-gradient(135deg, #a855f7, #4c1d95); box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+        
+        .speed-slot {
+            width: 95px; height: 125px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px dashed #334155;
+            border-radius: 16px;
+            display: flex; flex-direction: column; items: center; justify-content: center;
+            transition: all 0.3s; position: relative;
+        }
+        .speed-slot.active { border-color: #fbbf24; background: rgba(251, 191, 36, 0.1); transform: scale(1.05); }
+        .speed-slot.filled { border-style: solid; border-color: #64748b; }
+
+        .speed-badge {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            background: #fbbf24; color: #000; font-weight: 900;
+            padding: 1px 12px; border-radius: 999px; font-size: 10px; z-index: 10;
+        }
+
+        .card-mini {
+            width: 100%; height: 100%; border-radius: 14px;
+            display: flex; flex-direction: column; items: center; justify-content: center;
+            font-size: 0.7rem; cursor: pointer; animation: cardIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        @keyframes cardIn { from { transform: translateY(20px) rotate(5deg); opacity: 0; } to { transform: translateY(0) rotate(0); opacity: 1; } }
+
+        .die { 
+            width: 65px; height: 65px; 
+            background: #ffffff; color: #000000; 
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 14px; font-weight: 900; font-size: 2rem;
+            box-shadow: 0 8px 0px #cbd5e1, 0 15px 25px rgba(0,0,0,0.5); 
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            z-index: 60;
+        }
+        
+        .die.destroyed { transform: scale(0) rotate(180deg); opacity: 0; filter: blur(10px); }
+
+        .die.elem-fire { border-color: #ef4444; background: #fee2e2; color: #7f1d1d; }
+        .die.elem-water { border-color: #3b82f6; background: #dbeafe; color: #1e3a8a; }
+        .die.elem-thunder { border-color: #eab308; background: #fef9c3; color: #713f12; }
+        .die.elem-ice { border-color: #06b6d4; background: #ecfeff; color: #164e63; }
+        .die.elem-arcane { border-color: #a855f7; background: #f3e8ff; color: #4c1d95; }
+
+        .rolling { animation: diceRoll 0.1s infinite; background: #fff !important; color: #ccc !important; }
+        @keyframes diceRoll { 0% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-5px) rotate(10deg); } 100% { transform: translateY(0) rotate(-10deg); } }
+
+        .damage-pop {
+            position: absolute; animation: popFloat 1.2s ease-out forwards;
+            font-weight: 900; pointer-events: none; z-index: 100;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        @keyframes popFloat { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-150px); opacity: 0; } }
+
+        .elem-tag {
+            font-size: 10px; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.6); 
+            border: 1px solid rgba(255,255,255,0.3); margin-top: 4px;
+        }
+
+        .advantage-badge {
+            position: absolute; top: -30px; color: #fbbf24; font-weight: 900; font-style: italic;
+            font-size: 14px; animation: pulse 1s infinite; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
+
+        .deck-counter {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .enemy-panel {
+            background: linear-gradient(to bottom, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.8));
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center h-screen w-screen p-4">
+
+    <div class="max-w-7xl w-full h-[95vh] bg-slate-950 rounded-[40px] shadow-[0_0_100px_rgba(0,0,0,1)] border border-slate-800 flex flex-col relative overflow-hidden">
+        
+        <!-- UI 頂部欄 -->
+        <div class="z-20 p-6 flex justify-between items-center bg-slate-900/60 backdrop-blur-xl border-b border-white/5">
+            <div class="flex gap-6 items-center">
+                <div class="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">ELEMENTAL FRONT</div>
+                <div id="turn-display" class="bg-white/5 text-slate-400 px-4 py-1 rounded-full text-xs font-mono tracking-widest border border-white/10">TURN 01</div>
+            </div>
+            
+            <div class="flex gap-12">
+                <div class="text-right">
+                    <div class="text-[10px] text-red-500 font-bold uppercase tracking-[0.2em]">生命值 Vitality</div>
+                    <div id="p-hp" class="text-3xl font-mono font-bold text-red-400">100</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em]">乙太意志 Ether Mind</div>
+                    <div id="p-sp" class="text-3xl font-mono font-bold text-cyan-400">80</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 戰場區域 -->
+        <div class="flex-1 flex overflow-hidden relative">
+            <div class="flex-[2] flex flex-col items-center justify-center p-10 relative border-r border-white/5" id="player-battle-zone">
+                <div id="planning-zone" class="flex flex-wrap gap-6 items-center justify-center max-w-2xl"></div>
+                <div id="player-zone" class="mt-12 text-6xl transition-transform duration-200">👤</div>
+            </div>
+
+            <div id="enemy-panel" class="flex-1 enemy-panel p-8 flex flex-col items-center justify-center gap-8">
+                <div id="enemy-zone" class="flex flex-col items-center gap-6 transition-all duration-700">
+                    <div class="relative">
+                        <div id="enemy-sprite" class="text-8xl filter drop-shadow-[0_0_40px_rgba(239,68,68,0.4)] transition-transform duration-200">👹</div>
+                    </div>
+                    
+                    <div class="w-full max-w-[280px] space-y-4">
+                        <div id="enemy-intent-card" class="bg-slate-900/80 p-5 rounded-2xl border border-red-500/30 shadow-2xl">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="text-[10px] text-red-400 font-black uppercase tracking-widest">敵方意圖</div>
+                                <div id="enemy-dice-info" class="text-[10px] font-mono bg-red-500/20 text-red-300 px-2 py-0.5 rounded">1D (5-15)</div>
+                            </div>
+                            <div id="enemy-intent" class="text-base font-bold text-slate-100 flex items-center gap-3">載入中...</div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-400 px-1">
+                                <span>異常數據核心</span>
+                                <span id="enemy-hp-text">100/100</span>
+                            </div>
+                            <div class="relative h-2.5 bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                                <div id="e-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-rose-400 transition-all duration-1000" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div id="status-icons" class="flex gap-1"></div>
+                            <div id="enemy-speed-tag" class="text-[10px] font-black text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/30">SPD: 4</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 衝突顯示層 -->
+            <div id="clash-zone" class="absolute inset-0 z-50 flex flex-col items-center justify-center opacity-0 pointer-events-none bg-slate-950/95 backdrop-blur-3xl transition-all duration-500">
+                <div id="clash-title" class="text-5xl font-black italic mb-16 text-white tracking-widest">CLASH SEQUENCE</div>
+                <div class="flex gap-24 items-start justify-center w-full">
+                    <div class="flex flex-col items-center gap-8 relative w-48">
+                        <div id="p-advantage" class="advantage-badge hidden">ELEMENT ADV.</div>
+                        <div id="p-dice-container" class="flex flex-wrap justify-center gap-4 min-h-[80px]"></div>
+                        <div class="text-xs font-black tracking-widest text-cyan-400 uppercase border-b-2 border-cyan-400 pb-2">USER</div>
+                    </div>
+                    
+                    <div class="text-5xl font-black italic text-slate-700 self-center">VS</div>
+                    
+                    <div class="flex flex-col items-center gap-8 relative w-48">
+                        <div id="e-advantage" class="advantage-badge hidden">ELEMENT ADV.</div>
+                        <div id="e-dice-container" class="flex flex-wrap justify-center gap-4 min-h-[80px]"></div>
+                        <div class="text-xs font-black tracking-widest text-red-500 uppercase border-b-2 border-red-500 pb-2">ENTITY</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部控制欄 -->
+        <div class="p-8 bg-slate-900/40 border-t border-white/5 backdrop-blur-3xl">
+            <div class="flex justify-between items-end mb-4">
+                <div>
+                    <h3 id="phase-label" class="text-lg font-bold text-slate-100">核心規劃階段</h3>
+                    <div class="flex gap-4 mt-2">
+                        <div class="deck-counter">牌庫: <span id="deck-count" class="text-white">--</span></div>
+                        <span class="text-[10px] text-slate-500 self-center">🔥 > ❄️ > ⚡ > 🌊 > 🔥</span>
+                    </div>
+                </div>
+                <button id="clash-btn" disabled class="px-16 py-4 rounded-2xl font-black text-sm tracking-[0.3em] transition-all uppercase">執行衝突 (EXE)</button>
+            </div>
+            <div id="hand" class="flex gap-5 justify-start h-48 overflow-x-auto px-4 custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <script>
+        const PROTOS = [
+            { name: '烈焰迸發', elem: 'fire', dice: {c: 2, min: 6, max: 12}, icon: '🔥', skill: 'BURN', desc: '克制 ❄️: 1.5倍 傷害' },
+            { name: '水流斬擊', elem: 'water', dice: {c: 3, min: 4, max: 9}, icon: '🌊', skill: 'WET', desc: '克制 🔥: 1.5倍 傷害' },
+            { name: '迅雷一閃', elem: 'thunder', dice: {c: 2, min: 8, max: 14}, icon: '⚡', skill: 'SHOCK', desc: '克制 🌊: 1.5倍 傷害' },
+            { name: '寒冰尖刺', elem: 'ice', dice: {c: 2, min: 7, max: 11}, icon: '❄️', skill: 'CHILL', desc: '克制 ⚡: 1.5倍 傷害' },
+            { name: '斬斷因果', elem: 'arcane', dice: {c: 1, min: 10, max: 20}, icon: '⚔️', skill: 'DESTROY_ALL', desc: '勝利時：摧毀敵方剩餘骰子' },
+            { name: '冰封禁制', elem: 'ice', dice: {c: 1, min: 15, max: 25}, icon: '🧊', skill: 'FREEZE_DICE', desc: '勝利時：摧毀敵方下一骰子' },
+            { name: '雷鳴過載', elem: 'thunder', dice: {c: 2, min: 5, max: 15}, icon: '🌩️', skill: 'CHAIN_DICE', desc: '勝利時：下一骰子 +5' },
+            { name: '淨化之泉', elem: 'water', dice: {c: 1, min: 10, max: 15}, icon: ' Fountain', skill: 'RECOVER', desc: '命中時回復 5 SP' },
+            { name: '次元斬', elem: 'arcane', dice: {c: 1, min: 25, max: 40}, icon: '✨', skill: 'LIMIT', desc: '消耗 20 SP' }
+        ];
+
+        const ELEMENT_CHART = { 'fire': 'ice', 'ice': 'thunder', 'thunder': 'water', 'water': 'fire', 'arcane': 'none' };
+
+        let game = {
+            turn: 1,
+            player: { hp: 100, maxHp: 100, sp: 80, maxSp: 80 },
+            enemy: { hp: 100, maxHp: 100, speed: 4, sprite: '👺', status: [], intentElem: 'fire' },
+            slots: [],
+            hand: [],
+            deck: [],
+            discard: [],
+            selectedIdx: 0,
+            active: true
+        };
+
+        function initDeck() {
+            game.deck = [];
+            for(let i=0; i<60; i++) {
+                const proto = PROTOS[Math.floor(Math.random()*PROTOS.length)];
+                game.deck.push({...proto, instId: Math.random()});
+            }
+            shuffle(game.deck);
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function draw() {
+            if (game.deck.length === 0) {
+                if (game.discard.length === 0) return;
+                game.deck = [...game.discard];
+                game.discard = [];
+                shuffle(game.deck);
+            }
+            game.hand.push(game.deck.pop());
+        }
+
+        function start() {
+            initDeck();
+            game.hand = [];
+            for(let i=0; i<7; i++) draw();
+            setEnemy(); // 只在開始時生成敵人
+            refreshTurn();
+        }
+
+        function refreshTurn() {
+            const count = 2 + Math.floor(game.turn / 4);
+            game.slots = Array.from({length: Math.min(count, 5)}, () => ({ spd: Math.floor(Math.random()*6)+1, card: null }));
+            game.selectedIdx = 0;
+            // 修正：這裡不再呼叫 setEnemy()，避免每回合血量重設
+            render();
+        }
+
+        function setEnemy() {
+            const bosses = [
+                { s: '👺', i: '熔岩衝擊', d: {c:1, min:12, max:24}, spd: 3, e: 'fire' },
+                { s: '🐙', i: '深海束縛', d: {c:3, min:5, max:10}, spd: 5, e: 'water' },
+                { s: '🧿', i: '雷鳴閃光', d: {c:2, min:8, max:15}, spd: 4, e: 'thunder' },
+                { s: '❄️', i: '冷冽凍氣', d: {c:1, min:15, max:25}, spd: 2, e: 'ice' },
+                { s: '👾', i: '虛空崩解', d: {c:2, min:10, max:15}, spd: 4, e: 'arcane' }
+            ];
+            const b = bosses[Math.floor(Math.random()*bosses.length)];
+            game.enemy.sprite = b.s;
+            game.enemy.intent = b.i;
+            game.enemy.dice = b.d;
+            game.enemy.speed = b.spd;
+            game.enemy.intentElem = b.e;
+            game.enemy.hp = game.enemy.maxHp; // 只有在生成新敵人時才設為滿血
+        }
+
+        function render() {
+            document.getElementById('deck-count').innerText = game.deck.length;
+            const sz = document.getElementById('planning-zone');
+            sz.innerHTML = '';
+            game.slots.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = `speed-slot ${game.selectedIdx === i ? 'active' : ''} ${s.card ? 'filled' : ''}`;
+                div.onclick = () => { if(game.active) { game.selectedIdx = i; render(); } };
+                let html = `<div class="speed-badge">SPD ${s.spd}</div>`;
+                if(s.card) {
+                    html += `<div class="card-mini elem-${s.card.elem}" onclick="removeCard(event, ${i})">
+                        <div class="text-3xl mb-1">${s.card.icon}</div>
+                        <div class="font-black text-[9px] uppercase">${s.card.name}</div>
+                    </div>`;
+                } else {
+                    html += `<div class="text-[9px] font-black text-slate-700">VOID ${i+1}</div>`;
+                }
+                div.innerHTML = html;
+                sz.appendChild(div);
+            });
+
+            const hz = document.getElementById('hand');
+            hz.innerHTML = '';
+            game.hand.forEach(c => {
+                const div = document.createElement('div');
+                div.className = `min-w-[120px] h-full rounded-2xl p-4 flex flex-col justify-between cursor-pointer border border-white/10 hover:-translate-y-4 transition-all elem-${c.elem} relative group`;
+                div.onclick = () => pickCard(c);
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="text-2xl group-hover:scale-125 transition-transform">${c.icon}</span>
+                        <span class="text-[9px] opacity-60 font-mono">${c.dice.c}D</span>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] font-black tracking-tighter uppercase">${c.name}</div>
+                        <div class="elem-tag">${c.elem.toUpperCase()}</div>
+                    </div>
+                    <div class="text-[8px] opacity-80 leading-tight mt-1 text-center italic">${c.desc}</div>
+                    <div class="mt-2 py-1 bg-black/40 rounded-lg text-[10px] font-mono text-center font-bold">${c.dice.min}-${c.dice.max}</div>
+                `;
+                hz.appendChild(div);
+            });
+
+            document.getElementById('p-hp').innerText = Math.ceil(game.player.hp);
+            document.getElementById('p-sp').innerText = Math.ceil(game.player.sp);
+            document.getElementById('e-hp-bar').style.width = (game.enemy.hp / game.enemy.maxHp * 100) + '%';
+            document.getElementById('enemy-hp-text').innerText = `${Math.ceil(game.enemy.hp)} / ${game.enemy.maxHp}`;
+            document.getElementById('enemy-sprite').innerText = game.enemy.sprite;
+            document.getElementById('enemy-intent').innerHTML = `<span class="text-xl">⚡</span> <span>${game.enemy.intent}</span>`;
+            document.getElementById('enemy-dice-info').innerText = `${game.enemy.dice.c}D (${game.enemy.dice.min}-${game.enemy.dice.max})`;
+            document.getElementById('enemy-speed-tag').innerText = `SPD: ${game.enemy.speed}`;
+            document.getElementById('turn-display').innerText = `TURN ${game.turn.toString().padStart(2, '0')}`;
+
+            const btn = document.getElementById('clash-btn');
+            const ready = game.slots.every(s => s.card);
+            btn.disabled = !ready || !game.active;
+            if(ready && game.active) btn.className = "px-16 py-4 rounded-2xl bg-blue-600 text-white font-black text-sm tracking-[0.3em] shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:scale-105 active:scale-95 transition-all";
+            else btn.className = "px-16 py-4 rounded-2xl bg-slate-800 text-slate-500 font-black text-sm tracking-[0.3em] transition-all opacity-30 cursor-not-allowed";
+        }
+
+        function pickCard(c) {
+            if(!game.active) return;
+            if(c.skill === 'LIMIT' && game.player.sp < 20) {
+                pop(document.getElementById('player-zone'), "SP 不足", "#94a3b8");
+                return;
+            }
+            if(game.slots[game.selectedIdx].card) game.hand.push(game.slots[game.selectedIdx].card);
+            game.slots[game.selectedIdx].card = c;
+            game.hand = game.hand.filter(h => h.instId !== c.instId);
+            game.selectedIdx = (game.selectedIdx + 1) % game.slots.length;
+            render();
+        }
+
+        function removeCard(e, i) {
+            e.stopPropagation();
+            if(!game.active) return;
+            game.hand.push(game.slots[i].card);
+            game.slots[i].card = null;
+            game.selectedIdx = i;
+            render();
+        }
+
+        document.getElementById('clash-btn').onclick = async function() {
+            game.active = false;
+            document.getElementById('phase-label').innerText = "衝突序列執行中...";
+            render();
+            
+            for(let slot of game.slots) {
+                await runClash(slot);
+                game.discard.push(slot.card);
+                if(game.enemy.hp <= 0 || game.player.hp <= 0) break;
+            }
+
+            if(game.enemy.hp <= 0) {
+                pop(document.getElementById('enemy-zone'), "ELIMINATED", "#fbbf24");
+                // 擊敗後雙方回滿
+                game.player.hp = game.player.maxHp;
+                game.player.sp = game.player.maxSp;
+                // 這裡的 game.enemy.hp 設為滿是為了進度條顯示，隨後會換一個新的敵人
+                game.enemy.hp = game.enemy.maxHp;
+                render();
+                
+                setTimeout(() => {
+                    alert("擊敗敵人！狀態已全數恢復，新威脅正在接近...");
+                    game.turn++;
+                    game.active = true;
+                    while(game.hand.length < 7 && (game.deck.length > 0 || game.discard.length > 0)) draw();
+                    setEnemy(); // 只有擊敗時才換下一個滿血敵人
+                    refreshTurn();
+                }, 500);
+            } else if(game.player.hp <= 0) {
+                alert("數據核心崩潰。你戰敗了。");
+                location.reload();
+            } else {
+                // 戰鬥尚未結束，進入下一回合，保留血量
+                game.turn++;
+                game.active = true;
+                while(game.hand.length < 7 && (game.deck.length > 0 || game.discard.length > 0)) draw();
+                document.getElementById('phase-label').innerText = "核心規劃階段";
+                refreshTurn();
+            }
+        };
+
+        async function runClash(slot) {
+            const cz = document.getElementById('clash-zone');
+            const pc = document.getElementById('p-dice-container');
+            const ec = document.getElementById('e-dice-container');
+            const padv = document.getElementById('p-advantage');
+            const eadv = document.getElementById('e-advantage');
+            
+            pc.innerHTML = ''; ec.innerHTML = '';
+            padv.classList.add('hidden'); eadv.classList.add('hidden');
+            cz.classList.add('opacity-100', 'pointer-events-auto');
+
+            const pElem = slot.card.elem;
+            const eElem = game.enemy.intentElem;
+            let pMult = 1, eMult = 1;
+
+            if(ELEMENT_CHART[pElem] === eElem) { pMult = 1.5; padv.classList.remove('hidden'); }
+            else if(ELEMENT_CHART[eElem] === pElem) { eMult = 1.5; eadv.classList.remove('hidden'); }
+
+            if(slot.card.skill === 'LIMIT') game.player.sp -= 20;
+
+            let pRolls = Array.from({length: slot.card.dice.c}, () => Math.floor(Math.random()*(slot.card.dice.max - slot.card.dice.min + 1)) + slot.card.dice.min);
+            let eRolls = Array.from({length: game.enemy.dice.c}, () => Math.floor(Math.random()*(game.enemy.dice.max - game.enemy.dice.min + 1)) + game.enemy.dice.min);
+
+            const pD = pRolls.map(() => { 
+                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?'; pc.appendChild(d); return d; 
+            });
+            const eD = eRolls.map(() => { 
+                const d = document.createElement('div'); d.className = 'die rolling'; d.innerText = '?'; ec.appendChild(d); return d; 
+            });
+
+            await new Promise(r => setTimeout(r, 600));
+            pD.forEach((d, i) => { d.classList.remove('rolling'); d.innerText = pRolls[i]; d.classList.add(`elem-${pElem}`); });
+            eD.forEach((d, i) => { d.classList.remove('rolling'); d.innerText = eRolls[i]; d.classList.add(`elem-${eElem}`); });
+            await new Promise(r => setTimeout(r, 600));
+
+            let nextDiceBonus = 0;
+            const rounds = Math.max(pRolls.length, eRolls.length);
+            for(let i=0; i<rounds; i++) {
+                if(eD[i]?.classList.contains('destroyed')) continue;
+
+                let pv = (pRolls[i] || 0) + nextDiceBonus;
+                let ev = (eRolls[i] || 0);
+                nextDiceBonus = 0;
+
+                if(pv > ev) {
+                    let dmg = (pv - ev) * pMult;
+                    game.enemy.hp -= dmg;
+                    pop(document.getElementById('enemy-zone'), `${pMult > 1 ? 'CRITICAL ' : ''}-${Math.ceil(dmg)}`, pMult > 1 ? "#fbbf24" : "#f87171");
+                    
+                    if(slot.card.skill === 'DESTROY_ALL') {
+                        pop(document.getElementById('clash-title'), "CAUSALITY BREAK", "#a855f7");
+                        for(let j=i+1; j<eD.length; j++) {
+                            eD[j].classList.add('destroyed');
+                            eRolls[j] = 0;
+                        }
+                    } else if(slot.card.skill === 'FREEZE_DICE' && i+1 < eD.length) {
+                        pop(eD[i+1], "FROZEN", "#67e8f9");
+                        eD[i+1].classList.add('destroyed');
+                        eRolls[i+1] = 0;
+                    } else if(slot.card.skill === 'CHAIN_DICE') {
+                        nextDiceBonus = 5;
+                        pop(pc, "+5 NEXT", "#eab308");
+                    } else if(slot.card.skill === 'RECOVER') {
+                        game.player.sp = Math.min(game.player.maxSp, game.player.sp + 5);
+                    }
+                } else if(ev > pv) {
+                    let dmg = (ev - pv) * eMult;
+                    game.player.hp -= dmg;
+                    pop(document.getElementById('player-zone'), `-${Math.ceil(dmg)}`, "#ef4444");
+                }
+                render();
+                await new Promise(r => setTimeout(r, 400));
+                if(game.enemy.hp <= 0 || game.player.hp <= 0) break;
+            }
+            await new Promise(r => setTimeout(r, 800));
+            cz.classList.remove('opacity-100', 'pointer-events-auto');
+        }
+
+        function pop(target, text, color) {
+            const r = target.getBoundingClientRect();
+            const p = document.createElement('div');
+            p.className = 'damage-pop text-4xl font-black italic';
+            p.style.left = (r.left + r.width/2 + (Math.random()*40-20)) + 'px';
+            p.style.top = (r.top + 20) + 'px';
+            p.style.color = color;
+            p.innerText = text;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 1200);
+            target.style.transform = 'translateY(-10px)';
+            setTimeout(() => target.style.transform = 'translateY(0)', 100);
+        }
+
+        window.onload = start;
+    </script>
 </body>
-<script>
-    window.onload = function() {
-    const urlToOpen = 'https://meloncat0827-afk.github.io/melon/'; 
-    const windowName = '>>I-X10Xideuc1buvy1hvb2yv<<';
-    const specs = 'width=1000,height=800,toolbar=no,scrollbars=yes';
-    document.getElementById('myButton2').click();
-    document.getElementById('myButton1').click();
-    document.getElementById('myButton3').click();
-    }
-
-
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+</html>
