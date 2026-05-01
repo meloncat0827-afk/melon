@@ -238,3 +238,65 @@ function resetGame() {
     document.getElementById('clash-message').innerText = "WAITING FOR CLASH...";
     renderHand();
 }
+// 初始化血量
+let playerHP = 100;
+let oppHP = 100;
+
+function updateStats() {
+    // 更新數值
+    document.getElementById('player-hp').innerText = playerHP;
+    document.getElementById('opp-hp').innerText = oppHP;
+    document.getElementById('player-lumen').innerText = playerLumen;
+    
+    // 更新血量條長度
+    document.getElementById('player-hp-bar').style.width = playerHP + "%";
+    document.getElementById('opp-hp-bar').style.width = oppHP + "%";
+    
+    // 血量過低警示
+    if(playerHP < 30) document.getElementById('player-hp-bar').classList.add('hp-low');
+    if(oppHP < 30) document.getElementById('opp-hp-bar').classList.add('hp-low');
+}
+
+// 修改拼點判定函數
+function processClash(pCard, bCard) {
+    const pPoint = (pCard.stars * pCard.power) + (Math.floor(Math.random() * 3));
+    const bPoint = (bCard.stars * bCard.power) + (Math.floor(Math.random() * 3));
+    
+    let message = "";
+    
+    if (pPoint > bPoint) {
+        // 玩家勝：計算傷害
+        let damage = pPoint * 3; // 基礎傷害倍率
+        if (pCard.type === 'Attack') damage = pPoint * 5; // 攻擊卡傷害更高
+        
+        // 如果機器人是 Evasion 且拼點失敗，玩家造成全額傷害
+        // 如果機器人是 Defense，傷害減半
+        if (bCard.type === 'Defense') damage = Math.floor(damage * 0.5);
+
+        oppHP = Math.max(0, oppHP - damage);
+        message = `拼點勝利！造成 ${damage} 點傷害`;
+        
+    } else if (pPoint < bPoint) {
+        // 機器人勝：玩家卡牌失效，若機器人是 Defense 可能有反傷
+        let damageToPlayer = bPoint * 2;
+        playerHP = Math.max(0, playerHP - damageToPlayer);
+        message = `拼點失敗！受到 ${damageToPlayer} 點反擊傷害`;
+        
+    } else {
+        message = "雙方勢均力敵，未造成傷害！";
+    }
+
+    document.getElementById('clash-message').innerText = message;
+    updateStats();
+    checkGameOver();
+}
+
+function checkGameOver() {
+    if (oppHP <= 0) {
+        alert("目標已清除，零號光域同步完成。你贏了！");
+        resetGame();
+    } else if (playerHP <= 0) {
+        alert("意識同步中斷... 你失敗了。");
+        resetGame();
+    }
+}
