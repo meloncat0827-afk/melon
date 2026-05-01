@@ -118,3 +118,25 @@ body {
     color: var(--lumen-blue);
     margin-top: 100px;
 }
+.hp-bar-container {
+    width: 300px;
+    height: 12px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 6px;
+    margin: 5px 0;
+    overflow: hidden;
+}
+
+.hp-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff3c3c, #ff7676);
+    transition: width 0.5s ease-out; /* 扣血動畫 */
+}
+
+/* 當血量低於 30% 時變色 */
+.hp-low {
+    background: #ff0000;
+    box-shadow: 0 0 10px #ff0000;
+}
