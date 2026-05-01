@@ -123,3 +123,118 @@ function toggleStore() {
 // 初始化
 updateUI();
 renderHand();
+// 新增遊戲狀態變數
+let isMatching = false;
+let botLumen = 2; // 機器人的光芒
+
+// 1. 切換配對模式
+function toggleMatch() {
+    isMatching = !isMatching;
+    const btn = document.getElementById('match-btn');
+    if (isMatching) {
+        btn.innerText = "尋找對手 (配對中: ON)";
+        btn.style.boxShadow = "0 0 10px var(--lumen-blue)";
+        // 這裡可以加入配對動畫
+    } else {
+        btn.innerText = "尋找對手 (配對中: OFF)";
+        btn.style.boxShadow = "none";
+    }
+}
+
+// 2. 機器人 AI 出牌邏輯
+function botTurn() {
+    // 機器人只會出 Defense 或 Evasion
+    const botPool = ['Defense', 'Evasion'];
+    const randomType = botPool[Math.floor(Math.random() * botPool.length)];
+    
+    const botCard = {
+        stars: Math.floor(Math.random() * 2) + 1, // 機器人出牌較保守 1~2星
+        power: Math.floor(Math.random() * 3) + 1,
+        type: randomType
+    };
+
+    // 渲染機器人出的牌到對手槽
+    const oppSlot = document.getElementById('opp-slot');
+    oppSlot.innerHTML = `
+        <div class="card" style="border-color: var(--clash-red); transform: scale(1);">
+            <div style="padding:10px">
+                <div style="font-size:12px">${botCard.type}</div>
+                <div style="color:silver">${'★'.repeat(botCard.stars)}</div>
+                <div style="font-size:20px; text-align:center; margin-top:20px">P:${botCard.power}</div>
+            </div>
+        </div>
+    `;
+
+    return botCard;
+}
+
+// 3. 修改原有的 playCard 函數，加入對戰邏輯
+async function playCard(cardData, cardElement) {
+    const cost = cardData.stars;
+    if (playerLumen < cost) {
+        alert("光芒不足！");
+        return;
+    }
+
+    // 玩家出牌
+    playerLumen -= cost;
+    updateUI();
+    
+    // 移動玩家卡牌動畫 (沿用之前的邏輯)
+    moveCardToSlot(cardElement, 'player-slot');
+
+    // 檢查是否為機器人對戰模式
+    if (!isMatching) {
+        document.getElementById('clash-message').innerText = "機器人思考中...";
+        
+        // 延遲 1 秒模擬機器人出牌
+        setTimeout(() => {
+            const botCard = botTurn();
+            processClash(cardData, botCard);
+        }, 1000);
+    } else {
+        document.getElementById('clash-message').innerText = "等待對手出牌...";
+        // 這裡未來接 Socket.io 實作真人對戰
+    }
+}
+
+// 4. 拼點判定 (Clash Judgment)
+function processClash(pCard, bCard) {
+    // 基礎點數 = 星數 * 強度
+    const pPoint = (pCard.stars * pCard.power) + (Math.floor(Math.random() * 3));
+    const bPoint = (bCard.stars * bCard.power) + (Math.floor(Math.random() * 3));
+    
+    let resultMsg = "";
+    if (pPoint > bPoint) {
+        resultMsg = `贏了！ ${pPoint} vs ${bPoint}`;
+        document.getElementById('clash-message').style.color = "var(--lumen-blue)";
+    } else if (pPoint < bPoint) {
+        resultMsg = `輸了！ ${pPoint} vs ${bPoint} (卡牌失效)`;
+        document.getElementById('clash-message').style.color = "var(--clash-red)";
+    } else {
+        resultMsg = "平手！點數相同";
+        document.getElementById('clash-message').style.color = "white";
+    }
+    
+    document.getElementById('clash-message').innerText = resultMsg;
+}
+
+// 輔助函數：移動動畫
+function moveCardToSlot(el, slotId) {
+    const slot = document.getElementById(slotId);
+    const slotRect = slot.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    el.style.transform = `translate(${slotRect.left - rect.left}px, ${slotRect.top - rect.top}px) scale(1.1)`;
+    el.style.zIndex = "100";
+    el.style.pointerEvents = "none";
+}
+
+// 重置遊戲
+function resetGame() {
+    playerLumen = 2;
+    updateUI();
+    document.getElementById('player-slot').innerHTML = '';
+    document.getElementById('opp-slot').innerHTML = '';
+    document.getElementById('clash-message').innerText = "WAITING FOR CLASH...";
+    renderHand();
+}
