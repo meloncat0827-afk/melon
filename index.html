@@ -1,35 +1,41 @@
-<head><title>X_EVENT</title></head>
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>零號光域 Zone Zero: Lumen</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
-    <a id="myButton1" href="X.txt" download = "x_event"></a>
-    <a id="myButton2" href="病毒.html"></a>
-    <a id="myButton3" href="https://meloncat0827-afk.github.io/melon/" target="_blank"></a>
+    <div id="game-container">
+        <!-- 對手資訊與手牌 -->
+        <div class="area opponent-area">
+            <div id="opp-info">對手 - 光芒: <span id="opp-lumen">0</span>/10</div>
+            <div id="opp-hand" class="hand"></div>
+        </div>
+
+        <!-- 中央拼點對戰區 -->
+        <div class="area clash-area">
+            <div id="clash-zone">
+                <div id="clash-message">WAITING FOR CLASH...</div>
+                <div class="clash-slots">
+                    <div id="opp-slot" class="card-slot"></div>
+                    <div id="player-slot" class="card-slot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 玩家資訊與手牌 -->
+        <div class="area player-area">
+            <div id="player-info">
+                <span>羅丞洲 - 光芒: <span id="player-lumen">2</span>/10</span>
+                <div class="status-bar">
+                    <span class="status-icon" title="充電">⚡0</span>
+                    <span class="status-icon" title="流血">🩸0</span>
+                </div>
+            </div>
+            <div id="player-hand" class="hand"></div>
+        </div>
+    </div>
+    <script src="game.js"></script>
 </body>
-<script>
-    window.onload = function() {
-    const urlToOpen = 'https://meloncat0827-afk.github.io/melon/'; 
-    const windowName = '>>I-X10Xideuc1buvy1hvb2yv<<';
-    const specs = 'width=1000,height=800,toolbar=no,scrollbars=yes';
-    document.getElementById('myButton2').click();
-    document.getElementById('myButton1').click();
-    document.getElementById('myButton3').click();
-    }
-
-
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+</html>
