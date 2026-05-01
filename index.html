@@ -61,5 +61,22 @@
     <button onclick="toggleStore()">前往商城 / 回到戰鬥</button>
     <button onclick="resetGame()" style="background: #444;">重新開始</button>
 </nav>
+    <!-- 對手區塊更新 -->
+<div class="area opponent-area">
+    <div id="opp-stats">
+        對手 - HP: <span id="opp-hp">100</span>/100 | 光芒: <span id="opp-lumen">2</span>
+    </div>
+    <div class="hp-bar-container"><div id="opp-hp-bar" class="hp-bar"></div></div>
+    <div id="opp-hand" class="hand"></div>
+</div>
+
+<!-- 玩家區塊更新 -->
+<div class="area player-area">
+    <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
+    <div id="player-info">
+        <span>羅丞洲 - HP: <span id="player-hp">100</span>/100 | 光芒: <span id="player-lumen">2</span></span>
+    </div>
+    <div id="player-hand" class="hand"></div>
+</div>
 </body>
 </html>
