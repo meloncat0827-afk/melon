@@ -37,5 +37,24 @@
         </div>
     </div>
     <script src="game.js"></script>
+    <!-- 在 game-container 內頂部加入導覽按鈕 -->
+<nav style="position: absolute; top: 10px; left: 10px; z-index: 100;">
+    <button onclick="toggleStore()">前往商城 / 回到戰鬥</button>
+</nav>
+
+<!-- 商城介面 (預設隱藏) -->
+<div id="store-container" style="display: none;">
+    <h1 style="color: var(--visible-gold); text-align: center;">零號商城 - 特異點供應站</h1>
+    <div class="store-layout">
+        <div class="pack" onclick="buyPack('common')">
+            <h3>基礎光譜包</h3>
+            <p>100 金幣</p>
+        </div>
+        <div class="pack" onclick="buyPack('rare')">
+            <h3>特異點強化包</h3>
+            <p>300 金幣</p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
