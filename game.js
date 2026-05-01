@@ -327,3 +327,34 @@ function endTurnSettlement() {
     updateStats();[cite: 1]
     checkGameOver();[cite: 1]
 }
+let playerGold = 500; // 初始金幣
+
+function buyPack(type) {
+    const price = (type === 'common') ? 100 : 300;[cite: 2]
+    
+    if (playerGold < price) {
+        alert("金幣不足！");
+        return;
+    }
+
+    playerGold -= price;
+    let newCards = [];
+    
+    // 一次性生成 5 張卡牌
+    for (let i = 0; i < 5; i++) {
+        let card = generateCard();[cite: 1]
+        if (type === 'rare') {
+            // 強化包邏輯：強制提升至少 2 星以上
+            card.stars = Math.floor(Math.random() * 2) + 2; 
+        }
+        newCards.push(card);
+    }
+
+    displayNewCards(newCards);
+}
+
+function displayNewCards(cards) {
+    // 這裡可以實作一張張翻開的動畫
+    console.log("獲得新卡牌：", cards);
+    alert(`獲得 5 張新卡！最強強度為: ${Math.max(...cards.map(c => c.power))}`);
+}
