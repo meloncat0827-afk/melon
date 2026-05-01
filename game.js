@@ -300,3 +300,30 @@ function checkGameOver() {
         resetGame();
     }
 }
+// 擴充玩家與對手的狀態變數
+let playerStatus = { charge: 0, bleed: 0, poison: 0, burn: 0 };
+let oppStatus = { charge: 0, bleed: 0, poison: 0, burn: 0 };
+
+// 每回合結算函數
+function endTurnSettlement() {
+    // 燃燒 (Burn)：回合結束固定扣血
+    if (playerStatus.burn > 0) {
+        playerHP -= playerStatus.burn;
+        console.log(`玩家受到燃燒傷害: ${playerStatus.burn}`);
+    }
+    if (oppStatus.burn > 0) {
+        oppHP -= oppStatus.burn;
+    }
+
+    // 毒素結算 (Poisoning)：此處邏輯可依需求設定為回合結束扣血或出牌時扣血
+    // 假設為回合結束扣血
+    playerHP -= playerStatus.poison;
+    oppHP -= oppStatus.poison;
+
+    // 更新狀態 (例如：燃燒每回合減 1)
+    playerStatus.burn = Math.max(0, playerStatus.burn - 1);
+    oppStatus.burn = Math.max(0, oppStatus.burn - 1);
+
+    updateStats();[cite: 1]
+    checkGameOver();[cite: 1]
+}
