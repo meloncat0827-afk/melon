@@ -1,10 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>食指指令接收處</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: "Noto Serif TC", serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .index-container {
+            border: 2px solid #333;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .prescript-box {
+            min-height: 120px;
+            margin: 30px 0;
+            padding: 20px;
+            border-top: 1px solid #444;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .prescript-text {
+            font-size: 1.6rem;
+            line-height: 1.6;
+            letter-spacing: 2px;
+            color: #fff;
+            animation: stampAppear 0.3s ease-out forwards;
+            margin: 0;
+        }
+
+        /* 重點：讓填入的詞彙顏色稍微不同，更有格式感 */
+        .highlight {
+            color: #d4af37; /* 金色 */
+            font-weight: bold;
+            padding: 0 5px;
+        }
+
+        .seal-button {
+            background: transparent;
+            color: #8b0000;
+            border: 2px solid #8b0000;
+            padding: 12px 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            letter-spacing: 5px;
+        }
+
+        .seal-button:hover {
+            background: #8b0000;
+            color: white;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+        }
+
+        @keyframes stampAppear {
+            0% { transform: scale(1.5); opacity: 0; filter: blur(10px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+    </style>
+</head>
+<body>
+
 <div class="index-container">
-    <div class="frame">
-        <h1 class="title">代理人，領受指令</h1>
-        <div id="prescript-box" class="prescript-box">
-            <!-- 指令內容會顯示在這裡 -->
-            <p class="placeholder">點擊下方印章以顯示指令</p>
-        </div>
-        <button onclick="generatePrescript()" class="seal-button">【 蓋印 】</button>
+    <h2 style="letter-spacing: 10px; color: #666;">THE INDEX</h2>
+    <div id="prescript-box" class="prescript-box">
+        <p style="color: #444;">-- 等待指令中 --</p>
     </div>
+    <button onclick="generatePrescript()" class="seal-button">領受意志</button>
 </div>
+
+<script>
+    // 這裡就是你要求的「分格式」資料
+    const data = {
+        times: ["在凌晨三點時", "當鐘聲敲響十二次後", "在雨停之前的瞬間", "於日落之時", "在看見第一道光後", "當你感到飢餓時"],
+        verbs: ["殺死", "吃掉", "埋葬", "記錄下", "獻祭", "燒毀", "親吻", "拆解"],
+        senses: ["所看見的", "所聽見的", "所畫出的", "所觸碰到的", "記憶中的", "夢見的"],
+        names: ["路人", "代理人", "指點者", "傳令員", "罪人", "後巷的野狗", "自己的影子"]
+    };
+
+    function getRandom(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function generatePrescript() {
+        const t = getRandom(data.times);
+        const v = getRandom(data.verbs);
+        const s = getRandom(data.senses);
+        const n = getRandom(data.names);
+
+        // 使用 span 標籤來讓變動的部分有不同視覺效果
+        const fullHTML = `
+            <p class="prescript-text">
+                <span class="highlight">${t}</span>，
+                <span class="highlight">${v}</span>你
+                <span class="highlight">${s}</span>的
+                <span class="highlight">${n}</span>。
+            </p>
+        `;
+
+        const box = document.getElementById('prescript-box');
+        box.innerHTML = fullHTML;
+        
+        // 增加一點震動感
+        box.style.animation = 'none';
+        box.offsetHeight; /* 觸發重繪 */
+        box.style.animation = null;
+    }
+</script>
+
+</body>
+</html>
