@@ -88,42 +88,61 @@
 </div>
 
 <script>
-    // 這裡就是你要求的「分格式」資料
     const data = {
-        times: ["在凌晨三點時", "當鐘聲敲響十二次後", "在雨停之前的瞬間", "於日落之時", "在看見第一道光後", "當你感到飢餓時"],
-        verbs: ["殺死", "吃掉", "埋葬", "記錄下", "獻祭", "燒毀", "親吻", "拆解"],
-        senses: ["所看見的", "所聽見的", "所畫出的", "所觸碰到的", "記憶中的", "夢見的"],
-        names: ["路人", "代理人", "指點者", "傳令員", "罪人", "後巷的野狗", "自己的影子"]
-    };
+    times: ["在空無一物的時刻", "當第十三聲蟬鳴響起時", "在血液凝固的溫度下", "當影子長過本體之時", "在被遺忘的夢境邊緣", "於尚未命名的色彩中"],
+    verbs: ["編織", "抹除", "親吻", "拆解", "凝視", "咀嚼", "雕刻", "縫補"],
+    senses: ["未曾存在的", "正在腐爛的", "不可直視的", "被奪走名字的", "散發鐵鏽味的", "透明的"],
+    names: ["虛無", "螺旋", "線條的末端", "昨日的餘溫", "所有人的沈默", "齒輪的喘息", "褪色的誓言"],
+    abstract_prefix: ["為了證明服從，你必須", "以都市之名，准許你", "在苦難的盡頭，請務必", "這是不容置疑的意志："],
+    requirements: ["保持呼吸的韻律與時鐘同步", "將眼球轉向不存在的方位", "用指尖感受重力的重量", "在心中默唸不存在的數字"]
+};
 
-    function getRandom(array) {
-        return array[Math.floor(Math.random() * array.length)];
-    }
+function getRandom(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
 
-    function generatePrescript() {
-        const t = getRandom(data.times);
-        const v = getRandom(data.verbs);
-        const s = getRandom(data.senses);
-        const n = getRandom(data.names);
+function generatePrescript() {
+    const box = document.getElementById('prescript-box');
+    
+    // 隨機決定指令結構
+    const structureType = Math.random();
+    let fullHTML = '';
 
-        // 使用 span 標籤來讓變動的部分有不同視覺效果
-        const fullHTML = `
+    if (structureType > 0.5) {
+        // 結構 A：經典分格式 (時間 + 動作 + 感官 + 對象)
+        fullHTML = `
             <p class="prescript-text">
-                <span class="highlight">${t}</span>，
-                <span class="highlight">${v}</span>你
-                <span class="highlight">${s}</span>的
-                <span class="highlight">${n}</span>。
+                <span class="highlight">${getRandom(data.times)}</span>，
+                <span class="highlight">${getRandom(data.verbs)}</span>你
+                <span class="highlight">${getRandom(data.senses)}</span>的
+                <span class="highlight">${getRandom(data.names)}</span>。
             </p>
         `;
-
-        const box = document.getElementById('prescript-box');
-        box.innerHTML = fullHTML;
-        
-        // 增加一點震動感
-        box.style.animation = 'none';
-        box.offsetHeight; /* 觸發重繪 */
-        box.style.animation = null;
+    } else {
+        // 結構 B：抽象要求式 (前綴 + 具體要求的抽象化)
+        fullHTML = `
+            <p class="prescript-text">
+                <span class="highlight">${getRandom(data.abstract_prefix)}</span>
+                <span class="highlight">${getRandom(data.requirements)}</span>，並
+                <span class="highlight">${getRandom(data.verbs)}</span>
+                <span class="highlight">${getRandom(data.names)}</span>。
+            </p>
+        `;
     }
+
+    box.innerHTML = fullHTML;
+    
+    // 視覺回饋：背景隨機閃爍紅光
+    triggerEmergencyEffect();
+}
+
+function triggerEmergencyEffect() {
+    const container = document.querySelector('.index-container');
+    container.style.borderColor = '#8b0000';
+    setTimeout(() => {
+        container.style.borderColor = '#333';
+    }, 100);
+}
 </script>
 
 </body>
