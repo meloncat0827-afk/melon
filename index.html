@@ -1,82 +1,10 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <title>零號光域 Zone Zero: Lumen</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="game-container">
-        <!-- 對手資訊與手牌 -->
-        <div class="area opponent-area">
-            <div id="opp-info">對手 - 光芒: <span id="opp-lumen">0</span>/10</div>
-            <div id="opp-hand" class="hand"></div>
+<div class="index-container">
+    <div class="frame">
+        <h1 class="title">代理人，領受指令</h1>
+        <div id="prescript-box" class="prescript-box">
+            <!-- 指令內容會顯示在這裡 -->
+            <p class="placeholder">點擊下方印章以顯示指令</p>
         </div>
-
-        <!-- 中央拼點對戰區 -->
-        <div class="area clash-area">
-            <div id="clash-zone">
-                <div id="clash-message">WAITING FOR CLASH...</div>
-                <div class="clash-slots">
-                    <div id="opp-slot" class="card-slot"></div>
-                    <div id="player-slot" class="card-slot"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 玩家資訊與手牌 -->
-        <div class="area player-area">
-            <div id="player-info">
-                <span>羅丞洲 - 光芒: <span id="player-lumen">2</span>/10</span>
-                <div class="status-bar">
-                    <span class="status-icon" title="充電">⚡0</span>
-                    <span class="status-icon" title="流血">🩸0</span>
-                </div>
-            </div>
-            <div id="player-hand" class="hand"></div>
-        </div>
-    </div>
-    <script src="game.js"></script>
-    <!-- 在 game-container 內頂部加入導覽按鈕 -->
-<nav style="position: absolute; top: 10px; left: 10px; z-index: 100;">
-    <button onclick="toggleStore()">前往商城 / 回到戰鬥</button>
-</nav>
-
-<!-- 商城介面 (預設隱藏) -->
-<div id="store-container" style="display: none;">
-    <h1 style="color: var(--visible-gold); text-align: center;">零號商城 - 特異點供應站</h1>
-    <div class="store-layout">
-        <div class="pack" onclick="buyPack('common')">
-            <h3>基礎光譜包</h3>
-            <p>100 金幣</p>
-        </div>
-        <div class="pack" onclick="buyPack('rare')">
-            <h3>特異點強化包</h3>
-            <p>300 金幣</p>
-        </div>
+        <button onclick="generatePrescript()" class="seal-button">【 蓋印 】</button>
     </div>
 </div>
-    <nav style="position: absolute; top: 10px; left: 10px; z-index: 100; display: flex; gap: 10px;">
-    <button id="match-btn" onclick="toggleMatch()">尋找對手 (配對中: OFF)</button>
-    <button onclick="toggleStore()">前往商城 / 回到戰鬥</button>
-    <button onclick="resetGame()" style="background: #444;">重新開始</button>
-</nav>
-    <!-- 對手區塊更新 -->
-<div class="area opponent-area">
-    <div id="opp-stats">
-        對手 - HP: <span id="opp-hp">100</span>/100 | 光芒: <span id="opp-lumen">2</span>
-    </div>
-    <div class="hp-bar-container"><div id="opp-hp-bar" class="hp-bar"></div></div>
-    <div id="opp-hand" class="hand"></div>
-</div>
-
-<!-- 玩家區塊更新 -->
-<div class="area player-area">
-    <div class="hp-bar-container"><div id="player-hp-bar" class="hp-bar"></div></div>
-    <div id="player-info">
-        <span>羅丞洲 - HP: <span id="player-hp">100</span>/100 | 光芒: <span id="player-lumen">2</span></span>
-    </div>
-    <div id="player-hand" class="hand"></div>
-</div>
-</body>
-</html>
