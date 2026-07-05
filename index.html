@@ -2,12 +2,13 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>食指指令接收處</title>
+    <title>食指指令接收終端 - 藍色機型</title>
     <style>
+        /* 基礎設定：極黑背景，突出藍光 */
         body {
-            background-color: #0a0a0a;
-            color: #e0e0e0;
-            font-family: "Noto Serif TC", serif;
+            background-color: #030708;
+            color: #a3e2ff;
+            font-family: "Courier New", Courier, monospace, "Noto Serif TC";
             display: flex;
             justify-content: center;
             align-items: center;
@@ -16,148 +17,188 @@
             overflow: hidden;
         }
 
-        .index-container {
-            border: 2px solid #333;
-            padding: 40px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #050505 100%);
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            text-align: center;
-            width: 80%;
-            max-width: 600px;
+        /* 逼逼機外殼 */
+        .beeper-case {
+            background: #0f1c24;
+            border: 4px solid #1e3a47;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 162, 255, 0.2);
             position: relative;
         }
 
-        .prescript-box {
-            min-height: 120px;
-            margin: 30px 0;
-            padding: 20px;
-            border-top: 1px solid #444;
-            border-bottom: 1px solid #444;
+        /* 終端標頭 */
+        .beeper-header {
+            font-size: 0.8rem;
+            color: #528fa8;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
             display: flex;
-            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #1e3a47;
+            padding-bottom: 5px;
+        }
+
+        /* 藍色發光螢幕 */
+        .screen {
+            background: #07131a;
+            border: 2px solid #254b5c;
+            border-radius: 6px;
+            min-height: 180px;
+            padding: 15px;
+            box-shadow: inset 0 0 15px rgba(0, 162, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
         }
 
+        /* 模擬螢幕掃描線 (Scanlines) 效果 */
+        .screen::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* 指令內文 */
         .prescript-text {
-            font-size: 1.6rem;
-            line-height: 1.6;
-            letter-spacing: 2px;
-            color: #fff;
-            animation: stampAppear 0.3s ease-out forwards;
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: #c2efff;
+            text-shadow: 0 0 8px rgba(0, 162, 255, 0.6);
             margin: 0;
+            z-index: 1;
         }
 
-        /* 重點：讓填入的詞彙顏色稍微不同，更有格式感 */
+        /* 格式高亮：更具科技感 */
         .highlight {
-            color: #d4af37; /* 金色 */
-            font-weight: bold;
-            padding: 0 5px;
+            color: #ffffff;
+            border-bottom: 1px dashed #00a2ff;
+            padding: 0 2px;
         }
 
-        .seal-button {
-            background: transparent;
-            color: #8b0000;
-            border: 2px solid #8b0000;
-            padding: 12px 40px;
+        /* 底部控制區與按鈕 */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 機械感藍色按鈕 */
+        .btn-receive {
+            background: #132b38;
+            border: 2px solid #00a2ff;
+            color: #00a2ff;
+            border-radius: 4px;
+            padding: 8px 20px;
             cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.2s;
-            letter-spacing: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 0 10px rgba(0, 162, 255, 0.2);
+            transition: all 0.1s ease;
         }
 
-        .seal-button:hover {
-            background: #8b0000;
-            color: white;
-            box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+        .btn-receive:active {
+            background: #00a2ff;
+            color: #051118;
+            box-shadow: 0 0 15px #00a2ff;
         }
 
-        @keyframes stampAppear {
-            0% { transform: scale(1.5); opacity: 0; filter: blur(10px); }
-            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        /* 打字機/接收中動畫 */
+        .printing {
+            animation: blink 0.5s infinite alternate;
         }
-        .highlight {
-    color: #d4af37;
-    font-weight: bold;
-    text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
-    background: rgba(139, 0, 0, 0.1);
-    padding: 2px 4px;
-    border-radius: 2px;
-}
 
-/* 讓文字出現時帶有一點點模糊抖動 */
-@keyframes stampAppear {
-    0% { transform: scale(1.1); opacity: 0; filter: blur(15px) contrast(2); }
-    50% { transform: scale(0.98); opacity: 0.8; filter: blur(2px); }
-    100% { transform: scale(1); opacity: 1; filter: blur(0); }
-}
+        @keyframes blink {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
 
-<div class="index-container">
-    <h2 style="letter-spacing: 10px; color: #666;">THE INDEX</h2>
-    <div id="prescript-box" class="prescript-box">
-        <p style="color: #444;">-- 等待指令中 --</p>
+<div class="beeper-case">
+    <div class="beeper-header">
+        <span>PROXIMA_TERMINAL_V2.04</span>
+        <span id="status-light" style="color: #00a2ff;">● ONLINE</span>
     </div>
-    <button onclick="generatePrescript()" class="seal-button">領受意志</button>
+    
+    <div class="screen">
+        <div id="prescript-box">
+            <p style="color: #436d80; text-align: center; font-size: 0.9rem;">[ 點擊下方按鈕以接收線條意志 ]</p>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <span style="font-size: 0.7rem; color: #3a5e6e;">INDEX MFG.</span>
+        <button onclick="receiveOracle()" class="btn-receive">✉ RECEIVE</button>
+    </div>
 </div>
 
 <script>
+    // 保留原本抽象的指令詞庫
     const data = {
-    times: ["在空無一物的時刻", "當第十三聲蟬鳴響起時", "在血液凝固的溫度下", "當影子長過本體之時", "在被遺忘的夢境邊緣", "於尚未命名的色彩中","在凌晨三點時", "當鐘聲敲響十二次後", "在雨停之前的瞬間", "於日落之時", "在看見第一道光後", "當你感到飢餓時"],
-    verbs: ["編織", "抹除", "親吻", "拆解", "凝視", "咀嚼", "雕刻", "縫補","殺死", "吃掉", "埋葬", "記錄下", "獻祭", "燒毀", "親吻", "拆解"],
-    senses: ["未曾存在的", "正在腐爛的", "不可直視的", "被奪走名字的", "散發鐵鏽味的", "透明的","所看見的", "所聽見的", "所畫出的", "所觸碰到的", "記憶中的", "夢見的"],
-    names: ["虛無", "螺旋", "線條的末端", "昨日的餘溫", "所有人的沈默", "齒輪的喘息", "褪色的誓言","路人", "親人", "畫作", "受尊敬者", "罪人", "富有之人", "自己的影子"],
-    abstract_prefix: ["為了證明服從，你必須", "以都市之名，准許你", "在苦難的盡頭，請務必", "這是不容置疑的意志："],
-    requirements: ["保持呼吸的韻律與時鐘同步", "將眼球轉向不存在的方位", "用指尖感受重力的重量", "在心中默唸不存在的數字"]
-};
+        times: ["在空無一物的時刻", "當第十三聲蟬鳴響起時", "在血液凝固的溫度下", "當影子長過本體之時", "在被遺忘的夢境邊緣", "於尚未命名的色彩中"],
+        verbs: ["編織", "抹除", "親吻", "拆解", "凝視", "咀嚼", "雕刻", "縫補"],
+        senses: ["未曾存在的", "正在腐爛的", "不可直視的", "被奪走名字的", "散發鐵鏽味的", "透明的"],
+        names: ["虛無", "螺旋", "線條的末端", "昨日的餘溫", "所有人的沈默", "齒輪的喘息", "褪色的誓言"],
+        abstract_prefix: ["為了證明服從，你必須", "以都市之名，准許你", "在苦難的盡頭，請務必", "這是不容置疑的意志："],
+        requirements: ["保持呼吸的韻律與時鐘同步", "將眼球轉向不存在的方位", "用指尖感受重力的重量", "在心中默唸不存在的數字"]
+    };
 
-function getRandom(array) {
-    return array[Math.floor(Math.random() * array.length)];
-}
-
-function generatePrescript() {
-    const box = document.getElementById('prescript-box');
-    
-    // 隨機決定指令結構
-    const structureType = Math.random();
-    let fullHTML = '';
-
-    if (structureType > 0.5) {
-        // 結構 A：經典分格式 (時間 + 動作 + 感官 + 對象)
-        fullHTML = `
-            <p class="prescript-text">
-                <span class="highlight">${getRandom(data.times)}</span>，
-                <span class="highlight">${getRandom(data.verbs)}</span>你
-                <span class="highlight">${getRandom(data.senses)}</span>的
-                <span class="highlight">${getRandom(data.names)}</span>。
-            </p>
-        `;
-    } else {
-        // 結構 B：抽象要求式 (前綴 + 具體要求的抽象化)
-        fullHTML = `
-            <p class="prescript-text">
-                <span class="highlight">${getRandom(data.abstract_prefix)}</span>
-                <span class="highlight">${getRandom(data.requirements)}</span>，並
-                <span class="highlight">${getRandom(data.verbs)}</span>
-                <span class="highlight">${getRandom(data.names)}</span>。
-            </p>
-        `;
+    function getRandom(array) {
+        return array[Math.floor(Math.random() * array.length)];
     }
 
-    box.innerHTML = fullHTML;
-    
-    // 視覺回饋：背景隨機閃爍紅光
-    triggerEmergencyEffect();
-}
+    function receiveOracle() {
+        const box = document.getElementById('prescript-box');
+        const status = document.getElementById('status-light');
+        
+        // 模擬接收中的動態
+        status.innerText = "▲ RECEIVING...";
+        status.style.color = "#ffcc00";
+        box.innerHTML = `<p style="color: #00a2ff; text-align: center;" class="printing">正在解調線條信號...</p>`;
 
-function triggerEmergencyEffect() {
-    const container = document.querySelector('.index-container');
-    container.style.borderColor = '#8b0000';
-    setTimeout(() => {
-        container.style.borderColor = '#333';
-    }, 100);
-}
+        // 延遲 400 毫秒製造逼逼機「逼逼——」接收訊息的頓點感
+        setTimeout(() => {
+            status.innerText = "● RECEIVED";
+            status.style.color = "#00a2ff";
+
+            const structureType = Math.random();
+            let fullHTML = '';
+
+            if (structureType > 0.5) {
+                fullHTML = `
+                    <p class="prescript-text">
+                        <span class="highlight">${getRandom(data.times)}</span>，
+                        <span class="highlight">${getRandom(data.verbs)}</span>你
+                        <span class="highlight">${getRandom(data.senses)}</span>的
+                        <span class="highlight">${getRandom(data.names)}</span>。
+                    </p>
+                `;
+            } else {
+                fullHTML = `
+                    <p class="prescript-text">
+                        <span class="highlight">${getRandom(data.abstract_prefix)}</span>
+                        <span class="highlight">${getRandom(data.requirements)}</span>，並
+                        <span class="highlight">${getRandom(data.verbs)}</span>
+                        <span class="highlight">${getRandom(data.names)}</span>。
+                    </p>
+                `;
+            }
+
+            box.innerHTML = fullHTML;
+        }, 400);
+    }
 </script>
 
 </body>
