@@ -22,7 +22,7 @@
             border-radius: 12px;
             padding: 20px;
             width: 90%;
-            max-width: 450px;
+            max-width: 500px;
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 162, 255, 0.2);
             position: relative;
         }
@@ -42,7 +42,7 @@
             background: #07131a;
             border: 2px solid #254b5c;
             border-radius: 6px;
-            min-height: 180px;
+            min-height: 200px;
             padding: 15px;
             box-shadow: inset 0 0 15px rgba(0, 162, 255, 0.4);
             position: relative;
@@ -64,12 +64,13 @@
         }
 
         .prescript-text {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             line-height: 1.8;
             color: #c2efff;
             text-shadow: 0 0 8px rgba(0, 162, 255, 0.6);
             margin: 0;
             z-index: 1;
+            letter-spacing: 1px;
         }
 
         .highlight {
@@ -78,11 +79,10 @@
             padding: 0 2px;
         }
 
-        /* 讓每個字預設隱藏，當加上 .revealed 時才顯示 */
         .char {
             opacity: 0;
             display: inline-block;
-            transition: opacity 0.05s ease;
+            transition: opacity 0.03s ease;
         }
 
         .char.revealed {
@@ -136,37 +136,54 @@
 
 <div class="beeper-case">
     <div class="beeper-header">
-        <span>PROXIMA_TERMINAL_V2.04</span>
+        <span>METRO_TERMINAL_V5.50</span>
         <span id="status-light" style="color: #00a2ff;">● ONLINE</span>
     </div>
     
     <div class="screen">
         <div id="prescript-box">
-            <p style="color: #436d80; text-align: center; font-size: 0.9rem;">[ 點擊下方按鈕以接收線條意志 ]</p>
+            <p style="color: #436d80; text-align: center; font-size: 0.9rem;">[ 點擊按鈕，接收 ]</p>
         </div>
     </div>
     
     <div class="controls">
-        <span style="font-size: 0.7rem; color: #3a5e6e;">INDEX MFG.</span>
+        <span style="font-size: 0.7rem; color: #3a5e6e;">INDEX INDUSTRIAL.</span>
         <button onclick="receiveOracle()" id="receive-btn" class="btn-receive">✉ RECEIVE</button>
     </div>
 </div>
 
 <script>
+    // 嚴格分類並擴充至 50 個現實詞彙
     const data = {
-        times: ["在空無一物的時刻", "當第十三聲蟬鳴響起時", "在血液凝固的溫度下", "當影子長過本體之時", "在被遺忘的夢境邊緣", "於尚未命名的色彩中"],
-        verbs: ["編織", "抹除", "親吻", "拆解", "凝視", "咀嚼", "雕刻", "縫補"],
-        senses: ["未曾存在的", "正在腐爛的", "不可直視的", "被奪走名字的", "散發鐵鏽味的", "透明的"],
-        names: ["虛無", "螺旋", "線條的末端", "昨日的餘溫", "所有人的沈默", "齒輪的喘息", "褪色的誓言"],
-        abstract_prefix: ["為了證明服從，你必須", "以都市之名，准許你", "在苦難的盡頭，請務必", "這是不容置疑的意志："],
-        requirements: ["保持呼吸的韻律與時鐘同步", "將眼球轉向不存在的方位", "用指尖感受重力的重量", "在心中默唸不存在的數字"]
+        // 【時間】 (現實生活情境)
+        times: [
+            "當下班鐘聲響起時", "在捷運門即將關上的瞬間", "當手機電量僅剩1%時", "在便利商店大夜班交接時", 
+            "當垃圾車音樂從遠處傳來時", "在打開免洗筷的瞬間", "當週一早上的鬧鐘響起第三次時", "在對發票卻全部沒中的時刻"
+        ],
+        // 【動詞】 (現代人常做的荒謬/日常動作)
+        verbs: [
+            "解除分期付款", "封鎖", "按讚分享", "截圖存證", "取消追蹤", "強制打卡", "雙擊點讚", 
+            "退群組", "瘋狂重新整理", "悄悄關注", "複製貼上", "投遞履歷", "全面優化", "精準投放"
+        ],
+        // 【形容詞/感官】 (包裝現代物件的形容詞)
+        adjectives: [
+            "過期三天的", "充滿香精味的", "顯示為已讀的", "高流量的", "藍光外洩的", "脆化的", 
+            "極度缺鈣的", "被演算法推薦的", "沒訊號的", "散發微波食品氣味的", "高畫質的", "充滿社畜怨氣的"
+        ],
+        // 【名詞】 (現代常見的物品與身份)
+        names: [
+            "外送員", "垃圾分類桶", "悠遊卡", "大冰奶", "藍牙耳機", "演算法", "限時動態", "Wi-Fi密碼", 
+            "Excel表格", "群組訊息", "載具條碼", "主管的來電", "迷因圖", "動態磚", "超商熱狗"
+        ],
+        // 【特殊句型前綴與要求】
+        abstract_prefix: ["為了維持社會秩序，你必須", "依循都市KPI，命令你", "這是不可忤逆的勞工合約："],
+        requirements: ["保持雙眼直視螢幕不眨眼", "用滑鼠游標在桌面上畫出完美圓形", "在心中默唸退職申請書", "將呼吸頻率調整為冷氣機的運作節奏"]
     };
 
     function getRandom(array) {
         return array[Math.floor(Math.random() * array.length)];
     }
 
-    // 將字串包裝成一個個帶有 .char 類別的 span，以此保留高亮標籤又能做逐字動畫
     function wrapTextInSpans(text, isHighlight = false) {
         return text.split('').map(char => {
             const hClass = isHighlight ? 'highlight' : '';
@@ -179,11 +196,10 @@
         const status = document.getElementById('status-light');
         const btn = document.getElementById('receive-btn');
         
-        // 停用按鈕，避免在打字時重複觸發
         btn.disabled = true;
-        status.innerText = "▲ RECEIVING...";
+        status.innerText = "▲ CONNECTING...";
         status.style.color = "#ffcc00";
-        box.innerHTML = `<p style="color: #00a2ff; text-align: center;" class="printing">正在解調線條信號...</p>`;
+        box.innerHTML = `<p style="color: #00a2ff; text-align: center;" class="printing">正在從基地台下載線條代碼...</p>`;
 
         setTimeout(() => {
             status.innerText = "● PRINTING";
@@ -192,21 +208,23 @@
             const structureType = Math.random();
             let htmlContent = '';
 
-            if (structureType > 0.5) {
+            if (structureType > 0.4) {
+                // 結構 A：現實分格式 (時間 + 動詞 + 形容詞 + 名詞)
                 htmlContent = `
                     <p class="prescript-text">
                         ${wrapTextInSpans(getRandom(data.times), true)}，
-                        ${wrapTextInSpans(getRandom(data.verbs), true)}你
-                        ${wrapTextInSpans(getRandom(data.senses), true)}的
+                        填空要求：請${wrapTextInSpans(getRandom(data.verbs), true)}你
+                        ${wrapTextInSpans(getRandom(data.adjectives), true)}的
                         ${wrapTextInSpans(getRandom(data.names), true)}。
                     </p>
                 `;
             } else {
+                // 結構 B：現代苦行式 (前綴 + 現實要求的抽象化)
                 htmlContent = `
                     <p class="prescript-text">
                         ${wrapTextInSpans(getRandom(data.abstract_prefix), true)}
-                        ${wrapTextInSpans(getRandom(data.requirements), true)}，並
-                        ${wrapTextInSpans(getRandom(data.verbs), true)}
+                        ${wrapTextInSpans(getRandom(data.requirements), true)}，並立即
+                        ${wrapTextInSpans(getRandom(data.verbs), true)}那份
                         ${wrapTextInSpans(getRandom(data.names), true)}。
                     </p>
                 `;
@@ -214,12 +232,9 @@
 
             box.innerHTML = htmlContent;
 
-            // 執行逐字顯示邏輯
             const chars = box.querySelectorAll('.char');
             let index = 0;
-            
-            // 調整這個數字可以改變滾動速度（毫秒/字）
-            const typingSpeed = 70; 
+            const typingSpeed = 50; // 加快一點打字速度，因為字數變多了
 
             const ticker = setInterval(() => {
                 if (index < chars.length) {
@@ -227,7 +242,6 @@
                     index++;
                 } else {
                     clearInterval(ticker);
-                    // 結束打字，恢復狀態
                     status.innerText = "● RECEIVED";
                     status.style.color = "#00a2ff";
                     btn.disabled = false;
