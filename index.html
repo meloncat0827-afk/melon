@@ -2,9 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>食指指令接收終端 - 藍色機型</title>
+    <title>接收終端 </title>
     <style>
-        /* 基礎設定：極黑背景，突出藍光 */
         body {
             background-color: #030708;
             color: #a3e2ff;
@@ -17,7 +16,6 @@
             overflow: hidden;
         }
 
-        /* 逼逼機外殼 */
         .beeper-case {
             background: #0f1c24;
             border: 4px solid #1e3a47;
@@ -29,7 +27,6 @@
             position: relative;
         }
 
-        /* 終端標頭 */
         .beeper-header {
             font-size: 0.8rem;
             color: #528fa8;
@@ -41,7 +38,6 @@
             padding-bottom: 5px;
         }
 
-        /* 藍色發光螢幕 */
         .screen {
             background: #07131a;
             border: 2px solid #254b5c;
@@ -56,7 +52,6 @@
             justify-content: center;
         }
 
-        /* 模擬螢幕掃描線 (Scanlines) 效果 */
         .screen::before {
             content: " ";
             display: block;
@@ -68,7 +63,6 @@
             pointer-events: none;
         }
 
-        /* 指令內文 */
         .prescript-text {
             font-size: 1.25rem;
             line-height: 1.8;
@@ -78,14 +72,23 @@
             z-index: 1;
         }
 
-        /* 格式高亮：更具科技感 */
         .highlight {
             color: #ffffff;
             border-bottom: 1px dashed #00a2ff;
             padding: 0 2px;
         }
 
-        /* 底部控制區與按鈕 */
+        /* 讓每個字預設隱藏，當加上 .revealed 時才顯示 */
+        .char {
+            opacity: 0;
+            display: inline-block;
+            transition: opacity 0.05s ease;
+        }
+
+        .char.revealed {
+            opacity: 1;
+        }
+
         .controls {
             margin-top: 15px;
             display: flex;
@@ -93,7 +96,6 @@
             align-items: center;
         }
 
-        /* 機械感藍色按鈕 */
         .btn-receive {
             background: #132b38;
             border: 2px solid #00a2ff;
@@ -107,13 +109,19 @@
             transition: all 0.1s ease;
         }
 
-        .btn-receive:active {
+        .btn-receive:disabled {
+            border-color: #1e3a47;
+            color: #1e3a47;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-receive:active:not(:disabled) {
             background: #00a2ff;
             color: #051118;
             box-shadow: 0 0 15px #00a2ff;
         }
 
-        /* 打字機/接收中動畫 */
         .printing {
             animation: blink 0.5s infinite alternate;
         }
@@ -140,12 +148,11 @@
     
     <div class="controls">
         <span style="font-size: 0.7rem; color: #3a5e6e;">INDEX MFG.</span>
-        <button onclick="receiveOracle()" class="btn-receive">✉ RECEIVE</button>
+        <button onclick="receiveOracle()" id="receive-btn" class="btn-receive">✉ RECEIVE</button>
     </div>
 </div>
 
 <script>
-    // 保留原本抽象的指令詞庫
     const data = {
         times: ["在空無一物的時刻", "當第十三聲蟬鳴響起時", "在血液凝固的溫度下", "當影子長過本體之時", "在被遺忘的夢境邊緣", "於尚未命名的色彩中"],
         verbs: ["編織", "抹除", "親吻", "拆解", "凝視", "咀嚼", "雕刻", "縫補"],
@@ -159,44 +166,74 @@
         return array[Math.floor(Math.random() * array.length)];
     }
 
+    // 將字串包裝成一個個帶有 .char 類別的 span，以此保留高亮標籤又能做逐字動畫
+    function wrapTextInSpans(text, isHighlight = false) {
+        return text.split('').map(char => {
+            const hClass = isHighlight ? 'highlight' : '';
+            return `<span class="char ${hClass}">${char}</span>`;
+        }).join('');
+    }
+
     function receiveOracle() {
         const box = document.getElementById('prescript-box');
         const status = document.getElementById('status-light');
+        const btn = document.getElementById('receive-btn');
         
-        // 模擬接收中的動態
+        // 停用按鈕，避免在打字時重複觸發
+        btn.disabled = true;
         status.innerText = "▲ RECEIVING...";
         status.style.color = "#ffcc00";
         box.innerHTML = `<p style="color: #00a2ff; text-align: center;" class="printing">正在解調線條信號...</p>`;
 
-        // 延遲 400 毫秒製造逼逼機「逼逼——」接收訊息的頓點感
         setTimeout(() => {
-            status.innerText = "● RECEIVED";
-            status.style.color = "#00a2ff";
+            status.innerText = "● PRINTING";
+            status.style.color = "#00ffff";
 
             const structureType = Math.random();
-            let fullHTML = '';
+            let htmlContent = '';
 
             if (structureType > 0.5) {
-                fullHTML = `
+                htmlContent = `
                     <p class="prescript-text">
-                        <span class="highlight">${getRandom(data.times)}</span>，
-                        <span class="highlight">${getRandom(data.verbs)}</span>你
-                        <span class="highlight">${getRandom(data.senses)}</span>的
-                        <span class="highlight">${getRandom(data.names)}</span>。
+                        ${wrapTextInSpans(getRandom(data.times), true)}，
+                        ${wrapTextInSpans(getRandom(data.verbs), true)}你
+                        ${wrapTextInSpans(getRandom(data.senses), true)}的
+                        ${wrapTextInSpans(getRandom(data.names), true)}。
                     </p>
                 `;
             } else {
-                fullHTML = `
+                htmlContent = `
                     <p class="prescript-text">
-                        <span class="highlight">${getRandom(data.abstract_prefix)}</span>
-                        <span class="highlight">${getRandom(data.requirements)}</span>，並
-                        <span class="highlight">${getRandom(data.verbs)}</span>
-                        <span class="highlight">${getRandom(data.names)}</span>。
+                        ${wrapTextInSpans(getRandom(data.abstract_prefix), true)}
+                        ${wrapTextInSpans(getRandom(data.requirements), true)}，並
+                        ${wrapTextInSpans(getRandom(data.verbs), true)}
+                        ${wrapTextInSpans(getRandom(data.names), true)}。
                     </p>
                 `;
             }
 
-            box.innerHTML = fullHTML;
+            box.innerHTML = htmlContent;
+
+            // 執行逐字顯示邏輯
+            const chars = box.querySelectorAll('.char');
+            let index = 0;
+            
+            // 調整這個數字可以改變滾動速度（毫秒/字）
+            const typingSpeed = 70; 
+
+            const ticker = setInterval(() => {
+                if (index < chars.length) {
+                    chars[index].classList.add('revealed');
+                    index++;
+                } else {
+                    clearInterval(ticker);
+                    // 結束打字，恢復狀態
+                    status.innerText = "● RECEIVED";
+                    status.style.color = "#00a2ff";
+                    btn.disabled = false;
+                }
+            }, typingSpeed);
+
         }, 400);
     }
 </script>
