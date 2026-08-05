@@ -1,280 +1,359 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <title>接收終端 </title>
-    <style>
-        body {
-            background-color: #030708;
-            color: #a3e2ff;
-            font-family: "Courier New", Courier, monospace, "Noto Serif TC";
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>祈iruni 生日倒數與蛋糕手作工房</title>
+  <style>
+    :root {
+      --primary: #ff7597;
+      --primary-dark: #ff4d7d;
+      --bg: #fff0f5;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --text: #4a3e3d;
+    }
 
-        .beeper-case {
-            background: #0f1c24;
-            border: 4px solid #1e3a47;
-            border-radius: 12px;
-            padding: 20px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 162, 255, 0.2);
-            position: relative;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif;
+    }
 
-        .beeper-header {
-            font-size: 0.8rem;
-            color: #528fa8;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #1e3a47;
-            padding-bottom: 5px;
-        }
+    body {
+      background: linear-gradient(135deg, #ffe6eb 0%, #edf2ff 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+    }
 
-        .screen {
-            background: #07131a;
-            border: 2px solid #254b5c;
-            border-radius: 6px;
-            min-height: 200px;
-            padding: 15px;
-            box-shadow: inset 0 0 15px rgba(0, 162, 255, 0.4);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+    .container {
+      background: var(--card-bg);
+      padding: 30px 25px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
+      max-width: 500px;
+      width: 100%;
+    }
 
-        .screen::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
-        }
+    h1 { color: var(--primary); margin-bottom: 8px; font-size: 1.8rem; }
+    p { margin-bottom: 15px; font-size: 0.95rem; color: #666; }
 
-        .prescript-text {
-            font-size: 1.2rem;
-            line-height: 1.8;
-            color: #c2efff;
-            text-shadow: 0 0 8px rgba(0, 162, 255, 0.6);
-            margin: 0;
-            z-index: 1;
-            letter-spacing: 1px;
-        }
+    /* 倒數計時樣式 */
+    .timer {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
 
-        .highlight {
-            color: #ffffff;
-            border-bottom: 1px dashed #00a2ff;
-            padding: 0 2px;
-        }
+    .time-box {
+      background: #fff0f3;
+      padding: 12px;
+      border-radius: 12px;
+      min-width: 65px;
+      border: 2px solid #ffb3c6;
+    }
 
-        .char {
-            opacity: 0;
-            display: inline-block;
-            transition: opacity 0.03s ease;
-        }
+    .time-box span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
 
-        .char.revealed {
-            opacity: 1;
-        }
+    .time-box label { font-size: 0.75rem; color: #888; }
 
-        .controls {
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .hidden { display: none !important; }
 
-        .btn-receive {
-            background: #132b38;
-            border: 2px solid #00a2ff;
-            color: #00a2ff;
-            border-radius: 4px;
-            padding: 8px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.9rem;
-            box-shadow: 0 0 10px rgba(0, 162, 255, 0.2);
-            transition: all 0.1s ease;
-        }
+    /* 按鈕通用樣式 */
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.3);
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
 
-        .btn-receive:disabled {
-            border-color: #1e3a47;
-            color: #1e3a47;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+    .btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn:active { transform: scale(0.98); }
 
-        .btn-receive:active:not(:disabled) {
-            background: #00a2ff;
-            color: #051118;
-            box-shadow: 0 0 15px #00a2ff;
-        }
+    /* 遊戲關卡 UI */
+    .stage-card {
+      background: #ffffff;
+      border: 2px solid #ffe1e8;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 15px;
+    }
 
-        .printing {
-            animation: blink 0.5s infinite alternate;
-        }
+    .ingredient-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
 
-        @keyframes blink {
-            from { opacity: 0.4; }
-            to { opacity: 1; }
-        }
-    </style>
+    .ing-item {
+      background: #fff8f9;
+      border: 2px dashed #ffb3c6;
+      border-radius: 12px;
+      padding: 15px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: 0.2s;
+    }
+
+    .ing-item.collected {
+      background: #ffe1e8;
+      border-style: solid;
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    /* 烤箱條 */
+    .oven-meter {
+      width: 100%;
+      height: 25px;
+      background: #e0e0e0;
+      border-radius: 15px;
+      position: relative;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .oven-target {
+      position: absolute;
+      left: 65%;
+      width: 20%;
+      height: 100%;
+      background: #ffb84d;
+      border-radius: 4px;
+    }
+
+    .oven-pointer {
+      position: absolute;
+      left: 0%;
+      width: 6px;
+      height: 100%;
+      background: #d90429;
+    }
+  </style>
 </head>
 <body>
 
-<div class="beeper-case">
-    <div class="beeper-header">
-        <span>METRO_TERMINAL_V5.50</span>
-        <span id="status-light" style="color: #00a2ff;">● ONLINE</span>
-    </div>
+  <div class="container">
     
-    <div class="screen">
-        <div id="prescript-box">
-            <p style="color: #436d80; text-align: center; font-size: 0.9rem;">[ 點擊按鈕，接收指令 ]</p>
+    <!-- 1. 倒數階段 -->
+    <div id="countdown-view">
+      <h1>🎉 祈iruni 生日倒數 🎂</h1>
+      <p>神秘小禮物?!?!：</p>
+      
+      <div class="timer">
+        <div class="time-box"><span id="days">00</span><label>天</label></div>
+        <div class="time-box"><span id="hours">00</span><label>時</label></div>
+        <div class="time-box"><span id="minutes">00</span><label>分</label></div>
+        <div class="time-box"><span id="seconds">00</span><label>秒</label></div>
+      </div>
+
+      <p style="font-size: 0.85rem; color: #888;">倒數進入最後 1.5 小時，將開啟烘焙手作關卡！</p>
+    </div>
+
+    <!-- 2. 做蛋糕闖關遊戲 -->
+    <div id="game-view" class="hidden">
+      <h1 id="stage-title">🥣 步驟 1：準備食材</h1>
+      
+      <!-- 第一關：備料 -->
+      <div id="stage-1" class="stage-card">
+        <p>點擊收集做蛋糕所需的所有食材：</p>
+        <div class="ingredient-grid">
+          <div class="ing-item" onclick="collectIng(this)">🌾 麵粉</div>
+          <div class="ing-item" onclick="collectIng(this)">🥚 雞蛋</div>
+          <div class="ing-item" onclick="collectIng(this)">🥛 牛奶</div>
+          <div class="ing-item" onclick="collectIng(this)">🍬 細砂糖</div>
         </div>
+      </div>
+
+      <!-- 第二關：攪拌麵糊 -->
+      <div id="stage-2" class="stage-card hidden">
+        <p>快速點擊攪拌棒，將麵糊均勻打發！</p>
+        <div style="font-size: 4rem; margin: 15px 0;" id="mixer-icon">🥣</div>
+        <p>進度：<span id="mix-progress">0</span> / 15 次</p>
+        <button class="btn" onclick="mixBatter()">🌀 快速攪拌！</button>
+      </div>
+
+      <!-- 第三關：控溫烘烤 -->
+      <div id="stage-3" class="stage-card hidden">
+        <p>在紅線移動到<b>黃色完美區域</b>時按下停止！</p>
+        <div class="oven-meter">
+          <div class="oven-target"></div>
+          <div class="oven-pointer" id="pointer"></div>
+        </div>
+        <button class="btn" onclick="stopOven()">🔥 出爐烤箱！</button>
+      </div>
+
+      <!-- 第四關：抹鮮奶油與裝飾 -->
+      <div id="stage-4" class="stage-card hidden">
+        <p>滑動下方滑塊，幫蛋糕抹上均勻的鮮奶油並擺上草莓！</p>
+        <div style="font-size: 3.5rem; margin: 15px 0;" id="cake-preview">🍞</div>
+        <input type="range" id="cream-slider" min="0" max="100" value="0" style="width: 80%;" oninput="updateCream(this.value)">
+        <br>
+        <button class="btn hidden" id="finish-btn" onclick="finishGame()">✨ 完成生日蛋糕！</button>
+      </div>
     </div>
+
+    <!-- 3. 完成通關祝福卡片 -->
+    <div id="card-view" class="hidden">
+      <h1>💖 🎉 生日快樂 祈iruni！ 🎉 💖</h1>
+      <div style="font-size: 4.5rem; margin: 15px 0;">🎂✨</div>
+      <p style="font-weight: bold; color: var(--primary);">太棒了！專屬祈iruni的客製化蛋糕製作完成！</p>
+      
+      <div style="background: #fff6f8; padding: 20px; border-radius: 16px; text-align: left; margin-top: 15px; line-height: 1.6; border: 1px solid #ffe1e8;">
+        親愛的祈iruni：<br><br>
+        祝你生日快樂！希望這款親手（遊戲）製作的蛋糕能帶給你甜甜的好心情！<br>
+        願你在新的一年裡所有願望都實現，每天都像蛋糕一樣甜美幸福，永遠快樂！🎂🍓🌸
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ⚠️ 請修改祈iruni的生日時間 (YYYY-MM-DDTHH:mm:ss)
+    const TARGET_DATE = new Date('2026-08-06T00:00:00'); 
     
-    <div class="controls">
-        <span style="font-size: 0.7rem; color: #3a5e6e;">INDEX INDUSTRIAL.</span>
-        <button onclick="receiveOracle()" id="receive-btn" class="btn-receive">✉ RECEIVE</button>
-    </div>
-</div>
+    // 1.5 小時的毫秒數 (90 分鐘)
+    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000;
 
-<script>
-    const data = {
-        // 【時間/狀態】 (擴充並修正至 50+ 現實與都市怪談情境)
-        times: [
-            "當下班鐘聲響起時", "在捷運門即將關上的瞬間", "當手機電量僅剩1%時", "在便利商店大夜班交接時", 
-            "當垃圾車音樂從遠處傳來時", "在打開免洗筷的瞬間", "當週一早上的鬧鐘響起第三次時", "在對發票卻全部沒中的時刻",
-            "當陰影投射在牆面時", "當空間扭曲達到臨界點時", "當面臨抉擇時", "當執行計畫時", "當擦肩而過時", 
-            "當心跳加速時", "當怒火中燒時", "當失去理智時", "黑夜降臨時代替所有人時", "當時鐘定格時", 
-            "日落西山時", "黑夜降臨時代碼重構時", "黎明初現時", "四季更迭時", "流星劃過天際時", 
-            "冰雪消融時", "櫻花盛開時", "暴雨傾盆時", "霓虹閃爍在街角時", "狂風驟起時", "迷霧籠罩觀測站時", 
-            "潮汐退去時", "雷電交加時", "大地震動時", "靈感湧現時", "意識模糊時", "恐懼蔓延時", 
-            "孤獨襲來時", "記憶復甦時", "意志堅定時", "希望破滅時", "真相大白時", "靈魂共鳴時", 
-            "抵達終點時", "按下主機開關時", "拔得頭籌時", "陷入沉思時", "陷入無底絕境時", "跨越肉體極限時", 
-            "遭遇無法戰勝的強敵時", "握緊顫抖的雙手時", "轉身冷酷離去時", "迎風瘋狂奔跑時", "能量耗盡核心熄滅時", 
-            "城市秩序崩塌時", "底層系統重啟時", "既有規則失效時", "光芒徹底黯淡時", "高維數據溢出時", 
-            "沉睡的古神甦醒時", "兩個世界產生重疊時"
-        ],
-        // 【動詞】 (修正語法錯誤，去重，保留生活感與怪談操作)
-        verbs: [
-            "解除分期付款", "封鎖", "按讚分享", "截圖存證", "取消追蹤", "強制打卡", "雙擊點讚", 
-            "退群組", "瘋狂重新整理", "悄悄關注", "複製貼上", "投遞履歷", "全面優化", "精準投放", 
-            "學習", "思考", "執行", "計劃", "閱讀", "寫作", "觀察", "想像", "跑步", "游泳",
-            "飛翔", "超越", "控制", "創造", "改變", "發展", "溝通", "分享", "聚集", "選擇",
-            "決定", "喜歡", "討厭", "感謝", "抱怨", "準備", "忘記", "記得", "發現", "發明",
-            "解決", "破壞", "建立", "改善", "影響", "增加", "減少", "獲得", "失去", "拒絕",
-            "接受", "承諾", "懷疑", "相信", "堅持", "放棄", "追求", "等待", "期待", "珍惜"
-        ],
-        // 【形容詞/感官】 (擴充至 50 個，修正分類錯誤)
-        adjectives: [
-            "過期三天的", "充滿香精味的", "顯示為已讀的", "高流量的", "藍光外洩的", "脆化的", 
-            "極度缺鈣的", "被演算法推薦的", "沒訊號的", "散發微波食品氣味的", "高畫質的", "充滿社畜怨氣的",
-            "優秀的", "聰明的", "善良的", "美麗的", "快樂的", "悲傷的", "憤怒的", "緊張的", "放鬆的", "疲憊的",
-            "充實的", "積極的", "消極的", "敏捷的", "勇敢的", "謹慎的", "溫柔的", "嚴肅的", "幽默的", "瘋狂的",
-            "精彩的", "無聊的", "幸運的", "倒楣的", "自由的", "受限制的", "複雜的", "單純的", "獨特的", "普遍的",
-            "理智的", "迷茫的", "堅定的", "脆弱的", "強大的", "遙遠的", "接近的", "真實的", "虛幻的", "黑暗的",
-            "明亮的", "沉重的", "輕盈的", "溫暖的", "寒冷的", "神秘的", "巨大的", "微小的", "核心的", "未知的"
-        ],
-        // 【名詞】 (修正與形容詞混雜的錯誤，確保都是物品/身份/概念)
-        names: [
-            "外送員", "垃圾分類桶", "悠遊卡", "大冰奶", "藍牙耳機", "演算法", "限時動態", "Wi-Fi密碼", 
-            "Excel表格", "群組訊息", "載具條碼", "主管的來電", "迷因圖", "動態磚", "超商熱狗",
-            "世界", "社會", "自然", "宇宙", "時間", "空間", "命運", "機會", "挑戰", "目標", 
-            "責任", "經驗", "知識", "科技", "核心", "系統", "數據", "資訊", "能量", "物質", 
-            "光芒", "陰影", "秘密", "奇蹟", "現象", "規律", "記憶", "邏輯", "靈感", "意識", 
-            "常理", "本質", "結構", "秩序", "混亂", "財富", "智慧", "情感", "環境", "音樂", 
-            "藝術", "程式碼", "遊戲關卡", "故事線", "歷史紀錄", "未來", "現在", "過去", "夢想", "現實"
-        ],
-        // 【特殊句型前綴與要求】
-        abstract_prefix: ["為了維持社會秩序，你必須", "依循都市KPI，命令你", "這是不可忤逆的勞工合約："],
-        requirements: ["保持雙眼直視螢幕不眨眼", "用滑鼠游標在桌面上畫出完美圓形", "在心中默唸退職申請書", "將呼吸頻率調整為冷氣機的運作節奏"]
-    };
+    const countdownView = document.getElementById('countdown-view');
+    const gameView = document.getElementById('game-view');
 
-    function getRandom(array) {
-        return array[Math.floor(Math.random() * array.length)];
+    function updateCountdown() {
+      const now = new Date();
+      const diff = TARGET_DATE - now;
+
+      // 剩餘 1.5 小時以內且未過生日 -> 開放關卡
+      if (diff > 0 && diff <= GAME_UNLOCK_WINDOW) {
+        countdownView.classList.add('hidden');
+        gameView.classList.remove('hidden');
+      } 
+      // 還有 1.5 小時以上 -> 繼續倒數
+      else if (diff > 0) {
+        countdownView.classList.remove('hidden');
+        gameView.classList.add('hidden');
+
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+
+        document.getElementById('days').innerText = String(d).padStart(2, '0');
+        document.getElementById('hours').innerText = String(h).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(m).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(s).padStart(2, '0');
+      } 
+      // 時間已過生日當天 -> 直接開啓遊戲或生日畫面
+      else {
+        countdownView.classList.add('hidden');
+        gameView.classList.remove('hidden');
+      }
     }
 
-    function wrapTextInSpans(text, isHighlight = false) {
-        return text.split('').map(char => {
-            const hClass = isHighlight ? 'highlight' : '';
-            return `<span class="char ${hClass}">${char}</span>`;
-        }).join('');
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // ----------------- 做蛋糕關卡邏輯 -----------------
+
+    // 關卡 1：備料
+    let collectedCount = 0;
+    function collectIng(element) {
+      if (!element.classList.contains('collected')) {
+        element.classList.add('collected');
+        collectedCount++;
+        if (collectedCount === 4) {
+          setTimeout(() => {
+            document.getElementById('stage-1').classList.add('hidden');
+            document.getElementById('stage-2').classList.remove('hidden');
+            document.getElementById('stage-title').innerText = "🥣 步驟 2：攪拌麵糊";
+          }, 500);
+        }
+      }
     }
 
-    function receiveOracle() {
-        const box = document.getElementById('prescript-box');
-        const status = document.getElementById('status-light');
-        const btn = document.getElementById('receive-btn');
-        
-        btn.disabled = true;
-        status.innerText = "▲ CONNECTING...";
-        status.style.color = "#ffcc00";
-        box.innerHTML = `<p style="color: #00a2ff; text-align: center;" class="printing">正在從基地台下載線條代碼...</p>`;
+    // 關卡 2：攪拌
+    let mixCount = 0;
+    function mixBatter() {
+      mixCount++;
+      document.getElementById('mix-progress').innerText = mixCount;
+      const mixerIcon = document.getElementById('mixer-icon');
+      mixerIcon.style.transform = mixCount % 2 === 0 ? "rotate(15deg)" : "rotate(-15deg)";
 
+      if (mixCount >= 15) {
         setTimeout(() => {
-            status.innerText = "● PRINTING";
-            status.style.color = "#00ffff";
-
-            const structureType = Math.random();
-            let htmlContent = '';
-
-            if (structureType > 0.4) {
-                // 結構 A：現實分格式 (時間 + 動詞 + 形容詞 + 名詞)
-                htmlContent = `
-                    <p class="prescript-text">
-                        ${wrapTextInSpans(getRandom(data.times), true)}，
-                        填空要求：請${wrapTextInSpans(getRandom(data.verbs), true)}你
-                        ${wrapTextInSpans(getRandom(data.adjectives), true)}
-                        ${wrapTextInSpans(getRandom(data.names), true)}。
-                    </p>
-                `;
-            } else {
-                // 結構 B：現代苦行式 (前綴 + 現實要求的抽象化)
-                htmlContent = `
-                    <p class="prescript-text">
-                        ${wrapTextInSpans(getRandom(data.abstract_prefix), true)}
-                        ${wrapTextInSpans(getRandom(data.requirements), true)}，並立即
-                        ${wrapTextInSpans(getRandom(data.verbs), true)}那份
-                        ${wrapTextInSpans(getRandom(data.names), true)}。
-                    </p>
-                `;
-            }
-
-            box.innerHTML = htmlContent;
-
-            const chars = box.querySelectorAll('.char');
-            let index = 0;
-            const typingSpeed = 40; // 稍微微調打字速度
-
-            const ticker = setInterval(() => {
-                if (index < chars.length) {
-                    chars[index].classList.add('revealed');
-                    index++;
-                } else {
-                    clearInterval(ticker);
-                    status.innerText = "● RECEIVED";
-                    status.style.color = "#00a2ff";
-                    btn.disabled = false;
-                }
-            }, typingSpeed);
-
-        }, 400);
+          document.getElementById('stage-2').classList.add('hidden');
+          document.getElementById('stage-3').classList.remove('hidden');
+          document.getElementById('stage-title').innerText = "🔥 步驟 3：掌控烤箱火候";
+          startOvenGame();
+        }, 300);
+      }
     }
-</script>
 
+    // 關卡 3：烘烤控溫
+    let pointerPos = 0;
+    let pointerDirection = 1;
+    let ovenInterval;
+
+    function startOvenGame() {
+      const pointer = document.getElementById('pointer');
+      ovenInterval = setInterval(() => {
+        pointerPos += pointerDirection * 2;
+        if (pointerPos >= 95 || pointerPos <= 0) {
+          pointerDirection *= -1;
+        }
+        pointer.style.left = pointerPos + '%';
+      }, 20);
+    }
+
+    function stopOven() {
+      clearInterval(ovenInterval);
+      // 判斷是否停止在 65% ~ 85% 的目標區
+      if (pointerPos >= 65 && pointerPos <= 85) {
+        alert("🎉 太棒了！蛋糕烤得香噴噴、完美金黃！");
+      } else {
+        alert("😋 雖然稍微有點焦/不夠熟，但心意滿分！依然非常美味！");
+      }
+
+      document.getElementById('stage-3').classList.add('hidden');
+      document.getElementById('stage-4').classList.remove('hidden');
+      document.getElementById('stage-title').innerText = "🍓 步驟 4：抹鮮奶油與裝飾";
+    }
+
+    // 關卡 4：裝飾蛋糕
+    function updateCream(val) {
+      const preview = document.getElementById('cake-preview');
+      if (val < 40) {
+        preview.innerText = "🍞"; // 空蛋糕胚
+      } else if (val < 80) {
+        preview.innerText = "🧁"; // 抹上奶油
+      } else {
+        preview.innerText = "🎂"; // 完成草莓蛋糕
+        document.getElementById('finish-btn').classList.remove('hidden');
+      }
+    }
+
+    // 通關
+    function finishGame() {
+      document.getElementById('game-view').classList.add('hidden');
+      document.getElementById('card-view').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
