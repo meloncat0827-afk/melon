@@ -1,531 +1,149 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>祈iruni 生日倒數與皮克敏烘焙冒險！</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祈iruni 🎂 生日倒數首頁</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff0f3',
+              100: '#ffe1e8',
+              200: '#ffc2d1',
+              400: '#ff7597',
+              500: '#ff4d7d',
+              600: '#e62e60',
+            },
+            husky: {
+              50: '#f0f4f8',
+              100: '#dbe3ed',
+              200: '#b8c7d9',
+              500: '#5a738e',
+              600: '#435870',
+              700: '#324356',
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+            display: ['"Fredoka"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    :root {
-      --primary: #ff7597;
-      --primary-dark: #ff4d7d;
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --text: #4a3e3d;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif;
-    }
-
     body {
-      background: linear-gradient(135deg, #ffe6eb 0%, #edf2ff 100%);
-      color: var(--text);
+      background: linear-gradient(135deg, #ffeef2 0%, #f0f4ff 50%, #f1f5f9 100%);
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 15px;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(14px);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 20px 40px rgba(255, 117, 151, 0.12);
     }
 
-    .container {
-      background: var(--card-bg);
-      padding: 25px 20px;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
-      max-width: 520px;
-      width: 100%;
+    .card-hover-iruni {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card-hover-iruni:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(255, 77, 125, 0.25);
     }
 
-    h1 { color: var(--primary); margin-bottom: 8px; font-size: 1.6rem; }
-    p { margin-bottom: 12px; font-size: 0.9rem; color: #666; }
-
-    /* 倒數計時樣式 */
-    .timer {
-      display: flex;
-      justify-content: space-around;
-      margin: 20px 0;
+    .card-hover-husky {
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-
-    .time-box {
-      background: #fff0f3;
-      padding: 12px;
-      border-radius: 12px;
-      min-width: 65px;
-      border: 2px solid #ffb3c6;
-    }
-
-    .time-box span {
-      display: block;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--primary);
-    }
-
-    .time-box label { font-size: 0.75rem; color: #888; }
-
-    .hidden { display: none !important; }
-
-    .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 10px 22px;
-      font-size: 1rem;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.3);
-      transition: all 0.2s;
-      margin-top: 10px;
-    }
-
-    .btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
-
-    /* 關卡卡片 */
-    .stage-card {
-      background: #ffffff;
-      border: 2px solid #ffe1e8;
-      border-radius: 16px;
-      padding: 15px;
-      margin-top: 10px;
-    }
-
-    /* 採收遊戲 Canvas 容器 */
-    #canvas-container {
-      position: relative;
-      width: 100%;
-      margin: 10px 0;
-    }
-
-    canvas {
-      background: #eef9f2; /* 草地質感背景 */
-      border: 3px solid #ffb3c6;
-      border-radius: 16px;
-      touch-action: none;
-      max-width: 100%;
-    }
-
-    .controls-hint {
-      font-size: 0.8rem;
-      color: #777;
-      margin-top: 5px;
-    }
-
-    /* 烤箱條 */
-    .oven-meter {
-      width: 100%;
-      height: 25px;
-      background: #e0e0e0;
-      border-radius: 15px;
-      position: relative;
-      overflow: hidden;
-      margin: 20px 0;
-    }
-
-    .oven-target {
-      position: absolute;
-      left: 65%;
-      width: 20%;
-      height: 100%;
-      background: #ffb84d;
-    }
-
-    .oven-pointer {
-      position: absolute;
-      left: 0%;
-      width: 6px;
-      height: 100%;
-      background: #d90429;
-    }
-
-    /* 圖片展示 */
-    .display-img {
-      max-width: 140px;
-      max-height: 140px;
-      object-fit: contain;
-      margin: 10px auto;
-      display: block;
+    .card-hover-husky:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(90, 115, 142, 0.25);
     }
   </style>
 </head>
-<body>
+<body class="text-slate-700 font-sans flex flex-col justify-between min-h-screen">
 
-  <div class="container">
-    
-    <!-- 1. 倒數階段 -->
-    <div id="countdown-view">
-      <h1>🎉 祈iruni 生日倒數 🎂</h1>
-      <p>距離皮克敏採收手作蛋糕關卡解鎖還有：</p>
+  <main class="w-full max-w-4xl mx-auto px-4 py-6 flex-grow flex items-center justify-center">
+
+    <section class="w-full max-w-xl glass-card rounded-3xl p-6 md:p-8 text-center space-y-6">
       
-      <div class="timer">
-        <div class="time-box"><span id="days">00</span><label>天</label></div>
-        <div class="time-box"><span id="hours">00</span><label>時</label></div>
-        <div class="time-box"><span id="minutes">00</span><label>分</label></div>
-        <div class="time-box"><span id="seconds">00</span><label>秒</label></div>
+      <!-- 轉址提示區塊 -->
+      <div id="redirect-notice" class="hidden text-xs md:text-sm bg-amber-50 text-amber-700 p-3 rounded-xl border border-amber-200 font-semibold animate-pulse">
+        🚀 選擇身分...
       </div>
 
-      <p style="font-size: 0.85rem; color: #888;">倒數進入最後 1.5 小時，將開放搬運採收關卡！</p>
-    </div>
-
-    <!-- 2. 做蛋糕闖關遊戲 -->
-    <div id="game-view" class="hidden">
-      <h1 id="stage-title">🌱 步驟 1：野外採收食材</h1>
-      
-      <!-- 第一關：皮克敏採收遊戲 -->
-      <div id="stage-1" class="stage-card">
-        <p>操控主角搬運食材回底部的<b>「料理台 🥣」</b>！</p>
-        <div id="canvas-container">
-          <canvas id="harvestCanvas" width="450" height="320"></canvas>
-        </div>
-        <div class="controls-hint">
-          🎮 <b>操作方式：</b>滑鼠點擊/拖曳 或 觸控螢幕，指揮主角移動方向！
-        </div>
-        <div style="margin-top: 8px; font-weight: bold; color: var(--primary);" id="harvest-status">
-          已收集：草莓 (0/3) | 麵粉 (0/1) | 雞蛋 (0/2) | 牛牛奶 (0/1)
-        </div>
+      <!-- 身份問答標題 -->
+      <div>
+        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 flex items-center justify-center gap-2">
+          <span>🤔</span> 請問你是 <b>祈iruni</b> 還是 <b>觀眾 (哈士祈)</b>？
+        </h2>
+        <p class="text-xs text-slate-400 mt-1.5">請選擇您的身份進入專屬體驗區：</p>
       </div>
 
-      <!-- 第二關：攪拌麵糊 -->
-      <div id="stage-2" class="stage-card hidden">
-        <p>快速點擊攪拌棒，將麵糊均勻打發！</p>
-        <div style="font-size: 4rem; margin: 15px 0;" id="mixer-icon">🥣</div>
-        <p>進度：<span id="mix-progress">0</span> / 20 次</p>
-        <button class="btn" onclick="mixBatter()">🌀 快速攪拌！</button>
+      <!-- 身份選擇雙按鈕區 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        
+        <!-- 我是 祈iruni：超連結導向 game.html -->
+        <a href="game.html" class="card-hover-iruni block p-6 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 text-white text-left relative overflow-hidden group shadow-md flex items-center justify-between">
+          <div>
+            <span class="text-[10px] tracking-wider text-brand-100 font-bold block uppercase">Party Host</span>
+            <h3 class="font-bold text-lg leading-tight mt-1">我是 祈iruni</h3>
+          </div>
+          <i class="fa-solid fa-chevron-right text-brand-200 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+
+        <!-- 我是 觀眾 (哈士祈)：超連結導向 input.html -->
+        <a href="input.html" class="card-hover-husky block p-6 rounded-2xl bg-gradient-to-br from-husky-600 to-husky-700 text-white text-left relative overflow-hidden group shadow-md flex items-center justify-between">
+          <div>
+            <span class="text-[10px] tracking-wider text-husky-200 font-bold block uppercase">Fan & Audience</span>
+            <h3 class="font-bold text-lg leading-tight mt-1">我是 觀眾 (哈士祈)</h3>
+          </div>
+          <i class="fa-solid fa-chevron-right text-husky-200 group-hover:translate-x-1 transition-transform"></i>
+        </a>
+
       </div>
 
-      <!-- 第三關：控溫烘烤 -->
-      <div id="stage-3" class="stage-card hidden">
-        <p>在紅線移動到<b>黃色完美區域</b>時按下停止！</p>
-        <div class="oven-meter">
-          <div class="oven-target"></div>
-          <div class="oven-pointer" id="pointer"></div>
-        </div>
-        <button class="btn" onclick="stopOven()">🔥 出爐烤箱！</button>
-      </div>
+    </section>
 
-      <!-- 第四關：抹鮮奶油與裝飾 -->
-      <div id="stage-4" class="stage-card hidden">
-        <p>滑動下方滑塊，幫蛋糕抹上均勻的鮮奶油並擺上剛採收的草莓！</p>
-        <div id="cake-preview-box">
-          <div style="font-size: 3.5rem; margin: 15px 0;" id="cake-preview-emoji">🍞</div>
-          <img id="cake-preview-img" class="display-img hidden" alt="完成蛋糕" />
-        </div>
-        <input type="range" id="cream-slider" min="0" max="100" value="0" style="width: 80%;" oninput="updateCream(this.value)">
-        <br>
-        <button class="btn hidden" id="finish-btn" onclick="finishGame()">✨ 完成生日蛋糕！</button>
-      </div>
-    </div>
+  </main>
 
-    <!-- 3. 完成通關祝福卡片 -->
-    <div id="card-view" class="hidden">
-      <h1>💖 🎉 生日快樂 祈iruni！ 🎉 💖</h1>
-      <div id="final-cake-display">
-        <div style="font-size: 4.5rem; margin: 15px 0;" id="final-emoji">🎂✨</div>
-        <img id="final-img" class="display-img hidden" alt="最終蛋糕" />
-      </div>
-      <p style="font-weight: bold; color: var(--primary);">太棒了！專屬祈iruni的精緻蛋糕新鮮出爐！</p>
-      
-      <div style="background: #fff6f8; padding: 20px; border-radius: 16px; text-align: left; margin-top: 15px; line-height: 1.6; border: 1px solid #ffe1e8;">
-        親愛的祈iruni：<br><br>
-        祝你生日快樂！謝謝你辛辛苦苦採收食材並製作出這麼完美的蛋糕！<br>
-        願你在新的一年裡幸福滿滿、冒險順利，每一天都充滿甜甜的驚喜！🎂🍓🌸
-      </div>
-    </div>
-
-  </div>
+  <footer class="w-full text-center py-4 text-xs text-slate-400">
+    🎂 Happy Birthday to 祈iruni | Made with ❤️ for Birthday Celebration
+  </footer>
 
   <script>
-    // =========================================================================
-    // 🖼️ 程式碼最開頭：素材圖片定義區 (可以直接貼上圖片 URL 或 Base64 字串)
-    // 如果留空 ""，網頁會自動使用內建的可愛 Emoji 作為備用繪製機制！
-    // =========================================================================
-    const ASSETS = {
-      player: "",     // 搬運主角 (例如：祈iruni 大頭照 / 皮克敏角色)
-      strawberry: "", // 採收物件 - 草莓
-      flour: "",      // 採收物件 - 麵粉
-      egg: "",        // 採收物件 - 雞蛋
-      milk: "",       // 採收物件 - 牛奶
-      cake: ""        // 最終完成的生日蛋糕圖片
-    };
-
-    // ⏰ 生日時間設定 (格式: YYYY-MM-DDTHH:mm:ss)
     const TARGET_DATE = new Date('2026-08-06T00:00:00'); 
-    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000; // 生日前 1.5 小時解鎖
-
-    // =========================================================================
-    // 以下為遊戲內部邏輯 (無需修改)
-    // =========================================================================
-
-    // 載入 Image 物件
-    const loadedImages = {};
-    for (let key in ASSETS) {
-      if (ASSETS[key]) {
-        loadedImages[key] = new Image();
-        loadedImages[key].src = ASSETS[key];
-      }
-    }
-
-    const countdownView = document.getElementById('countdown-view');
-    const gameView = document.getElementById('game-view');
+    let redirected = false;
 
     function updateCountdown() {
       const now = new Date();
       const diff = TARGET_DATE - now;
 
-      if (diff > 0 && diff <= GAME_UNLOCK_WINDOW) {
-        countdownView.classList.add('hidden');
-        gameView.classList.remove('hidden');
-        initHarvestGame();
-      } else if (diff > 0) {
-        countdownView.classList.remove('hidden');
-        gameView.classList.add('hidden');
-
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const m = Math.floor((diff / 1000 / 60) % 60);
-        const s = Math.floor((diff / 1000) % 60);
-
-        document.getElementById('days').innerText = String(d).padStart(2, '0');
-        document.getElementById('hours').innerText = String(h).padStart(2, '0');
-        document.getElementById('minutes').innerText = String(m).padStart(2, '0');
-        document.getElementById('seconds').innerText = String(s).padStart(2, '0');
-      } else {
-        countdownView.classList.add('hidden');
-        gameView.classList.remove('hidden');
-        initHarvestGame();
+      // 當到達指定時間時，顯示提示並自動跳轉至 game.html
+      if (diff <= 0 && !redirected) {
+        redirected = true;
+        const noticeEl = document.getElementById('redirect-notice');
+        if (noticeEl) noticeEl.classList.remove('hidden');
+        setTimeout(() => {
+          window.location.href = "game.html";
+        }, 1500);
       }
     }
 
     setInterval(updateCountdown, 1000);
     updateCountdown();
-
-    // -------------------------------------------------------------
-    // 皮克敏風格採收小遊戲 Canvas
-    // -------------------------------------------------------------
-    let canvas, ctx;
-    let player = { x: 225, y: 250, radius: 16, targetX: 225, targetY: 250, speed: 3.2, carrying: null };
-    let kitchenZone = { x: 175, y: 260, width: 100, height: 50 };
-    
-    let items = [
-      { id: 1, type: '草莓', imgKey: 'strawberry', icon: '🍓', x: 60, y: 60, carrying: false, delivered: false },
-      { id: 2, type: '草莓', imgKey: 'strawberry', icon: '🍓', x: 140, y: 80, carrying: false, delivered: false },
-      { id: 3, type: '草莓', imgKey: 'strawberry', icon: '🍓', x: 380, y: 70, carrying: false, delivered: false },
-      { id: 4, type: '麵粉', imgKey: 'flour', icon: '🌾', x: 80, y: 180, carrying: false, delivered: false },
-      { id: 5, type: '雞蛋', imgKey: 'egg', icon: '🥚', x: 390, y: 180, carrying: false, delivered: false },
-      { id: 6, type: '雞蛋', imgKey: 'egg', icon: '🥚', x: 320, y: 120, carrying: false, delivered: false },
-      { id: 7, type: '牛奶', imgKey: 'milk', icon: '🥛', x: 230, y: 70, carrying: false, delivered: false },
-    ];
-
-    let counts = { '草莓': 0, '麵粉': 0, '雞蛋': 0, '牛奶': 0 };
-    let harvestGameInitialized = false;
-
-    function initHarvestGame() {
-      if (harvestGameInitialized) return;
-      harvestGameInitialized = true;
-
-      canvas = document.getElementById('harvestCanvas');
-      ctx = canvas.getContext('2d');
-
-      function setTarget(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        player.targetX = (clientX - rect.left) * (canvas.width / rect.width);
-        player.targetY = (clientY - rect.top) * (canvas.height / rect.height);
-      }
-
-      canvas.addEventListener('mousedown', setTarget);
-      canvas.addEventListener('mousemove', (e) => { if (e.buttons === 1) setTarget(e); });
-      canvas.addEventListener('touchstart', (e) => { setTarget(e); e.preventDefault(); });
-      canvas.addEventListener('touchmove', (e) => { setTarget(e); e.preventDefault(); });
-
-      requestAnimationFrame(gameLoop);
-    }
-
-    function gameLoop() {
-      updateGame();
-      drawGame();
-      
-      if (counts['草莓'] === 3 && counts['麵粉'] === 1 && counts['雞蛋'] === 2 && counts['牛奶'] === 1) {
-        setTimeout(() => {
-          document.getElementById('stage-1').classList.add('hidden');
-          document.getElementById('stage-2').classList.remove('hidden');
-          document.getElementById('stage-title').innerText = "🥣 步驟 2：打發攪拌麵糊";
-        }, 800);
-        return;
-      }
-
-      requestAnimationFrame(gameLoop);
-    }
-
-    function updateGame() {
-      let dx = player.targetX - player.x;
-      let dy = player.targetY - player.y;
-      let dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist > player.speed) {
-        player.x += (dx / dist) * player.speed;
-        player.y += (dy / dist) * player.speed;
-      } else {
-        player.x = player.targetX;
-        player.y = player.targetY;
-      }
-
-      if (!player.carrying) {
-        items.forEach(item => {
-          if (!item.delivered && !item.carrying) {
-            let idx = item.x - player.x;
-            let idy = item.y - player.y;
-            if (Math.sqrt(idx * idx + idy * idy) < 22) {
-              player.carrying = item;
-              item.carrying = true;
-            }
-          }
-        });
-      } else {
-        player.carrying.x = player.x;
-        player.carrying.y = player.y - 20;
-
-        if (
-          player.x > kitchenZone.x && player.x < kitchenZone.x + kitchenZone.width &&
-          player.y > kitchenZone.y && player.y < kitchenZone.y + kitchenZone.height
-        ) {
-          player.carrying.delivered = true;
-          player.carrying.carrying = false;
-          counts[player.carrying.type]++;
-          player.carrying = null;
-
-          document.getElementById('harvest-status').innerText = 
-            `已收集：草莓 (${counts['草莓']}/3) | 麵粉 (${counts['麵粉']}/1) | 雞蛋 (${counts['雞蛋']}/2) | 牛牛奶 (${counts['牛奶']}/1)`;
-        }
-      }
-    }
-
-    function drawGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 1. 畫料理台 (交貨點)
-      ctx.fillStyle = "#ffb3c6";
-      ctx.beginPath();
-      ctx.roundRect(kitchenZone.x, kitchenZone.y, kitchenZone.width, kitchenZone.height, 12);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "14px Segoe UI";
-      ctx.fillText("🥣 料理台 (交貨)", kitchenZone.x + 8, kitchenZone.y + 30);
-
-      // 2. 畫食材
-      items.forEach(item => {
-        if (!item.delivered) {
-          if (loadedImages[item.imgKey] && loadedImages[item.imgKey].complete) {
-            ctx.drawImage(loadedImages[item.imgKey], item.x - 14, item.y - 14, 28, 28);
-          } else {
-            ctx.font = "20px Segoe UI";
-            ctx.fillText(item.icon, item.x - 10, item.y + 8);
-          }
-        }
-      });
-
-      // 3. 畫主角
-      if (loadedImages.player && loadedImages.player.complete) {
-        ctx.drawImage(loadedImages.player, player.x - 20, player.y - 20, 40, 40);
-      } else {
-        ctx.fillStyle = "#ff4d7d";
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#ffffff";
-        ctx.beginPath();
-        ctx.arc(player.x, player.y - 10, 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // ------------------- 後續步驟 -------------------
-
-    let mixCount = 0;
-    function mixBatter() {
-      mixCount++;
-      document.getElementById('mix-progress').innerText = mixCount;
-      const mixerIcon = document.getElementById('mixer-icon');
-      mixerIcon.style.transform = mixCount % 2 === 0 ? "rotate(20deg)" : "rotate(-20deg)";
-
-      if (mixCount >= 20) {
-        setTimeout(() => {
-          document.getElementById('stage-2').classList.add('hidden');
-          document.getElementById('stage-3').classList.remove('hidden');
-          document.getElementById('stage-title').innerText = "🔥 步驟 3：掌控烤箱火候";
-          startOvenGame();
-        }, 300);
-      }
-    }
-
-    let pointerPos = 0;
-    let pointerDirection = 1;
-    let ovenInterval;
-
-    function startOvenGame() {
-      const pointer = document.getElementById('pointer');
-      ovenInterval = setInterval(() => {
-        pointerPos += pointerDirection * 2.2;
-        if (pointerPos >= 95 || pointerPos <= 0) {
-          pointerDirection *= -1;
-        }
-        pointer.style.left = pointerPos + '%';
-      }, 20);
-    }
-
-    function stopOven() {
-      clearInterval(ovenInterval);
-      if (pointerPos >= 65 && pointerPos <= 85) {
-        alert("🎉 完美火候！烤出了香氣四溢的金黃蛋糕體！");
-      } else {
-        alert("😋 雖然稍微偏離黃金時間，但依然香甜可口！");
-      }
-
-      document.getElementById('stage-3').classList.add('hidden');
-      document.getElementById('stage-4').classList.remove('hidden');
-      document.getElementById('stage-title').innerText = "🍓 步驟 4：抹鮮奶油與擺盤裝飾";
-    }
-
-    function updateCream(val) {
-      const previewEmoji = document.getElementById('cake-preview-emoji');
-      const previewImg = document.getElementById('cake-preview-img');
-
-      if (val < 40) {
-        previewEmoji.innerText = "🍞"; 
-        previewImg.classList.add('hidden');
-        previewEmoji.classList.remove('hidden');
-      } else if (val < 80) {
-        previewEmoji.innerText = "🧁"; 
-        previewImg.classList.add('hidden');
-        previewEmoji.classList.remove('hidden');
-      } else {
-        if (loadedImages.cake && loadedImages.cake.complete) {
-          previewImg.src = loadedImages.cake.src;
-          previewImg.classList.remove('hidden');
-          previewEmoji.classList.add('hidden');
-        } else {
-          previewEmoji.innerText = "🎂"; 
-        }
-        document.getElementById('finish-btn').classList.remove('hidden');
-      }
-    }
-
-    function finishGame() {
-      document.getElementById('game-view').classList.add('hidden');
-      document.getElementById('card-view').classList.remove('hidden');
-
-      if (loadedImages.cake && loadedImages.cake.complete) {
-        const finalImg = document.getElementById('final-img');
-        finalImg.src = loadedImages.cake.src;
-        finalImg.classList.remove('hidden');
-        document.getElementById('final-emoji').classList.add('hidden');
-      }
-    }
   </script>
 </body>
 </html>
