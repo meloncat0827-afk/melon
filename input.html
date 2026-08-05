@@ -187,6 +187,7 @@
     let db = null;
     let auth = null;
     let currentUser = null;
+    let localBlessings = []; // 單機預覽與無雲端環境下的備用留言庫
 
     // Toast 提示訊息
     window.showToast = function(msg) {
@@ -229,8 +230,7 @@
 
     async function initFirebase() {
       if (!firebaseConfig) {
-        document.getElementById('cloudMessagesList').innerHTML = '<div class="text-center text-amber-600 text-xs py-4">⚠️ 目前為單機預覽模式，請匯出 TXT 檔儲存祝福。</div>';
-        document.getElementById('cloudCount').innerText = '單機模式';
+        renderLocalMessages();
         return;
       }
 
@@ -322,7 +322,55 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // ☁️ 上傳至雲端 (含壓縮封印邏輯)
+    // 📱 渲染單機預覽留言列表
+    async function renderLocalMessages() {
+      const listEl = document.getElementById('cloudMessagesList');
+      const countEl = document.getElementById('cloudCount');
+
+      if (localBlessings.length === 0) {
+        listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個打包祝福時空膠囊的觀眾吧！🎉</div>';
+        countEl.innerText = '0 則祝福 (單機預覽)';
+        return;
+      }
+
+      const isBirthdayPassed = new Date() >= BIRTHDAY_TARGET;
+      countEl.innerText = `${localBlessings.length} 則祝福 (${isBirthdayPassed ? '🎉 已解鎖' : '🔒 時空膠囊封印中'})`;
+
+      const cardsHTML = await Promise.all(localBlessings.map(async (msg) => {
+        let displayContent = "";
+        let capsuleTag = "";
+
+        if (msg.isCompressed && msg.compressedContent) {
+          if (isBirthdayPassed) {
+            displayContent = await decompressText(msg.compressedContent);
+            capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✨ 膠囊已解鎖</span>`;
+          } else {
+            displayContent = "🔒 [時空膠囊封印中] 本篇祝福已被壓縮打包，將於 9/29 祈iruni 生日當天自動解開！";
+            capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">🔒 時空膠囊</span>`;
+          }
+        } else {
+          displayContent = msg.content || '';
+        }
+
+        return `
+          <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
+                ${capsuleTag}
+              </div>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap ${!isBirthdayPassed && msg.isCompressed ? 'italic text-amber-800 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50' : ''}">${escapeHtml(displayContent)}</p>
+            <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
+          </div>
+        `;
+      }));
+
+      listEl.innerHTML = cardsHTML.join('');
+    }
+
+    // ☁️ 上傳至雲端 (含壓縮封印與單機備用邏輯)
     window.uploadToCloud = async function() {
       const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
       const level = document.getElementById('memberLevel').value;
@@ -330,11 +378,6 @@
 
       if (!content) {
         showToast("⚠️ 請先寫下給祈iruni的祝福作文內容！");
-        return;
-      }
-
-      if (!db || !currentUser) {
-        showToast("⚠️ 雲端資料庫尚未連線，可先使用「匯出 TXT 檔」儲存！");
         return;
       }
 
@@ -347,11 +390,30 @@
         // 1. 將祝福進行 Gzip 壓縮
         const compressedData = await compressText(content);
 
+        // 如果沒有雲端連線環境，切換至單機預覽模式存入記憶體
+        if (!db || !currentUser) {
+          localBlessings.unshift({
+            id: 'local_' + Date.now(),
+            name: name,
+            level: level,
+            content: isBeforeBirthday ? "🔒 [祝福已被生日時空膠囊封印，將於 9/29 祈生日當天解開！]" : content,
+            compressedContent: compressedData,
+            isCompressed: true,
+            createdAt: new Date().toISOString(),
+            userId: 'local-user'
+          });
+
+          await renderLocalMessages();
+          showToast("🎉 祝福已成功壓縮打包至【生日時空膠囊】！");
+          document.getElementById('messageContent').value = '';
+          return;
+        }
+
+        // 有雲端連線時，寫入 Firebase Firestore
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
         await addDoc(messagesCol, {
           name: name,
           level: level,
-          // 若在生日以前，Firestore 預設明碼內容顯示封印提示，真實內文保存在 compressedContent
           content: isBeforeBirthday ? "🔒 [祝福已被生日時空膠囊封印，將於 9/29 祈生日當天解開！]" : content,
           compressedContent: compressedData,
           isCompressed: true,
