@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>觀眾留作文與祝福區 - 祈iruni 生日歡慶</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff0f3',
+              100: '#ffe1e8',
+              200: '#ffc2d1',
+              400: '#ff7597',
+              500: '#ff4d7d',
+              600: '#e62e60',
+            },
+            husky: {
+              50: '#f0f4f8',
+              100: '#dbe3ed',
+              200: '#b8c7d9',
+              500: '#5a738e',
+              600: '#435870',
+              700: '#324356',
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+            display: ['"Fredoka"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #ffeef2 0%, #f0f4ff 50%, #f1f5f9 100%);
+      min-height: 100vh;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(14px);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 20px 40px rgba(255, 117, 151, 0.12);
+    }
+
+    .btn-bounce {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    }
+    .btn-bounce:hover {
+      transform: translateY(-2px);
+    }
+    .btn-bounce:active {
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+<body class="text-slate-700 font-sans flex flex-col justify-between min-h-screen">
+
+  <main class="w-full max-w-2xl mx-auto px-4 py-8 flex-grow flex flex-col items-center justify-center space-y-6">
+
+    <section class="w-full glass-card rounded-3xl p-6 md:p-8 space-y-6">
+      
+      <!-- 標題區域 -->
+      <div class="text-center border-b border-slate-100 pb-4">
+        <h1 class="text-2xl font-extrabold text-slate-800 flex items-center justify-center gap-2">
+          ✍️ 觀眾留作文與祝福區
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">寫下對 祈iruni 的生日祝福，上傳至雲端或下載 TXT 檔案備份！</p>
+      </div>
+
+      <!-- 填寫表單 -->
+      <div class="space-y-4">
+        
+        <!-- 欄位 1: 觀眾名稱 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">👤 觀眾暱稱 (觀眾名)：</label>
+          <input type="text" id="viewerName" placeholder="請輸入你的暱稱..." class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">
+        </div>
+
+        <!-- 欄位 2: 會員等級 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">⭐ 會員等級：</label>
+          <select id="memberLevel" class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm bg-white">
+            <option value="0級 (一般觀眾)">0級 - 一般觀眾</option>
+            <option value="1級 (哈士奇)">1級 - 哈士奇</option>
+            <option value="2級 (純種哈士奇)">2級 - 純種哈士奇</option>
+            <option value="3級 (大衛哈士奇)">3級 - 大衛哈士奇</option>
+          </select>
+        </div>
+
+        <!-- 欄位 3: 要說的話 -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">💬 想對祈iruni說的話 (作文/祝福內容)：</label>
+          <textarea id="messageContent" rows="7" placeholder="在這裡寫下你想對祈iruni說的話..." class="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm leading-relaxed"></textarea>
+        </div>
+
+      </div>
+
+      <!-- 主要上傳按鈕 -->
+      <div>
+        <button onclick="uploadToCloud()" id="cloudBtn" class="btn-bounce w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up"></i> 上傳至雲端祝福牆
+        </button>
+      </div>
+
+      <!-- 次要備份按鈕區塊 -->
+      <div class="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-100">
+        <!-- TXT 下載按鈕 -->
+        <button onclick="downloadTXT()" class="btn-bounce w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-download"></i> 匯出 TXT 檔
+        </button>
+
+        <!-- TXT 讀取按鈕 -->
+        <label class="btn-bounce w-full py-2.5 bg-husky-100 hover:bg-husky-200 text-husky-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer text-center">
+          <i class="fa-solid fa-file-arrow-up"></i> 讀取 TXT 檔
+          <input type="file" id="txtFileInput" accept=".txt" class="hidden" onchange="uploadTXT(event)">
+        </label>
+
+        <!-- 複製全文按鈕 -->
+        <button onclick="copyText()" class="btn-bounce w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-copy"></i> 複製內容
+        </button>
+      </div>
+
+      <!-- 提示訊息 -->
+      <div id="toastMessage" class="hidden text-center text-xs p-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200"></div>
+
+      <!-- 回首頁與管理員連結 -->
+      <div class="flex items-center justify-between pt-2 text-xs text-slate-400 font-semibold">
+        <a href="index.html" class="inline-flex items-center gap-1.5 hover:text-brand-500 transition-colors">
+          <i class="fa-solid fa-arrow-left"></i> 返回身份選擇首頁
+        </a>
+        <a href="admin.html" class="inline-flex items-center gap-1.5 hover:text-slate-600 transition-colors">
+          <i class="fa-solid fa-shield-halved"></i> 管理員後台
+        </a>
+      </div>
+
+    </section>
+
+    <!-- ☁️ 雲端即時留言牆 -->
+    <section class="w-full glass-card rounded-3xl p-6 md:p-8 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+          <span>💌</span> 雲端祝福留言牆
+        </h2>
+        <span id="cloudCount" class="text-xs bg-brand-100 text-brand-600 font-bold px-2.5 py-0.5 rounded-full">加載中...</span>
+      </div>
+
+      <div id="cloudMessagesList" class="space-y-3 max-h-96 overflow-y-auto pr-1">
+        <div class="text-center text-slate-400 text-xs py-8">
+          <i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在連線讀取雲端祝福...
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="w-full text-center py-4 text-xs text-slate-400">
+    🎂 Happy Birthday to 祈iruni | Made with ❤️ for Birthday Celebration
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 全域變數取得與環境設定
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+
+    // Toast 提示訊息
+    window.showToast = function(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3500);
+    };
+
+    async function initFirebase() {
+      if (!firebaseConfig) {
+        document.getElementById('cloudMessagesList').innerHTML = '<div class="text-center text-amber-600 text-xs py-4">⚠️ 目前為單機預覽模式，請匯出 TXT 檔儲存祝福。</div>';
+        document.getElementById('cloudCount').innerText = '單機模式';
+        return;
+      }
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        // 登入驗證
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+        currentUser = auth.currentUser;
+
+        // 監聽雲端資料庫
+        const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
+        
+        onSnapshot(messagesCol, (snapshot) => {
+          const listEl = document.getElementById('cloudMessagesList');
+          const countEl = document.getElementById('cloudCount');
+          
+          if (snapshot.empty) {
+            listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個上傳雲端祝福的觀眾吧！🎉</div>';
+            countEl.innerText = '0 則祝福';
+            return;
+          }
+
+          let messages = [];
+          snapshot.forEach((doc) => {
+            messages.push({ id: doc.id, ...doc.data() });
+          });
+
+          // 依照時間倒序排序
+          messages.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+          countEl.innerText = `${messages.length} 則祝福`;
+          listEl.innerHTML = messages.map(msg => `
+            <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.content || '')}</p>
+              <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
+            </div>
+          `).join('');
+
+        }, (error) => {
+          console.error("Firestore read error:", error);
+          document.getElementById('cloudMessagesList').innerHTML = '<div class="text-center text-red-400 text-xs py-4">❌ 讀取雲端留言失敗</div>';
+        });
+
+      } catch (err) {
+        console.error("Firebase init error:", err);
+      }
+    }
+
+    // HTML 轉義字元防護
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ☁️ 上傳至雲端
+    window.uploadToCloud = async function() {
+      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
+      const level = document.getElementById('memberLevel').value;
+      const content = document.getElementById('messageContent').value.trim();
+
+      if (!content) {
+        showToast("⚠️ 請先寫下給祈iruni的祝福作文內容！");
+        return;
+      }
+
+      if (!db || !currentUser) {
+        showToast("⚠️ 雲端資料庫尚未連線，可先使用「匯出 TXT 檔」儲存！");
+        return;
+      }
+
+      const cloudBtn = document.getElementById('cloudBtn');
+      cloudBtn.disabled = true;
+      cloudBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...`;
+
+      try {
+        const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
+        await addDoc(messagesCol, {
+          name: name,
+          level: level,
+          content: content,
+          createdAt: new Date().toISOString(),
+          userId: currentUser.uid
+        });
+
+        showToast("🎉 祝福已成功上傳至雲端留言牆！");
+        document.getElementById('messageContent').value = '';
+      } catch (err) {
+        console.error("Upload error:", err);
+        showToast("❌ 上傳失敗，請稍後再試或使用 TXT 匯出。");
+      } finally {
+        cloudBtn.disabled = false;
+        cloudBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 上傳至雲端祝福牆`;
+      }
+    };
+
+    // 💾 下載為 TXT 檔案
+    window.downloadTXT = function() {
+      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
+      const level = document.getElementById('memberLevel').value;
+      const content = document.getElementById('messageContent').value.trim();
+
+      if (!content) {
+        showToast("⚠️ 請先寫下給祈iruni的祝福作文內容！");
+        return;
+      }
+
+      const fileData = `=== 祈iruni 生日祝福作文 ===\n觀眾暱稱：${name}\n會員等級：${level}\n投稿時間：${new Date().toLocaleString('zh-TW')}\n\n【想對祈iruni說的話】\n${content}\n`;
+
+      const blob = new Blob([fileData], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `祈iruni生日祝福_${name}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("✅ 已成功匯出 TXT 檔案！");
+    };
+
+    // 📂 讀取/上傳 TXT 檔案
+    window.uploadTXT = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        
+        const nameMatch = text.match(/觀眾暱稱：(.*)/);
+        const levelMatch = text.match(/會員等級：(.*)/);
+        const contentSplit = text.split("【想對祈iruni說的話】\n");
+
+        if (nameMatch && nameMatch[1]) {
+          document.getElementById('viewerName').value = nameMatch[1].trim();
+        }
+        if (levelMatch && levelMatch[1]) {
+          const levelVal = levelMatch[1].trim();
+          const select = document.getElementById('memberLevel');
+          for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value.includes(levelVal) || levelVal.includes(select.options[i].value)) {
+              select.selectedIndex = i;
+              break;
+            }
+          }
+        }
+        if (contentSplit.length > 1) {
+          document.getElementById('messageContent').value = contentSplit[1].trim();
+        } else {
+          document.getElementById('messageContent').value = text;
+        }
+
+        showToast("📂 已成功讀取 TXT 檔案內容！");
+      };
+      reader.readAsText(file, 'UTF-8');
+      event.target.value = '';
+    };
+
+    // 📋 複製內容至剪貼簿
+    window.copyText = function() {
+      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
+      const level = document.getElementById('memberLevel').value;
+      const content = document.getElementById('messageContent').value.trim();
+
+      if (!content) {
+        showToast("⚠️ 沒有可複製的內容！");
+        return;
+      }
+
+      const textToCopy = `觀眾暱稱：${name}\n會員等級：${level}\n\n${content}`;
+
+      const textarea = document.createElement('textarea');
+      textarea.value = textToCopy;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast("📋 已成功複製內容到剪貼簿！");
+      } catch (err) {
+        showToast("❌ 複製失敗，請手動複製。");
+      }
+      document.body.removeChild(textarea);
+    };
+
+    // 初始化 Firebase
+    initFirebase();
+  </script>
+</body>
+</html>
