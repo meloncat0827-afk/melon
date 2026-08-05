@@ -93,23 +93,6 @@
       margin-top: 10px;
     }
 
-    /* 圖片替換選擇區 */
-    .img-upload-box {
-      background: #fff0f5;
-      border: 1px dashed #ff7597;
-      padding: 10px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      font-size: 0.8rem;
-      text-align: left;
-    }
-
-    .img-upload-box summary {
-      cursor: pointer;
-      font-weight: bold;
-      color: var(--primary-dark);
-    }
-
     /* 採收遊戲 Canvas 容器 */
     #canvas-container {
       position: relative;
@@ -158,10 +141,10 @@
       background: #d90429;
     }
 
-    /* 預覽展示 */
+    /* 圖片展示 */
     .display-img {
-      max-width: 120px;
-      max-height: 120px;
+      max-width: 140px;
+      max-height: 140px;
       object-fit: contain;
       margin: 10px auto;
       display: block;
@@ -189,33 +172,19 @@
 
     <!-- 2. 做蛋糕闖關遊戲 -->
     <div id="game-view" class="hidden">
-      
-      <!-- 可選：即時替換圖片區塊 -->
-      <details class="img-upload-box">
-        <summary>🖼️ 點此上傳/客製化遊戲素材（選擇性）</summary>
-        <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <label>主角/皮克敏：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'player')"></label>
-          <label>草莓：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'strawberry')"></label>
-          <label>麵粉：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'flour')"></label>
-          <label>雞蛋：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'egg')"></label>
-          <label>牛奶：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'milk')"></label>
-          <label>完成蛋糕：<input type="file" accept="image/*" onchange="loadCustomImg(event, 'cake')"></label>
-        </div>
-      </details>
-
       <h1 id="stage-title">🌱 步驟 1：野外採收食材</h1>
       
       <!-- 第一關：皮克敏採收遊戲 -->
       <div id="stage-1" class="stage-card">
-        <p>操控主廚搬運食材回底部的<b>「料理台 🥣」</b>！</p>
+        <p>操控主角搬運食材回底部的<b>「料理台 🥣」</b>！</p>
         <div id="canvas-container">
           <canvas id="harvestCanvas" width="450" height="320"></canvas>
         </div>
         <div class="controls-hint">
-          🎮 <b>操作方式：</b>滑鼠點擊/拖曳 或 觸控螢幕，指揮主廚移動方向！
+          🎮 <b>操作方式：</b>滑鼠點擊/拖曳 或 觸控螢幕，指揮主角移動方向！
         </div>
         <div style="margin-top: 8px; font-weight: bold; color: var(--primary);" id="harvest-status">
-          已收集：草莓 (0/3) | 麵粉 (0/1) | 雞蛋 (0/2) | 牛奶 (0/1)
+          已收集：草莓 (0/3) | 麵粉 (0/1) | 雞蛋 (0/2) | 牛牛奶 (0/1)
         </div>
       </div>
 
@@ -269,47 +238,35 @@
   </div>
 
   <script>
-    // =============================================================
-    // 🖼️ 1. 在此可預先定義圖片 URL (可用 PNG/JPG/GIF 等網路網址)
-    // 如果留空 ""，網頁會自動切換為可愛Emoji繪製！
-    // =============================================================
-    const DEFAULT_IMAGES = {
-      player: "",     // 主角 / 祈iruni 大頭照 / 皮克敏
-      strawberry: "", // 草莓圖片
-      flour: "",      // 麵粉圖片
-      egg: "",        // 雞蛋圖片
-      milk: "",       // 牛奶圖片
-      cake: ""        // 最終蛋糕圖片
+    // =========================================================================
+    // 🖼️ 程式碼最開頭：素材圖片定義區 (可以直接貼上圖片 URL 或 Base64 字串)
+    // 如果留空 ""，網頁會自動使用內建的可愛 Emoji 作為備用繪製機制！
+    // =========================================================================
+    const ASSETS = {
+      player: "",     // 搬運主角 (例如：祈iruni 大頭照 / 皮克敏角色)
+      strawberry: "", // 採收物件 - 草莓
+      flour: "",      // 採收物件 - 麵粉
+      egg: "",        // 採收物件 - 雞蛋
+      milk: "",       // 採收物件 - 牛奶
+      cake: ""        // 最終完成的生日蛋糕圖片
     };
 
-    // 載入圖片物件容器
-    const gameImages = {};
-    for (let key in DEFAULT_IMAGES) {
-      if (DEFAULT_IMAGES[key]) {
-        gameImages[key] = new Image();
-        gameImages[key].src = DEFAULT_IMAGES[key];
-      }
-    }
-
-    // 支援玩家手動選擇本地檔案上傳圖片
-    function loadCustomImg(event, type) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = new Image();
-          img.src = e.target.result;
-          gameImages[type] = img;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    // =============================================================
-    // ⏰ 2. 生日時間與倒數設定
-    // =============================================================
+    // ⏰ 生日時間設定 (格式: YYYY-MM-DDTHH:mm:ss)
     const TARGET_DATE = new Date('2026-08-06T00:00:00'); 
-    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000; // 倒數 1.5 小時解鎖
+    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000; // 生日前 1.5 小時解鎖
+
+    // =========================================================================
+    // 以下為遊戲內部邏輯 (無需修改)
+    // =========================================================================
+
+    // 載入 Image 物件
+    const loadedImages = {};
+    for (let key in ASSETS) {
+      if (ASSETS[key]) {
+        loadedImages[key] = new Image();
+        loadedImages[key].src = ASSETS[key];
+      }
+    }
 
     const countdownView = document.getElementById('countdown-view');
     const gameView = document.getElementById('game-view');
@@ -345,9 +302,9 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // =============================================================
-    // 🎮 3. 第一關：皮克敏風格採收小遊戲
-    // =============================================================
+    // -------------------------------------------------------------
+    // 皮克敏風格採收小遊戲 Canvas
+    // -------------------------------------------------------------
     let canvas, ctx;
     let player = { x: 225, y: 250, radius: 16, targetX: 225, targetY: 250, speed: 3.2, carrying: null };
     let kitchenZone = { x: 175, y: 260, width: 100, height: 50 };
@@ -442,7 +399,7 @@
           player.carrying = null;
 
           document.getElementById('harvest-status').innerText = 
-            `已收集：草莓 (${counts['草莓']}/3) | 麵粉 (${counts['麵粉']}/1) | 雞蛋 (${counts['雞蛋']}/2) | 牛奶 (${counts['牛奶']}/1)`;
+            `已收集：草莓 (${counts['草莓']}/3) | 麵粉 (${counts['麵粉']}/1) | 雞蛋 (${counts['雞蛋']}/2) | 牛牛奶 (${counts['牛奶']}/1)`;
         }
       }
     }
@@ -450,7 +407,7 @@
     function drawGame() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1. 畫料理台
+      // 1. 畫料理台 (交貨點)
       ctx.fillStyle = "#ffb3c6";
       ctx.beginPath();
       ctx.roundRect(kitchenZone.x, kitchenZone.y, kitchenZone.width, kitchenZone.height, 12);
@@ -459,11 +416,11 @@
       ctx.font = "14px Segoe UI";
       ctx.fillText("🥣 料理台 (交貨)", kitchenZone.x + 8, kitchenZone.y + 30);
 
-      // 2. 畫食材 (有圖片則繪製圖片，否則繪製 Emoji)
+      // 2. 畫食材
       items.forEach(item => {
         if (!item.delivered) {
-          if (gameImages[item.imgKey] && gameImages[item.imgKey].complete) {
-            ctx.drawImage(gameImages[item.imgKey], item.x - 14, item.y - 14, 28, 28);
+          if (loadedImages[item.imgKey] && loadedImages[item.imgKey].complete) {
+            ctx.drawImage(loadedImages[item.imgKey], item.x - 14, item.y - 14, 28, 28);
           } else {
             ctx.font = "20px Segoe UI";
             ctx.fillText(item.icon, item.x - 10, item.y + 8);
@@ -471,9 +428,9 @@
         }
       });
 
-      // 3. 畫角色 (有圖片則繪製圖片，否則繪製圓形主角)
-      if (gameImages.player && gameImages.player.complete) {
-        ctx.drawImage(gameImages.player, player.x - 20, player.y - 20, 40, 40);
+      // 3. 畫主角
+      if (loadedImages.player && loadedImages.player.complete) {
+        ctx.drawImage(loadedImages.player, player.x - 20, player.y - 20, 40, 40);
       } else {
         ctx.fillStyle = "#ff4d7d";
         ctx.beginPath();
@@ -487,9 +444,8 @@
       }
     }
 
-    // =============================================================
-    // 🍰 4. 後續步驟邏輯 (攪拌 / 烤箱 / 裝飾)
-    // =============================================================
+    // ------------------- 後續步驟 -------------------
+
     let mixCount = 0;
     function mixBatter() {
       mixCount++;
@@ -548,8 +504,8 @@
         previewImg.classList.add('hidden');
         previewEmoji.classList.remove('hidden');
       } else {
-        if (gameImages.cake && gameImages.cake.complete) {
-          previewImg.src = gameImages.cake.src;
+        if (loadedImages.cake && loadedImages.cake.complete) {
+          previewImg.src = loadedImages.cake.src;
           previewImg.classList.remove('hidden');
           previewEmoji.classList.add('hidden');
         } else {
@@ -563,10 +519,9 @@
       document.getElementById('game-view').classList.add('hidden');
       document.getElementById('card-view').classList.remove('hidden');
 
-      // 如果有設定自訂蛋糕圖片，最後的生日卡片會優先展示自訂圖片
-      if (gameImages.cake && gameImages.cake.complete) {
+      if (loadedImages.cake && loadedImages.cake.complete) {
         const finalImg = document.getElementById('final-img');
-        finalImg.src = gameImages.cake.src;
+        finalImg.src = loadedImages.cake.src;
         finalImg.classList.remove('hidden');
         document.getElementById('final-emoji').classList.add('hidden');
       }
