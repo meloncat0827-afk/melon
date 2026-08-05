@@ -78,7 +78,7 @@
         <h1 class="text-2xl font-extrabold text-slate-800 flex items-center justify-center gap-2">
           ✍️ 觀眾留作文與祝福區
         </h1>
-        <p class="text-xs text-slate-400 mt-1">寫下對 祈iruni 的生日祝福，上傳至雲端或下載 TXT 檔案備份！</p>
+        <p class="text-xs text-slate-400 mt-1">寫下對 祈iruni 的祝福，將自動打包入<b>生日時空膠囊</b>，於 9/29 當天解開！</p>
       </div>
 
       <!-- 填寫表單 -->
@@ -112,7 +112,7 @@
       <!-- 主要上傳按鈕 -->
       <div>
         <button onclick="uploadToCloud()" id="cloudBtn" class="btn-bounce w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2">
-          <i class="fa-solid fa-cloud-arrow-up"></i> 上傳至雲端祝福牆
+          <i class="fa-solid fa-box-archive"></i> 封印至生日時空膠囊 (上傳雲端)
         </button>
       </div>
 
@@ -150,11 +150,11 @@
 
     </section>
 
-    <!-- ☁️ 雲端即時留言牆 -->
+    <!-- ☁️ 雲端即時留言牆 (生日時空膠囊) -->
     <section class="w-full glass-card rounded-3xl p-6 md:p-8 space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
-          <span>💌</span> 雲端祝福留言牆
+          <span>💌</span> 雲端祝福留言牆 (生日膠囊)
         </h2>
         <span id="cloudCount" class="text-xs bg-brand-100 text-brand-600 font-bold px-2.5 py-0.5 rounded-full">加載中...</span>
       </div>
@@ -177,6 +177,9 @@
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+    // 🎂 設定祈iruni生日時間 (2026年9月29日 00:00:00)
+    const BIRTHDAY_TARGET = new Date('2026-09-29T00:00:00');
+
     // 全域變數取得與環境設定
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
@@ -194,6 +197,35 @@
         toast.classList.add('hidden');
       }, 3500);
     };
+
+    // 🗜️ 1. 原生 Gzip 壓縮工具 (字串 -> Base64)
+    async function compressText(text) {
+      try {
+        const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
+        const response = new Response(stream);
+        const buffer = await response.arrayBuffer();
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      } catch (e) {
+        console.warn("瀏覽器不支援 CompressionStream，改用標準 Base64 壓縮", e);
+        return btoa(encodeURIComponent(text));
+      }
+    }
+
+    // 🔓 2. 原生 Gzip 解壓縮工具 (Base64 -> 字串)
+    async function decompressText(base64Str) {
+      try {
+        const bytes = Uint8Array.from(atob(base64Str), c => c.charCodeAt(0));
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+        const response = new Response(stream);
+        return await response.text();
+      } catch (e) {
+        try {
+          return decodeURIComponent(atob(base64Str));
+        } catch (err) {
+          return base64Str; // 回傳原始文字
+        }
+      }
+    }
 
     async function initFirebase() {
       if (!firebaseConfig) {
@@ -218,12 +250,12 @@
         // 監聽雲端資料庫
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
         
-        onSnapshot(messagesCol, (snapshot) => {
+        onSnapshot(messagesCol, async (snapshot) => {
           const listEl = document.getElementById('cloudMessagesList');
           const countEl = document.getElementById('cloudCount');
           
           if (snapshot.empty) {
-            listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個上傳雲端祝福的觀眾吧！🎉</div>';
+            listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個打包祝福時空膠囊的觀眾吧！🎉</div>';
             countEl.innerText = '0 則祝福';
             return;
           }
@@ -236,17 +268,44 @@
           // 依照時間倒序排序
           messages.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
-          countEl.innerText = `${messages.length} 則祝福`;
-          listEl.innerHTML = messages.map(msg => `
-            <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
-                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
+          const isBirthdayPassed = new Date() >= BIRTHDAY_TARGET;
+          countEl.innerText = `${messages.length} 則祝福 (${isBirthdayPassed ? '🎉 已解鎖' : '🔒 時空膠囊封印中'})`;
+
+          // 處理每一筆留言的解壓縮與顯示邏輯
+          const cardsHTML = await Promise.all(messages.map(async (msg) => {
+            let displayContent = "";
+            let capsuleTag = "";
+
+            if (msg.isCompressed && msg.compressedContent) {
+              if (isBirthdayPassed) {
+                // 生日到了！進行解壓縮
+                displayContent = await decompressText(msg.compressedContent);
+                capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✨ 膠囊已解鎖</span>`;
+              } else {
+                // 生日前：隱藏內容，顯示封印狀態
+                displayContent = "🔒 [時空膠囊封印中] 本篇祝福已被壓縮打包，將於 9/29 祈iruni 生日當天自動解開！";
+                capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">🔒 時空膠囊</span>`;
+              }
+            } else {
+              displayContent = msg.content || '';
+            }
+
+            return `
+              <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
+                <div class="flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
+                    ${capsuleTag}
+                  </div>
+                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap ${!isBirthdayPassed && msg.isCompressed ? 'italic text-amber-800 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50' : ''}">${escapeHtml(displayContent)}</p>
+                <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
               </div>
-              <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.content || '')}</p>
-              <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
-            </div>
-          `).join('');
+            `;
+          }));
+
+          listEl.innerHTML = cardsHTML.join('');
 
         }, (error) => {
           console.error("Firestore read error:", error);
@@ -263,7 +322,7 @@
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // ☁️ 上傳至雲端
+    // ☁️ 上傳至雲端 (含壓縮封印邏輯)
     window.uploadToCloud = async function() {
       const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
       const level = document.getElementById('memberLevel').value;
@@ -281,26 +340,33 @@
 
       const cloudBtn = document.getElementById('cloudBtn');
       cloudBtn.disabled = true;
-      cloudBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...`;
+      cloudBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 打包封印壓縮中...`;
 
       try {
+        const isBeforeBirthday = new Date() < BIRTHDAY_TARGET;
+        // 1. 將祝福進行 Gzip 壓縮
+        const compressedData = await compressText(content);
+
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
         await addDoc(messagesCol, {
           name: name,
           level: level,
-          content: content,
+          // 若在生日以前，Firestore 預設明碼內容顯示封印提示，真實內文保存在 compressedContent
+          content: isBeforeBirthday ? "🔒 [祝福已被生日時空膠囊封印，將於 9/29 祈生日當天解開！]" : content,
+          compressedContent: compressedData,
+          isCompressed: true,
           createdAt: new Date().toISOString(),
           userId: currentUser.uid
         });
 
-        showToast("🎉 祝福已成功上傳至雲端留言牆！");
+        showToast("🎉 祝福已成功壓縮打包至【生日時空膠囊】！");
         document.getElementById('messageContent').value = '';
       } catch (err) {
         console.error("Upload error:", err);
         showToast("❌ 上傳失敗，請稍後再試或使用 TXT 匯出。");
       } finally {
         cloudBtn.disabled = false;
-        cloudBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> 上傳至雲端祝福牆`;
+        cloudBtn.innerHTML = `<i class="fa-solid fa-box-archive"></i> 封印至生日時空膠囊 (上傳雲端)`;
       }
     };
 
