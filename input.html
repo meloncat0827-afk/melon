@@ -182,23 +182,23 @@
 
     // 全域變數取得與環境設定
     // 1. 填入你從 Firebase 複製的正確設定
+// 1. 填入你從 Firebase 複製的正確設定
 const firebaseConfig = {
   apiKey: "AIzaSyBkqnAtcZHSUVrxoabWnZDs_MXA6mft62M",
   authDomain: "iruni2026.firebaseapp.com",
   projectId: "iruni2026",
-  storageBucket: "iruni2026.firebasestorage.app", // 確保這裡對應你的 Storage 網域
+  storageBucket: "iruni2026.firebasestorage.app",
   messagingSenderId: "267905666323",
   appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
   measurementId: "G-PTQ840GJ27"
 };
 
-// 2. 自定義一個固定的 appId 字串（不要用原本會變 null 的判斷式）
+// 2. 自定義一個固定的 appId 字串
 const appId = 'iruni2026-app';
-    let db = null;
-    let auth = null;
-    let currentUser = null;
-    let localBlessings = []; // 單機預覽與無雲端環境下的備用留言庫
 
+let db = null;
+let auth = null;
+let currentUser = null;
     // Toast 提示訊息
     window.showToast = function(msg) {
       const toast = document.getElementById('toastMessage');
