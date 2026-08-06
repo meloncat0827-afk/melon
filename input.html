@@ -194,10 +194,10 @@
   };
 
   // 2. 初始化 Firebase
-  // 2. 初始化 Firebase 與全域變數
+// 2. 初始化 Firebase 與全域變數
 window.db = null;
 window.auth = null;
-window.currentUser = null;  // 改成全域掛載在 window 上
+window.currentUser = null;  // <--- 務必加上 window. 前綴
 let localBlessings = [];
 
   // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
