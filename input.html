@@ -194,9 +194,10 @@
   };
 
   // 2. 初始化 Firebase
-  let db;
-  let auth;
-  let app;
+  let db = null;
+    let auth = null;
+    let currentUser = null;  // 確保這裡有宣告 currentUser
+    let localBlessings = [];
 
   // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
     // Toast 提示訊息
