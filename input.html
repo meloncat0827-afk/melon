@@ -194,10 +194,9 @@
   };
 
   // 2. 初始化 Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  let db;
+  let auth;
+  let app;
 
   // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
     // Toast 提示訊息
@@ -246,9 +245,10 @@
       }
 
       try {
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
+        // ✅ 正確寫法：不要加 const
+app = initializeApp(firebaseConfig);
+db = getFirestore(app);
+auth = getAuth(app);
 
         // 登入驗證
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
