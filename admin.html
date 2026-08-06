@@ -237,13 +237,27 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 1. 填入你從 Firebase 複製的正確設定
+const firebaseConfig = {
+  apiKey: "AIzaSyBkqnAtcZHSUVrxoabWnZDs_MXA6mft62M",
+  authDomain: "iruni2026.firebaseapp.com",
+  projectId: "iruni2026",
+  storageBucket: "iruni2026.firebasestorage.app", // 確保這裡對應你的 Storage 網域
+  messagingSenderId: "267905666323",
+  appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
+  measurementId: "G-PTQ840GJ27"
+};
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+// 2. 自定義一個固定的 appId 字串（不要用原本會變 null 的判斷式）
+const appId = 'iruni2026-app';
 
     let db = null;
     let auth = null;
