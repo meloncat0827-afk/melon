@@ -258,7 +258,7 @@ auth = getAuth(app);
         } else {
           await signInAnonymously(auth);
         }
-        currentUser = auth.currentUser;
+        window.currentUser = auth.window.currentUser;
 
         // 監聽雲端資料庫
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
@@ -404,7 +404,7 @@ auth = getAuth(app);
         const compressedData = await compressText(content);
 
         // 如果沒有雲端連線環境，切換至單機預覽模式存入記憶體
-        if (!db || !currentUser) {
+        if (!db || !window.currentUser) {
           localBlessings.unshift({
             id: 'local_' + Date.now(),
             name: name,
@@ -431,7 +431,7 @@ auth = getAuth(app);
           compressedContent: compressedData,
           isCompressed: true,
           createdAt: new Date().toISOString(),
-          userId: currentUser.uid
+          userId: window.currentUser.uid
         });
 
         showToast("🎉 祝福已成功壓縮打包至【生日時空膠囊】！");
