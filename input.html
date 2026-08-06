@@ -194,10 +194,11 @@
   };
 
   // 2. 初始化 Firebase
-  let db = null;
-    let auth = null;
-    let currentUser = null;  // 確保這裡有宣告 currentUser
-    let localBlessings = [];
+  // 2. 初始化 Firebase 與全域變數
+window.db = null;
+window.auth = null;
+window.currentUser = null;  // 改成全域掛載在 window 上
+let localBlessings = [];
 
   // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
     // Toast 提示訊息
