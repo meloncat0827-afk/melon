@@ -253,12 +253,13 @@ db = getFirestore(app);
 auth = getAuth(app);
 
         // 登入驗證
+        let userCred = null;
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
+          userCred = await signInWithCustomToken(auth, __initial_auth_token);
         } else {
-          await signInAnonymously(auth);
+          userCred = await signInAnonymously(auth);
         }
-        window.currentUser = auth.window.currentUser;
+        window.currentUser = userCred.user; // ✅ 這樣才能正確取得目前登入的使用者資訊！
 
         // 監聽雲端資料庫
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
