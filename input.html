@@ -173,37 +173,33 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  // 1. 統一使用官方 CDN (ESM) 引入 Firebase 模組
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+  import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 🎂 設定祈iruni生日時間 (2026年9月29日 00:00:00)
-    const BIRTHDAY_TARGET = new Date('2026-09-29T00:00:00');
+  // 🎂 設定祈iruni生日時間 (2026年9月29日 00:00:00)
+  const BIRTHDAY_TARGET = new Date('2026-09-29T00:00:00');
 
-    // 全域變數取得與環境設定
-    // 1. 填入你從 Firebase 複製的正確設定
-// 1. 填入你從 Firebase 複製的正確設定
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  // Firebase 設定資訊
+  const firebaseConfig = {
+    apiKey: "AIzaSyBkqnAtcZHSUvrxoabWnZDs_MXA6mft62M",
+    authDomain: "iruni2026.firebaseapp.com",
+    projectId: "iruni2026",
+    storageBucket: "iruni2026.firebasestorage.app",
+    messagingSenderId: "267905666323",
+    appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
+    measurementId: "G-PTQ840GJ27"
+  };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBkqnAtcZHSUvrxoabWnZDs_MXA6mft62M",
-  authDomain: "iruni2026.firebaseapp.com",
-  projectId: "iruni2026",
-  storageBucket: "iruni2026.firebasestorage.app",
-  messagingSenderId: "267905666323",
-  appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
-  measurementId: "G-PTQ840GJ27"
-};
+  // 2. 初始化 Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
     // Toast 提示訊息
     window.showToast = function(msg) {
       const toast = document.getElementById('toastMessage');
