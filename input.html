@@ -183,8 +183,16 @@
     // 全域變數取得與環境設定
     // 1. 填入你從 Firebase 複製的正確設定
 // 1. 填入你從 Firebase 複製的正確設定
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyBkqnAtcZHSUVrxoabWnZDs_MXA6mft62M",
+  apiKey: "AIzaSyBkqnAtcZHSUvrxoabWnZDs_MXA6mft62M",
   authDomain: "iruni2026.firebaseapp.com",
   projectId: "iruni2026",
   storageBucket: "iruni2026.firebasestorage.app",
@@ -193,12 +201,9 @@ const firebaseConfig = {
   measurementId: "G-PTQ840GJ27"
 };
 
-// 2. 自定義一個固定的 appId 字串
-const appId = 'iruni2026-app';
-
-let db = null;
-let auth = null;
-let currentUser = null;
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
     // Toast 提示訊息
     window.showToast = function(msg) {
       const toast = document.getElementById('toastMessage');
