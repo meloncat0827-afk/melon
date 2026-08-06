@@ -238,36 +238,37 @@
 
   <script type="module">
     // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+  import { 
+    getFirestore, 
+    collection, 
+    onSnapshot, 
+    doc, 
+    deleteDoc 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { 
+    getAuth, 
+    signInAnonymously, 
+    signInWithCustomToken 
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// 1. 填入你從 Firebase 複製的正確設定
-// 1. 填入你從 Firebase 複製的正確設定
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  // 2. 貼上您的 Firebase 設定
+  const firebaseConfig = {
+    apiKey: "AIzaSyBkqnAtcZHSUVrxoabWnZDs_MXA6mft62M",
+    authDomain: "iruni2026.firebaseapp.com",
+    projectId: "iruni2026",
+    storageBucket: "iruni2026.firebasestorage.app",
+    messagingSenderId: "267905666323",
+    appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
+    measurementId: "G-PTQ840GJ27"
+  };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBkqnAtcZHSUvrxoabWnZDs_MXA6mft62M",
-  authDomain: "iruni2026.firebaseapp.com",
-  projectId: "iruni2026",
-  storageBucket: "iruni2026.firebasestorage.app",
-  messagingSenderId: "267905666323",
-  appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
-  measurementId: "G-PTQ840GJ27"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  // 3. 初始化 Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
     let allMessages = [];
     let pendingDeleteTarget = null; // { type: 'single'|'batch', id?: string }
