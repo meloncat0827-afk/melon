@@ -1,8 +1,256 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祈iruni 生日祝福 - 管理員後台</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff0f3',
+              100: '#ffe1e8',
+              200: '#ffc2d1',
+              400: '#ff7597',
+              500: '#ff4d7d',
+              600: '#e62e60',
+            },
+            husky: {
+              50: '#f0f4f8',
+              100: '#dbe3ed',
+              200: '#b8c7d9',
+              500: '#5a738e',
+              600: '#435870',
+              700: '#324356',
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+            display: ['"Fredoka"', 'cursive'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #ffeef2 0%, #f0f4ff 50%, #f1f5f9 100%);
+      min-height: 100vh;
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(14px);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 20px 40px rgba(255, 117, 151, 0.12);
+    }
+
+    .btn-bounce {
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    }
+    .btn-bounce:hover {
+      transform: translateY(-2px);
+    }
+    .btn-bounce:active {
+      transform: translateY(1px);
+    }
+  </style>
+</head>
+<body class="text-slate-700 font-sans flex flex-col justify-between min-h-screen">
+
+  <header class="w-full max-w-5xl mx-auto px-4 pt-6 pb-2">
+    <nav class="glass-card rounded-2xl px-6 py-3 flex items-center justify-between shadow-sm">
+      <a href="index.html" class="flex items-center gap-3">
+        <span class="text-2xl">🛡️</span>
+        <div>
+          <h1 class="font-display font-bold text-lg text-slate-800 leading-tight">管理員後台 Dashboard</h1>
+          <p class="text-xs text-slate-400">祈iruni 生日祝福審核與時空膠囊控管</p>
+        </div>
+      </a>
+      <div class="flex items-center gap-2">
+        <a href="input.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-brand-100 transition-colors flex items-center gap-1">
+          <i class="fa-solid fa-pen-to-square"></i> 返回觀眾留作文
+        </a>
+        <a href="index.html" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-brand-100 transition-colors flex items-center gap-1">
+          <i class="fa-solid fa-house"></i> 首頁
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="w-full max-w-5xl mx-auto px-4 py-6 flex-grow flex flex-col space-y-6">
+
+    <!-- 驗證密碼鎖卡片 -->
+    <section id="authLockCard" class="w-full max-w-md mx-auto glass-card rounded-3xl p-8 text-center space-y-4 my-auto">
+      <div class="w-16 h-16 bg-brand-100 text-brand-500 rounded-full flex items-center justify-center text-2xl mx-auto shadow-sm">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">管理權限驗證</h2>
+        <p class="text-xs text-slate-400 mt-1">請輸入管理員密碼解鎖後台控管介面</p>
+      </div>
+      <div class="space-y-3">
+        <input type="password" id="adminPasswordInput" placeholder="請輸入管理密碼" class="w-full p-3 text-center rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm tracking-wider">
+        <button onclick="checkAdminPassword()" class="btn-bounce w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold text-sm rounded-xl shadow-md">
+          <i class="fa-solid fa-key mr-1"></i> 解鎖管理介面
+        </button>
+      </div>
+      <p id="authErrorMsg" class="text-xs text-red-500 font-semibold hidden">❌ 密碼錯誤，請再試一次！</p>
+    </section>
+
+    <!-- 主要管理控制台 (登入後顯示) -->
+    <section id="adminDashboard" class="hidden w-full space-y-6">
+      
+      <!-- 統計數據數據卡片區 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-500 flex items-center justify-center text-lg font-bold">
+            💌
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 font-medium block">總留言筆數</span>
+            <span id="statTotalCount" class="text-xl font-bold text-slate-800">0</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-bold">
+            🐾
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 font-medium block">哈士奇會員</span>
+            <span id="statHuskyCount" class="text-xl font-bold text-slate-800">0</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-bold">
+            👑
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 font-medium block">大衛哈士奇</span>
+            <span id="statDavidCount" class="text-xl font-bold text-slate-800">0</span>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-bold">
+            👤
+          </div>
+          <div>
+            <span class="text-xs text-slate-400 font-medium block">一般觀眾</span>
+            <span id="statNormalCount" class="text-xl font-bold text-slate-800">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 工具與搜尋卡片 -->
+      <div class="glass-card rounded-3xl p-6 space-y-4">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          <!-- 搜尋與篩選 -->
+          <div class="flex flex-wrap items-center gap-3 w-full md:w-auto flex-1">
+            <div class="relative w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+              <input type="text" id="searchInput" oninput="filterMessages()" placeholder="搜尋暱稱或留言關鍵字..." class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-400">
+            </div>
+
+            <select id="levelFilter" onchange="filterMessages()" class="py-2 px-3 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-400 bg-white">
+              <option value="ALL">全部會員等級</option>
+              <option value="0級 (一般觀眾)">0級 - 一般觀眾</option>
+              <option value="1級 (哈士奇)">1級 - 哈士奇</option>
+              <option value="2級 (純種哈士奇)">2級 - 純種哈士奇</option>
+              <option value="3級 (大衛哈士奇)">3級 - 大衛哈士奇</option>
+            </select>
+          </div>
+
+          <!-- 批量操作與功能按鈕 -->
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <button onclick="toggleSelectAll()" class="btn-bounce px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1">
+              <i class="fa-regular fa-square-check"></i> 全選/全不選
+            </button>
+            <button onclick="confirmBatchDelete()" class="btn-bounce px-3.5 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-trash-can"></i> 批量刪除勾選
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 文章列表卡片 -->
+      <div class="glass-card rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="font-extrabold text-slate-800 text-base flex items-center gap-2">
+            <span>📋</span> 雲端文章與膠囊資料庫
+          </h3>
+          <span id="filteredCountTag" class="text-xs text-slate-500 font-semibold">載入中...</span>
+        </div>
+
+        <div id="adminMessageList" class="space-y-3">
+          <div class="text-center text-slate-400 text-xs py-12">
+            <i class="fa-solid fa-circle-notch fa-spin text-lg mb-2"></i><br>正在載入雲端留言資料...
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 自訂彈出刪除確認 Modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-center border border-slate-100">
+      <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-xl mx-auto">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-slate-800">確認要刪除嗎？</h3>
+        <p id="deleteModalText" class="text-xs text-slate-500 mt-1 leading-relaxed">此操作無法復原，確定要從雲端資料庫永久刪除此內容嗎？</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button onclick="closeDeleteModal()" class="py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50">
+          取消
+        </button>
+        <button id="confirmDeleteBtn" class="py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-bold shadow-md">
+          確認刪除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 訊息提示條 -->
+  <div id="toastMessage" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden text-xs px-4 py-2.5 rounded-xl bg-slate-800 text-white font-medium shadow-xl"></div>
+
+  <footer class="w-full text-center py-4 text-xs text-slate-400">
+    🎂 Happy Birthday to 祈iruni | 管理員審核與文章維護台
+  </footer>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-    import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      onSnapshot, 
+      doc, 
+      deleteDoc 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { 
+      getAuth, 
+      signInAnonymously, 
+      signInWithCustomToken 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBkqnAtcZHSUVrxoabWnZDs_MXA6mft62M",
@@ -14,20 +262,58 @@
       measurementId: "G-PTQ840GJ27"
     };
 
-    // --- 全域變數宣告 ---
+    // 初始化 Firebase 與全域變數
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const analytics = getAnalytics(app);
-    const appId = "default_app_id"; // 請務必確認此 ID 與你發送資料時的 path 一致
-    
+    const appId = "default_app_id";
+
     let allMessages = [];
     let pendingDeleteTarget = null;
     let currentUser = null;
 
-    // (中間的 decompressText, showToast, checkAdminPassword 函式保持不變)
+    // 解壓縮工具
+    async function decompressText(base64Str) {
+      try {
+        const bytes = Uint8Array.from(atob(base64Str), c => c.charCodeAt(0));
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+        const response = new Response(stream);
+        return await response.text();
+      } catch (e) {
+        try {
+          return decodeURIComponent(atob(base64Str));
+        } catch (err) {
+          return base64Str;
+        }
+      }
+    }
 
-    // --- 修正後的 initFirebase ---
+    // Toast 顯示
+    window.showToast = function(msg) {
+      const toast = document.getElementById('toastMessage');
+      toast.innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    };
+
+    // 密碼查驗
+    window.checkAdminPassword = function() {
+      const pwd = document.getElementById('adminPasswordInput').value.trim();
+      const err = document.getElementById('authErrorMsg');
+      
+      if (pwd === "iruni0929" || pwd === "admin") {
+        document.getElementById('authLockCard').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        showToast("🔓 管理員解鎖成功！已開啟管理員權限預覽機制");
+      } else {
+        err.classList.remove('hidden');
+      }
+    };
+
+    // 初始化 Firebase 登入與資料監聽
     async function initFirebase() {
       try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -37,7 +323,7 @@
         }
         currentUser = auth.currentUser;
 
-        // 正確的路徑：確保此處的路徑與發送端完全一致
+        // 訂閱資料庫
         const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'blessings');
 
         onSnapshot(messagesCol, async (snapshot) => {
@@ -46,8 +332,10 @@
             allMessages.push({ id: d.id, ...d.data() });
           });
 
+          // 依時間倒序
           allMessages.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
+          // 幫管理員解密膠囊內容以利審查
           for (let m of allMessages) {
             if (m.isCompressed && m.compressedContent) {
               m.adminDecryptedContent = await decompressText(m.compressedContent);
@@ -55,17 +343,128 @@
               m.adminDecryptedContent = m.content || '';
             }
           }
+
           updateStats();
           filterMessages();
+
+        }, (error) => {
+          console.error("Firestore read error:", error);
+          document.getElementById('adminMessageList').innerHTML = '<div class="text-center text-red-400 text-xs py-8">❌ 讀取雲端資料庫失敗</div>';
         });
+
       } catch (err) {
         console.error("Firebase init error:", err);
       }
     }
 
-    // --- 修正後的刪除邏輯 ---
+    // 更新頂部統計數據
+    function updateStats() {
+      document.getElementById('statTotalCount').innerText = allMessages.length;
+      
+      let husky = 0, david = 0, normal = 0;
+      allMessages.forEach(m => {
+        const lvl = m.level || '';
+        if (lvl.includes('3級') || lvl.includes('大衛')) david++;
+        else if (lvl.includes('哈士奇')) husky++;
+        else normal++;
+      });
+
+      document.getElementById('statHuskyCount').innerText = husky;
+      document.getElementById('statDavidCount').innerText = david;
+      document.getElementById('statNormalCount').innerText = normal;
+    }
+
+    // 關鍵字與等級過濾
+    window.filterMessages = function() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+      const selectedLevel = document.getElementById('levelFilter').value;
+
+      const filtered = allMessages.filter(m => {
+        const nameMatch = (m.name || '').toLowerCase().includes(keyword);
+        const contentMatch = (m.adminDecryptedContent || m.content || '').toLowerCase().includes(keyword);
+        const matchKey = nameMatch || contentMatch;
+
+        const levelMatch = selectedLevel === 'ALL' || (m.level && m.level.includes(selectedLevel.split(' ')[0]));
+
+        return matchKey && levelMatch;
+      });
+
+      document.getElementById('filteredCountTag').innerText = `顯示 ${filtered.length} / Total ${allMessages.length} 則`;
+
+      renderMessageList(filtered);
+    };
+
+    // 渲染卡片列表
+    function renderMessageList(list) {
+      const container = document.getElementById('adminMessageList');
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="text-center text-slate-400 text-xs py-10">尚無符合條件的雲端文章/祝福留言！</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => `
+        <div class="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/80 hover:border-brand-300 transition-all space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" value="${m.id}" class="msg-checkbox w-4 h-4 rounded border-slate-300 text-brand-500 focus:ring-brand-400">
+              <span class="font-bold text-slate-800 text-xs">👤 ${escapeHtml(m.name || '匿名觀眾')}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(m.level || '一般觀眾')}</span>
+              ${m.isCompressed ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">🔒 時空膠囊 (管理員已解密)</span>' : ''}
+            </div>
+            
+            <button onclick="promptSingleDelete('${m.id}', '${escapeHtml(m.name || '匿名')}')" class="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-600 font-bold text-[11px] rounded-lg transition-colors flex items-center gap-1">
+              <i class="fa-solid fa-trash-can"></i> 刪除文章
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap bg-white p-3 rounded-xl border border-slate-100">${escapeHtml(m.adminDecryptedContent || m.content || '')}</p>
+
+          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+            <span>ID: ${m.id} | User: ${m.userId ? m.userId.substring(0, 8) + '...' : 'Unknown'}</span>
+            <span>📅 ${m.createdAt ? new Date(m.createdAt).toLocaleString('zh-TW') : '時間未知'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 全選 / 全不選
+    window.toggleSelectAll = function() {
+      const checkboxes = document.querySelectorAll('.msg-checkbox');
+      if (checkboxes.length === 0) return;
+      
+      const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+      checkboxes.forEach(cb => cb.checked = !allChecked);
+    };
+
+    // 單筆刪除對話框
+    window.promptSingleDelete = function(docId, name) {
+      pendingDeleteTarget = { type: 'single', id: docId };
+      document.getElementById('deleteModalText').innerText = `確定要刪除來自【${name}】的這篇留言嗎？`;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    };
+
+    // 批量刪除對話框
+    window.confirmBatchDelete = function() {
+      const selected = Array.from(document.querySelectorAll('.msg-checkbox:checked')).map(cb => cb.value);
+      if (selected.length === 0) {
+        showToast("⚠️ 請先勾選要刪除的文章留言！");
+        return;
+      }
+      pendingDeleteTarget = { type: 'batch', ids: selected };
+      document.getElementById('deleteModalText').innerText = `確定要批量刪除已勾選的 ${selected.length} 篇留言嗎？`;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    };
+
+    // 關閉 Modal
+    window.closeDeleteModal = function() {
+      document.getElementById('deleteModal').classList.add('hidden');
+      pendingDeleteTarget = null;
+    };
+
+    // 執行刪除邏輯
     document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-      if (!pendingDeleteTarget) return;
+      if (!pendingDeleteTarget || !db) return;
 
       const btn = document.getElementById('confirmDeleteBtn');
       btn.disabled = true;
@@ -73,12 +472,14 @@
 
       try {
         if (pendingDeleteTarget.type === 'single') {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'blessings', pendingDeleteTarget.id));
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'blessings', pendingDeleteTarget.id);
+          await deleteDoc(docRef);
           showToast("🗑️ 已成功刪除文章！");
         } else if (pendingDeleteTarget.type === 'batch') {
-          const promises = pendingDeleteTarget.ids.map(id => 
-            deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'blessings', id))
-          );
+          const promises = pendingDeleteTarget.ids.map(id => {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'blessings', id);
+            return deleteDoc(docRef);
+          });
           await Promise.all(promises);
           showToast(`🗑️ 已成功刪除 ${pendingDeleteTarget.ids.length} 篇勾選文章！`);
         }
@@ -92,5 +493,13 @@
       }
     });
 
+    // HTML 轉義字元
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // 初始化啟動
     initFirebase();
   </script>
+</body>
+</html>
