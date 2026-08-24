@@ -32,7 +32,7 @@
       overflow-x: hidden;
     }
 
-    /* 主要容器加上相對定位，作為貼圖定位基準 */
+    /* 主要容器作為貼圖定位基準 */
     .container {
       background: rgba(255, 255, 255, 0.9);
       padding: 40px 30px;
@@ -114,15 +114,13 @@
       margin-top: 15px;
     }
 
-    /* ==========================================
-       周圍裝飾貼圖與表情符號樣式
-       ========================================== */
+    /* 周圍裝飾貼圖與表情符號樣式 */
     .sticker {
       position: absolute;
-      width: 55px;
-      height: 55px;
+      width: 60px;
+      height: 60px;
       object-fit: contain;
-      pointer-events: none; /* 避免擋到點擊按鈕 */
+      pointer-events: none; /* 避免擋到按鈕點擊 */
       animation: float 3s ease-in-out infinite alternate;
       filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
       z-index: 10;
@@ -136,7 +134,7 @@
     .s5 { bottom: -20px; left: -15px; transform: rotate(12deg); animation-delay: 0.8s; }
     .s6 { bottom: -20px; right: -15px; transform: rotate(-12deg); animation-delay: 0.3s; }
 
-    /* 輕微上下漂浮的動態效果 */
+    /* 上下飄浮效果 */
     @keyframes float {
       0% { transform: translateY(0px) rotate(0deg); }
       100% { transform: translateY(-8px) rotate(5deg); }
@@ -146,14 +144,13 @@
 <body>
 
   <div class="container">
-    <!-- 周圍的貼圖/表情包圖片 -->
-    <!-- 請將 src 替換為 iruni 資料夾裡的實際檔名 (如 1.png, 2.png 等) -->
-    <img src="iruni/1.png" class="sticker s1" alt="emote">
-    <img src="iruni/2.png" class="sticker s2" alt="emote">
-    <img src="iruni/3.png" class="sticker s3" alt="emote">
-    <img src="iruni/4.png" class="sticker s4" alt="emote">
-    <img src="iruni/5.png" class="sticker s5" alt="emote">
-    <img src="iruni/6.png" class="sticker s6" alt="emote">
+    <!-- 同目錄下的表情包圖片：iruni1.png ~ iruni6.png -->
+    <img src="iruni1.png" class="sticker s1" alt="emote">
+    <img src="iruni2.png" class="sticker s2" alt="emote">
+    <img src="iruni3.png" class="sticker s3" alt="emote">
+    <img src="iruni4.png" class="sticker s4" alt="emote">
+    <img src="iruni5.png" class="sticker s5" alt="emote">
+    <img src="iruni6.png" class="sticker s6" alt="emote">
 
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
