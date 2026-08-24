@@ -29,18 +29,21 @@
       justify-content: center;
       text-align: center;
       padding: 20px;
-      overflow-x: hidden;
+      overflow: hidden; /* 防止出現滾動條 */
+      position: relative;
     }
 
-    /* 主要容器作為貼圖定位基準 */
+    /* 主要容器 */
     .container {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.92);
       padding: 40px 30px;
       border-radius: 24px;
       box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
       max-width: 500px;
       width: 100%;
       position: relative;
+      z-index: 10; /* 保證卡片在圖片雨上方 */
+      backdrop-filter: blur(5px);
     }
 
     h1 {
@@ -114,44 +117,46 @@
       margin-top: 15px;
     }
 
-    /* 周圍裝飾貼圖與表情符號樣式 */
-    .sticker {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-      pointer-events: none; /* 避免擋到按鈕點擊 */
-      animation: float 3s ease-in-out infinite alternate;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-      z-index: 10;
+    /* ==========================================
+       圖片雨（Rain Effect）樣式
+       ========================================== */
+    #rain-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none; /* 滑鼠穿透，不擋住按鈕點擊 */
+      z-index: 1;
     }
 
-    /* 各個貼圖的個別位置與擺放角度 */
-    .s1 { top: -25px; left: -20px; transform: rotate(-15deg); animation-delay: 0s; }
-    .s2 { top: -30px; right: -20px; transform: rotate(15deg); animation-delay: 0.5s; }
-    .s3 { top: 40%; left: -35px; transform: rotate(-10deg); animation-delay: 1s; }
-    .s4 { top: 40%; right: -35px; transform: rotate(10deg); animation-delay: 1.5s; }
-    .s5 { bottom: -20px; left: -15px; transform: rotate(12deg); animation-delay: 0.8s; }
-    .s6 { bottom: -20px; right: -15px; transform: rotate(-12deg); animation-delay: 0.3s; }
+    .rain-drop {
+      position: absolute;
+      top: -80px;
+      object-fit: contain;
+      pointer-events: none;
+      animation: fall linear infinite;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
+    }
 
-    /* 上下飄浮效果 */
-    @keyframes float {
-      0% { transform: translateY(0px) rotate(0deg); }
-      100% { transform: translateY(-8px) rotate(5deg); }
+    @keyframes fall {
+      0% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 0.3;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- 同目錄下的表情包圖片：iruni1.png ~ iruni6.png -->
-    <img src="iruni1.png" class="sticker s1" alt="emote">
-    <img src="iruni2.png" class="sticker s2" alt="emote">
-    <img src="iruni3.png" class="sticker s3" alt="emote">
-    <img src="iruni4.png" class="sticker s4" alt="emote">
-    <img src="iruni5.png" class="sticker s5" alt="emote">
-    <img src="iruni6.png" class="sticker s6" alt="emote">
+  <!-- 圖片雨背景容器 -->
+  <div id="rain-container"></div>
 
+  <div class="container">
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
@@ -202,6 +207,7 @@
     const statusText = document.getElementById('status-text');
     const video = document.getElementById('birthday-video');
 
+    // 倒數計時邏輯
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = BIRTHDAY_DATE - now;
@@ -245,6 +251,34 @@
       document.getElementById('video-view').classList.add('hidden');
       document.getElementById('card-view').classList.remove('hidden');
     });
+
+    // ==========================================
+    // 動態產生圖片雨 (iruni1.png ~ iruni6.png)
+    // ==========================================
+    const rainContainer = document.getElementById('rain-container');
+    const TOTAL_DROPS = 25; // 螢幕同時顯示的圖片數量
+
+    for (let i = 0; i < TOTAL_DROPS; i++) {
+      const img = document.createElement('img');
+      // 隨機選擇 iruni1.png ~ iruni6.png
+      const randomImgNum = Math.floor(Math.random() * 6) + 1;
+      img.src = `iruni${randomImgNum}.png`;
+      img.classList.add('rain-drop');
+
+      // 隨機設定水平位置、大小、下落速度與延遲
+      const leftPos = Math.random() * 100; // 0% ~ 100% 畫面寬度
+      const size = Math.random() * 35 + 35; // 35px ~ 70px
+      const duration = Math.random() * 4 + 3; // 3 ~ 7 秒下落完成
+      const delay = Math.random() * 5; // 0 ~ 5 秒延遲啟動
+
+      img.style.left = `${leftPos}vw`;
+      img.style.width = `${size}px`;
+      img.style.height = `${size}px`;
+      img.style.animationDuration = `${duration}s`;
+      img.style.animationDelay = `${delay}s`;
+
+      rainContainer.appendChild(img);
+    }
   </script>
 </body>
 </html>
