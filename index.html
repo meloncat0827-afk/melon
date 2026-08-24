@@ -146,7 +146,7 @@
 
     <!-- 提前 1.5 小時解鎖的驚喜按鈕區域 -->
     <div id="unlock-section" class="hidden">
-      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">最後 1.5 小時</p>
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">驚喜區域已解鎖！</p>
       <button class="btn" onclick="startGame()">🎮 開始小遊戲</button>
     </div>
 
@@ -167,19 +167,16 @@
       <h2 style="color: var(--primary-color); margin-bottom: 15px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
         親愛的魯尼：<br><br>
-        生日快樂，又過了一年身為理科腦不會說話，好像也只能說一句生日快樂，不過......希望尼明年也可以打開這個網站
+        生日快樂！又過了一年，身為理科腦不太擅長說感性的話，好像也只能說一句生日快樂。不過......希望尼明年也可以打開這個網站！
       </p>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // 設定祈iruni的生日時間（請替換為實際的年/月/日/時/分）
-    // 範例：2026 年 8 月 10 日 00:00:00
-    // ==========================================
+    // 設定生日時間
     const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
     
-    // 1.5 小時 = 90 分鐘 = 90 * 60 * 1000 毫秒
+    // 提前 1.5 小時解鎖 (90 分鐘)
     const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
 
     const daysEl = document.getElementById('days');
@@ -189,18 +186,20 @@
     const unlockSection = document.getElementById('unlock-section');
     const statusText = document.getElementById('status-text');
 
-    let gameStarted = false;
-
     // 倒數計時邏輯
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = BIRTHDAY_DATE - now;
 
+      // 檢查是否到達解鎖時間 (提前 1.5 小時)
+      if (distance <= UNLOCK_BEFORE_MS && distance > 0) {
+        unlockSection.classList.remove('hidden');
+      }
+
       if (distance < 0) {
-        // 時間已過：生日到了！
         statusText.innerText = "🎂 今天是祈iruni的生日！";
         document.getElementById('countdown-view').classList.add('hidden');
-        document.getElementById('unlock-section').classList.remove('hidden');
+        unlockSection.classList.remove('hidden');
         return;
       }
 
@@ -208,6 +207,90 @@
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 這是一個超棒的生日驚喜點子！
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
+      daysEl.innerText = String(days).padStart(2, '0');
+      hoursEl.innerText = String(hours).padStart(2, '0');
+      minutesEl.innerText = String(minutes).padStart(2, '0');
+      secondsEl.innerText = String(seconds).padStart(2, '0');
+    }
 
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // 遊戲邏輯
+    let canvas, ctx;
+    let score = 0;
+    let basket = { x: 130, width: 60, height: 15 };
+    let cake = { x: 100, y: 0, speed: 3, size: 20 };
+
+    function startGame() {
+      document.getElementById('unlock-section').classList.add('hidden');
+      document.getElementById('countdown-view').classList.add('hidden');
+      document.getElementById('game-view').classList.remove('hidden');
+
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+
+      // 滑鼠與觸控監聽
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        basket.x = e.clientX - rect.left - basket.width / 2;
+      });
+
+      canvas.addEventListener('touchmove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        basket.x = e.touches[0].clientX - rect.left - basket.width / 2;
+        e.preventDefault();
+      });
+
+      resetCake();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function resetCake() {
+      cake.x = Math.random() * (canvas.width - cake.size);
+      cake.y = 0;
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 移動與繪製蛋糕
+      cake.y += cake.speed;
+      ctx.font = "20px Sans-serif";
+      ctx.fillText("🎂", cake.x, cake.y);
+
+      // 繪製籃子
+      ctx.fillStyle = "#ff7597";
+      ctx.beginPath();
+      ctx.roundRect(basket.x, canvas.height - basket.height - 10, basket.width, basket.height, 8);
+      ctx.fill();
+
+      // 碰撞偵測 (接住蛋糕)
+      if (
+        cake.y >= canvas.height - basket.height - 20 &&
+        cake.x + cake.size >= basket.x &&
+        cake.x <= basket.x + basket.width
+      ) {
+        score++;
+        document.getElementById('score').innerText = score;
+        if (score >= 10) {
+          // 通關顯示卡片
+          document.getElementById('game-view').classList.add('hidden');
+          document.getElementById('card-view').classList.remove('hidden');
+          return;
+        }
+        resetCake();
+      }
+
+      // 沒接到，掉落地面重置
+      if (cake.y > canvas.height) {
+        resetCake();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+  </script>
+</body>
+</html>
