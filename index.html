@@ -29,14 +29,40 @@
       justify-content: center;
       text-align: center;
       padding: 20px;
-      overflow: hidden;
+      overflow-x: hidden;
       position: relative;
+    }
+
+    /* 頂部彩燈三角旗裝飾 */
+    .bunting-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #ff7597 0, #ff7597 15px,
+        #ffb3c6 15px, #ffb3c6 30px,
+        #ffd166 30px, #ffd166 45px,
+        #06d6a0 45px, #06d6a0 60px,
+        #118ab2 60px, #118ab2 75px
+      );
+      clip-path: polygon(
+        0 0, 100% 0, 100% 60%, 
+        95% 100%, 90% 60%, 85% 100%, 80% 60%, 75% 100%, 70% 60%, 
+        65% 100%, 60% 60%, 55% 100%, 50% 60%, 45% 100%, 40% 60%, 
+        35% 100%, 30% 60%, 25% 100%, 20% 60%, 15% 100%, 10% 60%, 
+        5% 100%, 0 60%
+      );
+      z-index: 15;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
 
     /* 主要容器 */
     .container {
-      background: rgba(255, 255, 255, 0.92);
-      padding: 30px 25px;
+      background: rgba(255, 255, 255, 0.93);
+      padding: 35px 25px;
       border-radius: 24px;
       box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
       max-width: 500px;
@@ -44,11 +70,12 @@
       position: relative;
       z-index: 10;
       backdrop-filter: blur(5px);
+      margin-top: 25px;
     }
 
     h1 {
       color: var(--primary-color);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       font-size: 1.8rem;
     }
 
@@ -109,7 +136,7 @@
       box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
     }
 
-    /* 影片區域樣式 */
+    /* 影片區域 */
     #video-view video {
       width: 100%;
       border-radius: 16px;
@@ -117,7 +144,60 @@
       margin-top: 15px;
     }
 
-    /* 圖片雨樣式 */
+    /* 蛋糕淡入並向上浮現的動畫類別 */
+    .float-up {
+      animation: floatUpFade 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes floatUpFade {
+      0% {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 蛋糕本體與數字蠟燭 */
+    .cake-decoration {
+      font-size: 3.8rem;
+      margin-bottom: -5px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .candle-number {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ff477e;
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff0f3;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1.5px solid #ffb3c6;
+    }
+
+    /* 兩側裝飾圖示 */
+    .side-deco {
+      position: absolute;
+      font-size: 2.2rem;
+      pointer-events: none;
+      animation: sideFloat 3s ease-in-out infinite alternate;
+    }
+    .deco-left { left: -25px; top: -15px; }
+    .deco-right { right: -25px; top: -15px; animation-delay: 1.5s; }
+
+    @keyframes sideFloat {
+      0% { transform: translateY(0px) rotate(-5deg); }
+      100% { transform: translateY(-8px) rotate(5deg); }
+    }
+
+    /* 背景圖片雨 */
     #rain-container {
       position: fixed;
       top: 0;
@@ -151,14 +231,16 @@
 </head>
 <body>
 
-  <!-- 背景圖片雨 -->
+  <div class="bunting-banner"></div>
   <div id="rain-container"></div>
 
   <div class="container">
+    <div class="side-deco deco-left">🎁</div>
+    <div class="side-deco deco-right">🎈</div>
+
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
-    <!-- 倒數計時視圖 (全程保持顯示) -->
     <div id="countdown-view">
       <div class="timer-box">
         <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
@@ -168,13 +250,11 @@
       </div>
     </div>
 
-    <!-- 提前 1.5 小時解鎖按鈕 -->
     <div id="unlock-section" class="hidden">
-      <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">驚喜區域已解鎖！</p>
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">🎉 驚喜區域已解鎖！</p>
       <button class="btn" id="start-btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
     </div>
 
-    <!-- 影片播放區域 -->
     <div id="video-view" class="hidden">
       <video id="birthday-video" controls playsinline preload="auto">
         <source src="2026.mp4" type="video/mp4">
@@ -182,9 +262,14 @@
       </video>
     </div>
 
-    <!-- 生日祝福卡片 -->
+    <!-- 祝福卡片區域 -->
     <div id="card-view" class="hidden">
-      <h2 style="color: var(--primary-color); margin-top: 15px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
+      <!-- 蛋糕容器：播放完畢時會套用 float-up 效果浮上來 -->
+      <div id="cake-box" class="cake-decoration">
+        <div class="candle-number">🎂 20</div>
+        🎂
+      </div>
+      <h2 style="color: var(--primary-color); margin-top: 10px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
         親愛的魯尼：<br><br>
         生日快樂！又過了一年，身為理科腦不太擅長說感性的話，好像也只能說一句生日快樂。不過......希望尼明年也可以打開這個網站！
@@ -203,6 +288,7 @@
     const unlockSection = document.getElementById('unlock-section');
     const statusText = document.getElementById('status-text');
     const video = document.getElementById('birthday-video');
+    const cakeBox = document.getElementById('cake-box');
 
     function updateCountdown() {
       const now = new Date().getTime();
@@ -232,7 +318,6 @@
     updateCountdown();
 
     function startVideo() {
-      // 僅隱藏解鎖按鈕，倒數計時視圖 (countdown-view) 保留顯示
       unlockSection.classList.add('hidden');
       document.getElementById('video-view').classList.remove('hidden');
 
@@ -241,12 +326,16 @@
       });
     }
 
+    // 當影片結束時，觸發動畫效果
     video.addEventListener('ended', () => {
       document.getElementById('video-view').classList.add('hidden');
       document.getElementById('card-view').classList.remove('hidden');
+      
+      // 給蛋糕加上浮現動畫
+      cakeBox.classList.add('float-up');
     });
 
-    // 動態產生圖片雨 (iruni1.png ~ iruni6.png)
+    // 動態產生圖片雨
     const rainContainer = document.getElementById('rain-container');
     const TOTAL_DROPS = 25;
 
