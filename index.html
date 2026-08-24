@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>祈iruni 生日倒數與特別驚喜</title>
+  <title>祈魯尼生日倒數</title>
   <style>
     :root {
       --bg-color: #fdf0f5;
@@ -131,7 +131,7 @@
 <body>
 
   <div class="container">
-    <h1>🎉 祈iruni 生日倒數 🎂</h1>
+    <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
     <!-- 倒數計時視圖 -->
@@ -146,8 +146,8 @@
 
     <!-- 提前 1.5 小時解鎖的驚喜按鈕區域 -->
     <div id="unlock-section" class="hidden">
-      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">✨ 倒數進入最後 1.5 小時！特別遊戲已解鎖！</p>
-      <button class="btn" onclick="startGame()">🎮 開始小遊戲（收集蛋糕）</button>
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">最後 1.5 小時</p>
+      <button class="btn" onclick="startGame()">🎮 開始小遊戲</button>
     </div>
 
     <!-- 小遊戲區域 -->
@@ -166,8 +166,8 @@
     <div id="card-view" class="hidden">
       <h2 style="color: var(--primary-color); margin-bottom: 15px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
-        親愛的祈iruni：<br><br>
-        祝你生日快樂！希望新的一年裡每一天都充滿笑容、順心如意，繼續發光發熱！謝謝你帶給大家的溫暖與快樂！✨🍰
+        親愛的魯尼：<br><br>
+        生日快樂，又過了一年身為理科腦不會說話，好像也只能說一句生日快樂，不過......希望尼明年也可以打開這個網站
       </p>
     </div>
   </div>
@@ -177,7 +177,7 @@
     // 設定祈iruni的生日時間（請替換為實際的年/月/日/時/分）
     // 範例：2026 年 8 月 10 日 00:00:00
     // ==========================================
-    const BIRTHDAY_DATE = new Date("2026-08-10T00:00:00").getTime();
+    const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
     
     // 1.5 小時 = 90 分鐘 = 90 * 60 * 1000 毫秒
     const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
@@ -210,212 +210,4 @@
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 這是一個超棒的生日驚喜點子！
 
-要達成「**倒數計時**」＋「**倒數剩 1.5 小時（90 分鐘）自動解鎖小遊戲**」的效果，最適合且簡單的做法是用 **HTML + CSS + JavaScript** 寫一個網頁。
 
-以下為你規劃一個完整範例，包含**倒數畫面**與**解鎖小遊戲**的邏輯。
-
----
-
-## 🛠️ 頁面設計邏輯
-
-1. **倒數階段**（距離生日 > 1.5 小時）：顯示精美的生日倒數畫面，小遊戲區塊保持隱藏。
-2. **遊戲解鎖階段**（距離生日 <= 1.5 小時 且 未過生日）：自動隱藏倒數，顯示驚喜小遊戲！
-3. **生日當天/過後**：可以自動切換成「祝 祈iruni 生日快樂！」的慶祝畫面。
-
----
-
-## 💻 完整程式碼範例 (`index.html`)
-
-你可以直接複製下方程式碼，將它存成 `index.html` 檔案並用瀏覽器開啟：
-
-```html
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>祈iruni 生日倒數驚喜！</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-      background: linear-gradient(135deg, #ffd1ff 0%, #fad0c4 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      color: #4a4a4a;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.85);
-      padding: 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-      max-width: 500px;
-      width: 90%;
-    }
-
-    h1 {
-      color: #ff6b81;
-      margin-bottom: 1rem;
-    }
-
-    /* 倒數計時器樣式 */
-    .timer {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 20px 0;
-    }
-
-    .time-box {
-      background: #ff6b81;
-      color: white;
-      padding: 15px;
-      border-radius: 12px;
-      min-width: 70px;
-    }
-
-    .time-box span {
-      display: block;
-      font-size: 1.8rem;
-      font-weight: bold;
-    }
-
-    .time-box label {
-      font-size: 0.8rem;
-    }
-
-    /* 隱藏區塊用 */
-    .hidden {
-      display: none !important;
-    }
-
-    /* 小遊戲區塊（範例：點擊送祝福小遊戲） */
-    .game-box {
-      margin-top: 15px;
-    }
-
-    .btn {
-      background-color: #ff4757;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 1.1rem;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: transform 0.1s, background-color 0.2s;
-    }
-
-    .btn:hover {
-      background-color: #ff6b81;
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-    }
-
-    .score-board {
-      font-size: 1.5rem;
-      margin: 15px 0;
-      color: #ff4757;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <!-- 1. 倒數階段畫面 -->
-    <div id="countdown-section">
-      <h1>🎂 祈iruni 生日倒數 🎂</h1>
-      <p>距離驚喜解鎖還有：</p>
-      
-      <div class="timer">
-        <div class="time-box"><span id="days">00</span><label>天</label></div>
-        <div class="time-box"><span id="hours">00</span><label>時</label></div>
-        <div class="time-box"><span id="minutes">00</span><label>分</label></div>
-        <div class="time-box"><span id="seconds">00</span><label>秒</label></div>
-      </div>
-
-      <p style="font-size: 0.9rem; color: #777;">倒數倒數 1.5 小時會觸發隱藏關卡喔！</p>
-    </div>
-
-    <!-- 2. 小遊戲階段畫面（預設隱藏） -->
-    <div id="game-section" class="game-box hidden">
-      <h1>🎉 限時驚喜！祈iruni 生日小遊戲 🎉</h1>
-      <p>在倒數的最後一小時半，快來幫 祈iruni 收集生日蛋糕吧！</p>
-      
-      <div class="score-board">🎂 蛋糕數量：<span id="score">0</span></div>
-      <button class="btn" onclick="collectCake()">點擊送蛋糕 🍰</button>
-      
-      <p id="game-message" style="margin-top: 15px; font-weight: bold; color: #ff6b81;"></p>
-    </div>
-  </div>
-
-  <script>
-    // ⚠️ 請修改這裡：設定 祈iruni 的生日時間 (格式: YYYY-MM-DDTHH:mm:ss)
-    const TARGET_DATE = new Date('2026-08-06T00:00:00'); 
-    
-    // 1.5 小時的毫秒數 (1.5 * 60 * 60 * 1000 = 5,400,000 ms)
-    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000;
-
-    const countdownSection = document.getElementById('countdown-section');
-    const gameSection = document.getElementById('game-section');
-
-    function updateCountdown() {
-      const now = new Date();
-      const difference = TARGET_DATE - now;
-
-      // 情況 A：距離生日在大於 0 到 1.5 小時之間 -> 解鎖小遊戲
-      if (difference > 0 && difference <= GAME_UNLOCK_WINDOW) {
-        countdownSection.classList.add('hidden');
-        gameSection.classList.remove('hidden');
-      } 
-      // 情況 B：距離生日還有超過 1.5 小時 -> 正常倒數
-      else if (difference > 0) {
-        countdownSection.classList.remove('hidden');
-        gameSection.classList.add('hidden');
-
-        const d = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const h = Math.floor((difference / (1000 * 60 * 60)) % 24);
-        const m = Math.floor((difference / 1000 / 60) % 60);
-        const s = Math.floor((difference / 1000) % 60);
-
-        document.getElementById('days').innerText = String(d).padStart(2, '0');
-        document.getElementById('hours').innerText = String(h).padStart(2, '0');
-        document.getElementById('minutes').innerText = String(m).padStart(2, '0');
-        document.getElementById('seconds').innerText = String(s).padStart(2, '0');
-      } 
-      // 情況 C：已經到生日當天
-      else {
-        countdownSection.classList.add('hidden');
-        gameSection.classList.remove('hidden');
-        document.querySelector('#game-section h1').innerText = "🎂 祈iruni 生日快樂！🎂";
-      }
-    }
-
-    // 每秒更新一次
-    setInterval(updateCountdown, 1000);
-    updateCountdown();
-
-    // ------------------- 簡易小遊戲邏輯 -------------------
-    let score = 0;
-    function collectCake() {
-      score++;
-      document.getElementById('score').innerText = score;
-      
-      const msg = document.getElementById('game-message');
-      if (score === 10) msg.innerText = "祝福送出！祈iruni 收到了你的超讚蛋糕！";
-      if (score === 50) msg.innerText = "太厲害了！蛋糕塔已經疊到天花板啦！🎂🎂🎂";
-    }
-  </script>
-</body>
-</html>
