@@ -3,147 +3,419 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>祈iruni 🎂 生日倒數首頁</title>
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#fff0f3',
-              100: '#ffe1e8',
-              200: '#ffc2d1',
-              400: '#ff7597',
-              500: '#ff4d7d',
-              600: '#e62e60',
-            },
-            husky: {
-              50: '#f0f4f8',
-              100: '#dbe3ed',
-              200: '#b8c7d9',
-              500: '#5a738e',
-              600: '#435870',
-              700: '#324356',
-            }
-          },
-          fontFamily: {
-            sans: ['"Noto Sans TC"', 'sans-serif'],
-            display: ['"Fredoka"', 'cursive'],
-          }
-        }
-      }
-    }
-  </script>
-
+  <title>祈iruni 生日倒數與特別驚喜</title>
   <style>
+    :root {
+      --bg-color: #fdf0f5;
+      --primary-color: #ff7597;
+      --accent-color: #ffb3c6;
+      --text-color: #4a3e3d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     body {
-      background: linear-gradient(135deg, #ffeef2 0%, #f0f4ff 50%, #f1f5f9 100%);
+      background: linear-gradient(135deg, #ffe6eb 0%, #edf2ff 100%);
+      color: var(--text-color);
       min-height: 100vh;
-    }
-    
-    .glass-card {
-      background: rgba(255, 255, 255, 0.93);
-      backdrop-filter: blur(14px);
-      border: 2px solid rgba(255, 255, 255, 0.85);
-      box-shadow: 0 20px 40px rgba(255, 117, 151, 0.12);
-    }
-
-    .card-hover-iruni {
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .card-hover-iruni:hover {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 15px 30px rgba(255, 77, 125, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
     }
 
-    .card-hover-husky {
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 40px 30px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
     }
-    .card-hover-husky:hover {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 15px 30px rgba(90, 115, 142, 0.25);
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      color: #777;
+      margin-bottom: 25px;
+      font-size: 0.95rem;
+    }
+
+    /* 倒數計時器樣式 */
+    .timer-box {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+
+    .time-card {
+      background: #fff0f3;
+      padding: 12px;
+      border-radius: 12px;
+      min-width: 65px;
+      border: 2px solid var(--accent-color);
+    }
+
+    .time-card span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .time-card .label {
+      font-size: 0.75rem;
+      color: #888;
+    }
+
+    /* 隱藏與顯示區域控制 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* 按鈕樣式 */
+    .btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.4);
+      transition: all 0.2s ease;
+      margin-top: 15px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
+    }
+
+    /* 遊戲畫布容器 */
+    #game-container {
+      position: relative;
+      margin-top: 20px;
+    }
+
+    canvas {
+      background: #fff;
+      border-radius: 16px;
+      border: 3px solid var(--accent-color);
+      touch-action: none;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: var(--primary-color);
     }
   </style>
 </head>
-<body class="text-slate-700 font-sans flex flex-col justify-between min-h-screen">
+<body>
 
-  <main class="w-full max-w-4xl mx-auto px-4 py-6 flex-grow flex items-center justify-center">
+  <div class="container">
+    <h1>🎉 祈iruni 生日倒數 🎂</h1>
+    <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
-    <section class="w-full max-w-xl glass-card rounded-3xl p-6 md:p-8 text-center space-y-6">
-      
-      <!-- 轉址提示區塊 -->
-      <div id="redirect-notice" class="hidden text-xs md:text-sm bg-amber-50 text-amber-700 p-3 rounded-xl border border-amber-200 font-semibold animate-pulse">
-        🚀 選擇身分...
+    <!-- 倒數計時視圖 -->
+    <div id="countdown-view">
+      <div class="timer-box">
+        <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
+        <div class="time-card"><span id="hours">00</span><div class="label">時</div></div>
+        <div class="time-card"><span id="minutes">00</span><div class="label">分</div></div>
+        <div class="time-card"><span id="seconds">00</span><div class="label">秒</div></div>
       </div>
+    </div>
 
-      <!-- 身份問答標題 -->
-      <div>
-        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 flex items-center justify-center gap-2">
-          <span>🤔</span> 請問你是 <b>祈iruni</b> 還是 <b>觀眾 (哈士祈)</b>？
-        </h2>
-        <p class="text-xs text-slate-400 mt-1.5">請選擇您的身份進入專屬體驗區：</p>
+    <!-- 提前 1.5 小時解鎖的驚喜按鈕區域 -->
+    <div id="unlock-section" class="hidden">
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">✨ 倒數進入最後 1.5 小時！特別遊戲已解鎖！</p>
+      <button class="btn" onclick="startGame()">🎮 開始小遊戲（收集蛋糕）</button>
+    </div>
+
+    <!-- 小遊戲區域 -->
+    <div id="game-view" class="hidden">
+      <div class="game-stats">
+        <span>得分: <span id="score">0</span> / 10</span>
+        <span>目標: 10 個蛋糕</span>
       </div>
-
-      <!-- 身份選擇雙按鈕區 -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-        
-        <!-- 我是 祈iruni：超連結導向 game.html -->
-        <a href="game.html" class="card-hover-iruni block p-6 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 text-white text-left relative overflow-hidden group shadow-md flex items-center justify-between">
-          <div>
-            <span class="text-[10px] tracking-wider text-brand-100 font-bold block uppercase">Party Host</span>
-            <h3 class="font-bold text-lg leading-tight mt-1">我是 祈iruni</h3>
-          </div>
-          <i class="fa-solid fa-chevron-right text-brand-200 group-hover:translate-x-1 transition-transform"></i>
-        </a>
-
-        <!-- 我是 觀眾 (哈士祈)：超連結導向 input.html -->
-        <a href="input.html" class="card-hover-husky block p-6 rounded-2xl bg-gradient-to-br from-husky-600 to-husky-700 text-white text-left relative overflow-hidden group shadow-md flex items-center justify-between">
-          <div>
-            <span class="text-[10px] tracking-wider text-husky-200 font-bold block uppercase">Fan & Audience</span>
-            <h3 class="font-bold text-lg leading-tight mt-1">我是 觀眾 (哈士祈)</h3>
-          </div>
-          <i class="fa-solid fa-chevron-right text-husky-200 group-hover:translate-x-1 transition-transform"></i>
-        </a>
-
+      <div id="game-container">
+        <canvas id="gameCanvas" width="320" height="350"></canvas>
       </div>
+      <p style="font-size: 0.85rem; color: #888; margin-top: 8px;">左右移動滑鼠或用手指拖曳底部籃子來接蛋糕！</p>
+    </div>
 
-    </section>
-
-  </main>
-
-  <footer class="w-full text-center py-4 text-xs text-slate-400">
-    🎂 Happy Birthday to 祈iruni | Made with ❤️ for Birthday Celebration
-  </footer>
+    <!-- 通關/生日祝福卡片 -->
+    <div id="card-view" class="hidden">
+      <h2 style="color: var(--primary-color); margin-bottom: 15px;">💖 生日快樂 祈iruni！</h2>
+      <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
+        親愛的祈iruni：<br><br>
+        祝你生日快樂！希望新的一年裡每一天都充滿笑容、順心如意，繼續發光發熱！謝謝你帶給大家的溫暖與快樂！✨🍰
+      </p>
+    </div>
+  </div>
 
   <script>
-    const TARGET_DATE = new Date('2026-09-29T00:00:00'); 
-    let redirected = false;
+    // ==========================================
+    // 設定祈iruni的生日時間（請替換為實際的年/月/日/時/分）
+    // 範例：2026 年 8 月 10 日 00:00:00
+    // ==========================================
+    const BIRTHDAY_DATE = new Date("2026-08-10T00:00:00").getTime();
+    
+    // 1.5 小時 = 90 分鐘 = 90 * 60 * 1000 毫秒
+    const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
+
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const unlockSection = document.getElementById('unlock-section');
+    const statusText = document.getElementById('status-text');
+
+    let gameStarted = false;
+
+    // 倒數計時邏輯
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = BIRTHDAY_DATE - now;
+
+      if (distance < 0) {
+        // 時間已過：生日到了！
+        statusText.innerText = "🎂 今天是祈iruni的生日！";
+        document.getElementById('countdown-view').classList.add('hidden');
+        document.getElementById('unlock-section').classList.remove('hidden');
+        return;
+      }
+
+      // 計算剩餘天、時、分、秒
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 這是一個超棒的生日驚喜點子！
+
+要達成「**倒數計時**」＋「**倒數剩 1.5 小時（90 分鐘）自動解鎖小遊戲**」的效果，最適合且簡單的做法是用 **HTML + CSS + JavaScript** 寫一個網頁。
+
+以下為你規劃一個完整範例，包含**倒數畫面**與**解鎖小遊戲**的邏輯。
+
+---
+
+## 🛠️ 頁面設計邏輯
+
+1. **倒數階段**（距離生日 > 1.5 小時）：顯示精美的生日倒數畫面，小遊戲區塊保持隱藏。
+2. **遊戲解鎖階段**（距離生日 <= 1.5 小時 且 未過生日）：自動隱藏倒數，顯示驚喜小遊戲！
+3. **生日當天/過後**：可以自動切換成「祝 祈iruni 生日快樂！」的慶祝畫面。
+
+---
+
+## 💻 完整程式碼範例 (`index.html`)
+
+你可以直接複製下方程式碼，將它存成 `index.html` 檔案並用瀏覽器開啟：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>祈iruni 生日倒數驚喜！</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #ffd1ff 0%, #fad0c4 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #4a4a4a;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 90%;
+    }
+
+    h1 {
+      color: #ff6b81;
+      margin-bottom: 1rem;
+    }
+
+    /* 倒數計時器樣式 */
+    .timer {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .time-box {
+      background: #ff6b81;
+      color: white;
+      padding: 15px;
+      border-radius: 12px;
+      min-width: 70px;
+    }
+
+    .time-box span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+
+    .time-box label {
+      font-size: 0.8rem;
+    }
+
+    /* 隱藏區塊用 */
+    .hidden {
+      display: none !important;
+    }
+
+    /* 小遊戲區塊（範例：點擊送祝福小遊戲） */
+    .game-box {
+      margin-top: 15px;
+    }
+
+    .btn {
+      background-color: #ff4757;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #ff6b81;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+    }
+
+    .score-board {
+      font-size: 1.5rem;
+      margin: 15px 0;
+      color: #ff4757;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 1. 倒數階段畫面 -->
+    <div id="countdown-section">
+      <h1>🎂 祈iruni 生日倒數 🎂</h1>
+      <p>距離驚喜解鎖還有：</p>
+      
+      <div class="timer">
+        <div class="time-box"><span id="days">00</span><label>天</label></div>
+        <div class="time-box"><span id="hours">00</span><label>時</label></div>
+        <div class="time-box"><span id="minutes">00</span><label>分</label></div>
+        <div class="time-box"><span id="seconds">00</span><label>秒</label></div>
+      </div>
+
+      <p style="font-size: 0.9rem; color: #777;">倒數倒數 1.5 小時會觸發隱藏關卡喔！</p>
+    </div>
+
+    <!-- 2. 小遊戲階段畫面（預設隱藏） -->
+    <div id="game-section" class="game-box hidden">
+      <h1>🎉 限時驚喜！祈iruni 生日小遊戲 🎉</h1>
+      <p>在倒數的最後一小時半，快來幫 祈iruni 收集生日蛋糕吧！</p>
+      
+      <div class="score-board">🎂 蛋糕數量：<span id="score">0</span></div>
+      <button class="btn" onclick="collectCake()">點擊送蛋糕 🍰</button>
+      
+      <p id="game-message" style="margin-top: 15px; font-weight: bold; color: #ff6b81;"></p>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ 請修改這裡：設定 祈iruni 的生日時間 (格式: YYYY-MM-DDTHH:mm:ss)
+    const TARGET_DATE = new Date('2026-08-06T00:00:00'); 
+    
+    // 1.5 小時的毫秒數 (1.5 * 60 * 60 * 1000 = 5,400,000 ms)
+    const GAME_UNLOCK_WINDOW = 1.5 * 60 * 60 * 1000;
+
+    const countdownSection = document.getElementById('countdown-section');
+    const gameSection = document.getElementById('game-section');
 
     function updateCountdown() {
       const now = new Date();
-      const diff = TARGET_DATE - now;
+      const difference = TARGET_DATE - now;
 
-      // 當到達指定時間時，顯示提示並自動跳轉至 game.html
-      if (diff <= 0 && !redirected) {
-        redirected = true;
-        const noticeEl = document.getElementById('redirect-notice');
-        if (noticeEl) noticeEl.classList.remove('hidden');
-        setTimeout(() => {
-          window.location.href = "game.html";
-        }, 1500);
+      // 情況 A：距離生日在大於 0 到 1.5 小時之間 -> 解鎖小遊戲
+      if (difference > 0 && difference <= GAME_UNLOCK_WINDOW) {
+        countdownSection.classList.add('hidden');
+        gameSection.classList.remove('hidden');
+      } 
+      // 情況 B：距離生日還有超過 1.5 小時 -> 正常倒數
+      else if (difference > 0) {
+        countdownSection.classList.remove('hidden');
+        gameSection.classList.add('hidden');
+
+        const d = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const h = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((difference / 1000 / 60) % 60);
+        const s = Math.floor((difference / 1000) % 60);
+
+        document.getElementById('days').innerText = String(d).padStart(2, '0');
+        document.getElementById('hours').innerText = String(h).padStart(2, '0');
+        document.getElementById('minutes').innerText = String(m).padStart(2, '0');
+        document.getElementById('seconds').innerText = String(s).padStart(2, '0');
+      } 
+      // 情況 C：已經到生日當天
+      else {
+        countdownSection.classList.add('hidden');
+        gameSection.classList.remove('hidden');
+        document.querySelector('#game-section h1').innerText = "🎂 祈iruni 生日快樂！🎂";
       }
     }
 
+    // 每秒更新一次
     setInterval(updateCountdown, 1000);
     updateCountdown();
+
+    // ------------------- 簡易小遊戲邏輯 -------------------
+    let score = 0;
+    function collectCake() {
+      score++;
+      document.getElementById('score').innerText = score;
+      
+      const msg = document.getElementById('game-message');
+      if (score === 10) msg.innerText = "祝福送出！祈iruni 收到了你的超讚蛋糕！";
+      if (score === 50) msg.innerText = "太厲害了！蛋糕塔已經疊到天花板啦！🎂🎂🎂";
+    }
   </script>
 </body>
 </html>
