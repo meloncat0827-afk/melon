@@ -33,36 +33,47 @@
       position: relative;
     }
 
-    /* 頂部彩燈三角旗裝飾 */
-    .bunting-banner {
+    /* 頂部橫幅裝飾 */
+    .top-banner {
       position: absolute;
       top: 0;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
-      height: 40px;
-      background: repeating-linear-gradient(
-        -45deg,
-        #ff7597 0, #ff7597 15px,
-        #ffb3c6 15px, #ffb3c6 30px,
-        #ffd166 30px, #ffd166 45px,
-        #06d6a0 45px, #06d6a0 60px,
-        #118ab2 60px, #118ab2 75px
-      );
-      clip-path: polygon(
-        0 0, 100% 0, 100% 60%, 
-        95% 100%, 90% 60%, 85% 100%, 80% 60%, 75% 100%, 70% 60%, 
-        65% 100%, 60% 60%, 55% 100%, 50% 60%, 45% 100%, 40% 60%, 
-        35% 100%, 30% 60%, 25% 100%, 20% 60%, 15% 100%, 10% 60%, 
-        5% 100%, 0 60%
-      );
+      max-width: 800px;
+      height: auto;
+      max-height: 120px;
+      object-fit: contain;
       z-index: 15;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      pointer-events: none;
+    }
+
+    /* 氣球背景裝飾區 */
+    .balloon-deco {
+      position: absolute;
+      width: 60px;
+      height: auto;
+      pointer-events: none;
+      z-index: 2;
+      animation: floatBalloon 4s ease-in-out infinite alternate;
+    }
+
+    /* 左右兩側氣球位置 */
+    .b-left-1 { left: 5%; top: 15%; animation-delay: 0s; }
+    .b-left-2 { left: 12%; top: 45%; animation-delay: 1.5s; width: 75px; }
+    .b-left-3 { left: 3%; top: 70%; animation-delay: 0.8s; }
+    .b-right-1 { right: 5%; top: 18%; animation-delay: 1s; }
+    .b-right-2 { right: 11%; top: 50%; animation-delay: 2.2s; width: 70px; }
+
+    @keyframes floatBalloon {
+      0% { transform: translateY(0px) rotate(-4deg); }
+      100% { transform: translateY(-15px) rotate(4deg); }
     }
 
     /* 主要容器 */
     .container {
       background: rgba(255, 255, 255, 0.93);
-      padding: 35px 25px;
+      padding: 35px 25px 50px;
       border-radius: 24px;
       box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
       max-width: 500px;
@@ -70,8 +81,22 @@
       position: relative;
       z-index: 10;
       backdrop-filter: blur(5px);
-      margin-top: 25px;
+      margin-top: 60px;
     }
+
+    /* 禮物盒裝飾 (擺放於卡片角落) */
+    .gift-deco {
+      position: absolute;
+      bottom: -20px;
+      width: 65px;
+      height: auto;
+      z-index: 12;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+      pointer-events: none;
+    }
+    .gift-1 { left: -25px; }
+    .gift-2 { left: 35px; bottom: -25px; width: 50px; }
+    .gift-3 { right: -25px; }
 
     h1 {
       color: var(--primary-color);
@@ -144,57 +169,33 @@
       margin-top: 15px;
     }
 
-    /* 蛋糕淡入並向上浮現的動畫類別 */
+    /* 蛋糕容器與浮現動畫 */
+    .cake-container {
+      margin: 10px auto 5px;
+      width: 140px;
+      display: block;
+    }
+
+    .cake-img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.1));
+    }
+
     .float-up {
-      animation: floatUpFade 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: floatUpFade 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     @keyframes floatUpFade {
       0% {
         opacity: 0;
-        transform: translateY(40px);
+        transform: translateY(45px) scale(0.9);
       }
       100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
-    }
-
-    /* 蛋糕本體與數字蠟燭 */
-    .cake-decoration {
-      font-size: 3.8rem;
-      margin-bottom: -5px;
-      position: relative;
-      display: inline-block;
-    }
-
-    .candle-number {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #ff477e;
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #fff0f3;
-      padding: 2px 8px;
-      border-radius: 10px;
-      border: 1.5px solid #ffb3c6;
-    }
-
-    /* 兩側裝飾圖示 */
-    .side-deco {
-      position: absolute;
-      font-size: 2.2rem;
-      pointer-events: none;
-      animation: sideFloat 3s ease-in-out infinite alternate;
-    }
-    .deco-left { left: -25px; top: -15px; }
-    .deco-right { right: -25px; top: -15px; animation-delay: 1.5s; }
-
-    @keyframes sideFloat {
-      0% { transform: translateY(0px) rotate(-5deg); }
-      100% { transform: translateY(-8px) rotate(5deg); }
     }
 
     /* 背景圖片雨 */
@@ -231,16 +232,29 @@
 </head>
 <body>
 
-  <div class="bunting-banner"></div>
+  <!-- 頂部生日橫幅 -->
+  <img src="banner.png" alt="Happy Birthday Banner" class="top-banner">
+
+  <!-- 兩側浮動氣球 (balloon1.png ~ balloon5.png) -->
+  <img src="balloon1.png" class="balloon-deco b-left-1" alt="Balloon 1">
+  <img src="balloon2.png" class="balloon-deco b-left-2" alt="Balloon 2">
+  <img src="balloon3.png" class="balloon-deco b-left-3" alt="Balloon 3">
+  <img src="balloon4.png" class="balloon-deco b-right-1" alt="Balloon 4">
+  <img src="balloon5.png" class="balloon-deco b-right-2" alt="Balloon 5">
+
+  <!-- 背景圖片雨 -->
   <div id="rain-container"></div>
 
   <div class="container">
-    <div class="side-deco deco-left">🎁</div>
-    <div class="side-deco deco-right">🎈</div>
+    <!-- 角落禮物盒 (gift1.png ~ gift3.png) -->
+    <img src="gift1.png" class="gift-deco gift-1" alt="Gift 1">
+    <img src="gift2.png" class="gift-deco gift-2" alt="Gift 2">
+    <img src="gift3.png" class="gift-deco gift-3" alt="Gift 3">
 
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
+    <!-- 倒數計時區 -->
     <div id="countdown-view">
       <div class="timer-box">
         <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
@@ -250,11 +264,13 @@
       </div>
     </div>
 
+    <!-- 解鎖按鈕區 -->
     <div id="unlock-section" class="hidden">
       <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">🎉 驚喜區域已解鎖！</p>
       <button class="btn" id="start-btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
     </div>
 
+    <!-- 影片播放區 -->
     <div id="video-view" class="hidden">
       <video id="birthday-video" controls playsinline preload="auto">
         <source src="2026.mp4" type="video/mp4">
@@ -262,12 +278,11 @@
       </video>
     </div>
 
-    <!-- 祝福卡片區域 -->
+    <!-- 祝福卡片與浮現蛋糕區 -->
     <div id="card-view" class="hidden">
-      <!-- 蛋糕容器：播放完畢時會套用 float-up 效果浮上來 -->
-      <div id="cake-box" class="cake-decoration">
-        <div class="candle-number">🎂 20</div>
-        🎂
+      <!-- 蛋糕圖片容器 -->
+      <div id="cake-box" class="cake-container">
+        <img src="cake.png" alt="Birthday Cake" class="cake-img">
       </div>
       <h2 style="color: var(--primary-color); margin-top: 10px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
@@ -326,16 +341,16 @@
       });
     }
 
-    // 當影片結束時，觸發動畫效果
+    // 當影片結束時，顯示卡片並觸發 cake.png 的浮上動畫
     video.addEventListener('ended', () => {
       document.getElementById('video-view').classList.add('hidden');
       document.getElementById('card-view').classList.remove('hidden');
       
-      // 給蛋糕加上浮現動畫
+      // 蛋糕浮上動畫
       cakeBox.classList.add('float-up');
     });
 
-    // 動態產生圖片雨
+    // 動態產生圖片雨 (iruni1.png ~ iruni6.png)
     const rainContainer = document.getElementById('rain-container');
     const TOTAL_DROPS = 25;
 
