@@ -3,543 +3,370 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>觀眾留作文與祝福區 - 祈iruni 生日歡慶</title>
+  <title>祈魯尼生日倒數</title>
+  <style>
+    :root {
+      --bg-color: #fdf0f5;
+      --primary-color: #ff7597;
+      --accent-color: #ffb3c6;
+      --text-color: #4a3e3d;
+    }
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#fff0f3',
-              100: '#ffe1e8',
-              200: '#ffc2d1',
-              400: '#ff7597',
-              500: '#ff4d7d',
-              600: '#e62e60',
-            },
-            husky: {
-              50: '#f0f4f8',
-              100: '#dbe3ed',
-              200: '#b8c7d9',
-              500: '#5a738e',
-              600: '#435870',
-              700: '#324356',
-            }
-          },
-          fontFamily: {
-            sans: ['"Noto Sans TC"', 'sans-serif'],
-            display: ['"Fredoka"', 'cursive'],
-          }
-        }
+    body {
+      background: linear-gradient(135deg, #ffe6eb 0%, #edf2ff 100%);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* 頂部橫幅 (填滿螢幕寬度) */
+    .top-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: auto;
+      max-height: 200px;
+      object-fit: cover; /* 滿版覆蓋 */
+      object-position: top center;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    /* 背景氣球 */
+    .balloon-deco {
+      position: absolute;
+      width: 90px;
+      height: auto;
+      pointer-events: none;
+      z-index: 2;
+      animation: floatBalloon 4s ease-in-out infinite alternate;
+    }
+
+    .b-left-1 { left: 4%; top: 18%; animation-delay: 0s; }
+    .b-left-2 { left: 10%; top: 45%; animation-delay: 1.5s; width: 110px; }
+    .b-left-3 { left: 2%; top: 70%; animation-delay: 0.8s; }
+    .b-right-1 { right: 4%; top: 20%; animation-delay: 1s; }
+    .b-right-2 { right: 9%; top: 50%; animation-delay: 2.2s; width: 105px; }
+
+    @keyframes floatBalloon {
+      0% { transform: translateY(0px) rotate(-4deg); }
+      100% { transform: translateY(-18px) rotate(4deg); }
+    }
+
+    /* 主要容器 (加大頂部間距避開滿版橫幅) */
+    .container {
+      background: rgba(255, 255, 255, 0.93);
+      padding: 40px 30px 60px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      z-index: 10;
+      backdrop-filter: blur(5px);
+      margin-top: 120px;
+    }
+
+    /* 禮物盒裝飾 */
+    .gift-deco {
+      position: absolute;
+      bottom: -30px;
+      width: 95px;
+      height: auto;
+      z-index: 12;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.15));
+      pointer-events: none;
+    }
+    .gift-1 { left: -40px; }
+    .gift-2 { left: 50px; bottom: -35px; width: 80px; }
+    .gift-3 { right: -40px; }
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 8px;
+      font-size: 1.9rem;
+    }
+
+    .subtitle {
+      color: #777;
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
+
+    /* 倒數計時器 */
+    .timer-box {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+
+    .time-card {
+      background: #fff0f3;
+      padding: 12px;
+      border-radius: 12px;
+      min-width: 65px;
+      border: 2px solid var(--accent-color);
+    }
+
+    .time-card span {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .time-card .label {
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 按鈕 */
+    .btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.4);
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
+    }
+
+    /* 影片 */
+    #video-view video {
+      width: 100%;
+      border-radius: 16px;
+      border: 3px solid var(--accent-color);
+      margin-top: 15px;
+    }
+
+    /* 蛋糕圖片容器 */
+    .cake-container {
+      margin: 15px auto 10px;
+      width: 220px;
+      display: block;
+    }
+
+    .cake-img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
+    }
+
+    .float-up {
+      animation: floatUpFade 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes floatUpFade {
+      0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.85);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
     }
-  </script>
 
-  <style>
-    body {
-      background: linear-gradient(135deg, #ffeef2 0%, #f0f4ff 50%, #f1f5f9 100%);
-      min-height: 100vh;
-    }
-    
-    .glass-card {
-      background: rgba(255, 255, 255, 0.93);
-      backdrop-filter: blur(14px);
-      border: 2px solid rgba(255, 255, 255, 0.85);
-      box-shadow: 0 20px 40px rgba(255, 117, 151, 0.12);
+    /* 圖片雨容器 */
+    #rain-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
     }
 
-    .btn-bounce {
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+    .rain-drop {
+      position: absolute;
+      top: -120px;
+      object-fit: contain;
+      pointer-events: none;
+      animation: fall linear infinite;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
     }
-    .btn-bounce:hover {
-      transform: translateY(-2px);
-    }
-    .btn-bounce:active {
-      transform: translateY(1px);
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(115vh) rotate(360deg);
+        opacity: 0.3;
+      }
     }
   </style>
 </head>
-<body class="text-slate-700 font-sans flex flex-col justify-between min-h-screen">
+<body>
 
-  <main class="w-full max-w-2xl mx-auto px-4 py-8 flex-grow flex flex-col items-center justify-center space-y-6">
+  <!-- 滿版頂部生日橫幅 -->
+  <img src="banner.png" alt="Happy Birthday Banner" class="top-banner">
 
-    <section class="w-full glass-card rounded-3xl p-6 md:p-8 space-y-6">
-      
-      <!-- 標題區域 -->
-      <div class="text-center border-b border-slate-100 pb-4">
-        <h1 class="text-2xl font-extrabold text-slate-800 flex items-center justify-center gap-2">
-          ✍️ 觀眾留作文與祝福區
-        </h1>
-        <p class="text-xs text-slate-400 mt-1">寫下對 祈iruni 的祝福，將自動打包入<b>生日時空膠囊</b>，於 9/29 當天解開！</p>
+  <!-- 兩側氣球 -->
+  <img src="balloon1.png" class="balloon-deco b-left-1" alt="Balloon 1">
+  <img src="balloon2.png" class="balloon-deco b-left-2" alt="Balloon 2">
+  <img src="balloon3.png" class="balloon-deco b-left-3" alt="Balloon 3">
+  <img src="balloon4.png" class="balloon-deco b-right-1" alt="Balloon 4">
+  <img src="balloon5.png" class="balloon-deco b-right-2" alt="Balloon 5">
+
+  <!-- 背景圖片雨 -->
+  <div id="rain-container"></div>
+
+  <div class="container">
+    <!-- 角落禮物盒 -->
+    <img src="gift1.png" class="gift-deco gift-1" alt="Gift 1">
+    <img src="gift2.png" class="gift-deco gift-2" alt="Gift 2">
+    <img src="gift3.png" class="gift-deco gift-3" alt="Gift 3">
+
+    <h1>🎉 祈Iruni 生日倒數 🎂</h1>
+    <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
+
+    <!-- 倒數計時區 -->
+    <div id="countdown-view">
+      <div class="timer-box">
+        <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
+        <div class="time-card"><span id="hours">00</span><div class="label">時</div></div>
+        <div class="time-card"><span id="minutes">00</span><div class="label">分</div></div>
+        <div class="time-card"><span id="seconds">00</span><div class="label">秒</div></div>
       </div>
+    </div>
 
-      <!-- 填寫表單 -->
-      <div class="space-y-4">
-        
-        <!-- 欄位 1: 觀眾名稱 -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">👤 觀眾暱稱 (觀眾名)：</label>
-          <input type="text" id="viewerName" placeholder="請輸入你的暱稱..." class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">
-        </div>
+    <!-- 解鎖按鈕區 -->
+    <div id="unlock-section" class="hidden">
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">🎉 驚喜區域已解鎖！</p>
+      <button class="btn" id="start-btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
+    </div>
 
-        <!-- 欄位 2: 會員等級 -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">⭐ 會員等級：</label>
-          <select id="memberLevel" class="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm bg-white">
-            <option value="0級 (一般觀眾)">0級 - 一般觀眾</option>
-            <option value="1級 (哈士奇)">1級 - 哈士奇</option>
-            <option value="2級 (純種哈士奇)">2級 - 純種哈士奇</option>
-            <option value="3級 (大衛哈士奇)">3級 - 大衛哈士奇</option>
-          </select>
-        </div>
+    <!-- 影片播放區 -->
+    <div id="video-view" class="hidden">
+      <video id="birthday-video" controls playsinline preload="auto">
+        <source src="2026.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放。
+      </video>
+    </div>
 
-        <!-- 欄位 3: 要說的話 -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">💬 想對祈iruni說的話 (作文/祝福內容)：</label>
-          <textarea id="messageContent" rows="7" placeholder="在這裡寫下你想對祈iruni說的話..." class="w-full p-4 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm leading-relaxed"></textarea>
-        </div>
-
+    <!-- 祝福卡片與大蛋糕區 -->
+    <div id="card-view" class="hidden">
+      <div id="cake-box" class="cake-container">
+        <img src="cake.png" alt="Birthday Cake" class="cake-img">
       </div>
+      <h2 style="color: var(--primary-color); margin-top: 10px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
+      <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
+        親愛的魯尼：<br><br>
+        生日快樂！又過了一年，身為理科腦不太擅長說感性的話，好像也只能說一句生日快樂。不過......希望尼明年也可以打開這個網站！
+      </p>
+    </div>
+  </div>
 
-      <!-- 主要上傳按鈕 -->
-      <div>
-        <button onclick="uploadToCloud()" id="cloudBtn" class="btn-bounce w-full py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2">
-          <i class="fa-solid fa-box-archive"></i> 封印至生日時空膠囊 (上傳雲端)
-        </button>
-      </div>
+  <script>
+    const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
+    const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
 
-      <!-- 次要備份按鈕區塊 -->
-      <div class="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-slate-100">
-        <!-- TXT 下載按鈕 -->
-        <button onclick="downloadTXT()" class="btn-bounce w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-download"></i> 匯出 TXT 檔
-        </button>
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const unlockSection = document.getElementById('unlock-section');
+    const statusText = document.getElementById('status-text');
+    const video = document.getElementById('birthday-video');
+    const cakeBox = document.getElementById('cake-box');
 
-        <!-- TXT 讀取按鈕 -->
-        <label class="btn-bounce w-full py-2.5 bg-husky-100 hover:bg-husky-200 text-husky-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer text-center">
-          <i class="fa-solid fa-file-arrow-up"></i> 讀取 TXT 檔
-          <input type="file" id="txtFileInput" accept=".txt" class="hidden" onchange="uploadTXT(event)">
-        </label>
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = BIRTHDAY_DATE - now;
 
-        <!-- 複製全文按鈕 -->
-        <button onclick="copyText()" class="btn-bounce w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-copy"></i> 複製內容
-        </button>
-      </div>
-
-      <!-- 提示訊息 -->
-      <div id="toastMessage" class="hidden text-center text-xs p-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200"></div>
-
-      <!-- 回首頁與管理員連結 -->
-      <div class="flex items-center justify-between pt-2 text-xs text-slate-400 font-semibold">
-        <a href="index.html" class="inline-flex items-center gap-1.5 hover:text-brand-500 transition-colors">
-          <i class="fa-solid fa-arrow-left"></i> 返回身份選擇首頁
-        </a>
-        <a href="admin.html" class="inline-flex items-center gap-1.5 hover:text-slate-600 transition-colors">
-          <i class="fa-solid fa-shield-halved"></i> 管理員後台
-        </a>
-      </div>
-
-    </section>
-
-    <!-- ☁️ 雲端即時留言牆 (生日時空膠囊) -->
-    <section class="w-full glass-card rounded-3xl p-6 md:p-8 space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
-          <span>💌</span> 雲端祝福留言牆 (生日膠囊)
-        </h2>
-        <span id="cloudCount" class="text-xs bg-brand-100 text-brand-600 font-bold px-2.5 py-0.5 rounded-full">加載中...</span>
-      </div>
-
-      <div id="cloudMessagesList" class="space-y-3 max-h-96 overflow-y-auto pr-1">
-        <div class="text-center text-slate-400 text-xs py-8">
-          <i class="fa-solid fa-spinner fa-spin mr-1"></i> 正在連線讀取雲端祝福...
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="w-full text-center py-4 text-xs text-slate-400">
-    🎂 Happy Birthday to 祈iruni | Made with ❤️ for Birthday Celebration
-  </footer>
-
-  <script type="module">
-  // 1. 統一使用官方 CDN (ESM) 引入 Firebase 模組
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
-  import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-  // 🎂 設定祈iruni生日時間 (2026年9月29日 00:00:00)
-  const BIRTHDAY_TARGET = new Date('2026-09-29T00:00:00');
-
-  // Firebase 設定資訊
-  const firebaseConfig = {
-    apiKey: "AIzaSyBkqnAtcZHSUvrxoabWnZDs_MXA6mft62M",
-    authDomain: "iruni2026.firebaseapp.com",
-    projectId: "iruni2026",
-    storageBucket: "iruni2026.firebasestorage.app",
-    messagingSenderId: "267905666323",
-    appId: "1:267905666323:web:1423cabb5a3e21db641ee6",
-    measurementId: "G-PTQ840GJ27"
-  };
-
-  // 2. 初始化 Firebase 與全域變數
-window.app = null;
-window.db = null;
-window.auth = null;
-window.currentUser = null;  // <--- 務必加上 window. 前綴
-let localBlessings = [];
-
-// Firebase 專案的 App 識別字串（原本漏掉，補上避免 ReferenceError）
-const appId = firebaseConfig.appId;
-
-  // ... (底下繼續保留您的 Toast 提示與 Gzip 解壓工具函數)
-    // Toast 提示訊息
-    window.showToast = function(msg) {
-      const toast = document.getElementById('toastMessage');
-      toast.innerText = msg;
-      toast.classList.remove('hidden');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 3500);
-    };
-
-    // 🗜️ 1. 原生 Gzip 壓縮工具 (字串 -> Base64)
-    async function compressText(text) {
-      try {
-        const stream = new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));
-        const response = new Response(stream);
-        const buffer = await response.arrayBuffer();
-        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-      } catch (e) {
-        console.warn("瀏覽器不支援 CompressionStream，改用標準 Base64 壓縮", e);
-        return btoa(encodeURIComponent(text));
+      if (distance <= UNLOCK_BEFORE_MS && distance > 0) {
+        unlockSection.classList.remove('hidden');
       }
+
+      if (distance <= 0) {
+        statusText.innerText = "🎂 今天是祈iruni的生日！";
+        unlockSection.classList.remove('hidden');
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      daysEl.innerText = String(Math.max(0, days)).padStart(2, '0');
+      hoursEl.innerText = String(Math.max(0, hours)).padStart(2, '0');
+      minutesEl.innerText = String(Math.max(0, minutes)).padStart(2, '0');
+      secondsEl.innerText = String(Math.max(0, seconds)).padStart(2, '0');
     }
 
-    // 🔓 2. 原生 Gzip 解壓縮工具 (Base64 -> 字串)
-    async function decompressText(base64Str) {
-      try {
-        const bytes = Uint8Array.from(atob(base64Str), c => c.charCodeAt(0));
-        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-        const response = new Response(stream);
-        return await response.text();
-      } catch (e) {
-        try {
-          return decodeURIComponent(atob(base64Str));
-        } catch (err) {
-          return base64Str; // 回傳原始文字
-        }
-      }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    function startVideo() {
+      unlockSection.classList.add('hidden');
+      document.getElementById('video-view').classList.remove('hidden');
+
+      video.play().catch(error => {
+        console.log("需要使用者點擊播放");
+      });
     }
 
-    async function initFirebase() {
-      if (!firebaseConfig) {
-        renderLocalMessages();
-        return;
-      }
+    video.addEventListener('ended', () => {
+      document.getElementById('video-view').classList.add('hidden');
+      document.getElementById('card-view').classList.remove('hidden');
+      cakeBox.classList.add('float-up');
+    });
 
-      try {
-        // ✅ 正確寫法：掛在 window 上，避免 strict mode 下對未宣告變數賦值造成 ReferenceError
-        window.app = initializeApp(firebaseConfig);
-        window.db = getFirestore(window.app);
-        window.auth = getAuth(window.app);
+    // 動態產生圖片雨
+    const rainContainer = document.getElementById('rain-container');
+    const TOTAL_DROPS = 25;
 
-        // 登入驗證
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(window.auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(window.auth);
-        }
-        window.currentUser = window.auth.currentUser;
+    for (let i = 0; i < TOTAL_DROPS; i++) {
+      const img = document.createElement('img');
+      const randomImgNum = Math.floor(Math.random() * 6) + 1;
+      img.src = `iruni${randomImgNum}.png`;
+      img.classList.add('rain-drop');
 
-        // 監聽雲端資料庫
-        const messagesCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'blessings');
-        
-        onSnapshot(messagesCol, async (snapshot) => {
-          const listEl = document.getElementById('cloudMessagesList');
-          const countEl = document.getElementById('cloudCount');
-          
-          if (snapshot.empty) {
-            listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個打包祝福時空膠囊的觀眾吧！🎉</div>';
-            countEl.innerText = '0 則祝福';
-            return;
-          }
+      const leftPos = Math.random() * 100;
+      const size = Math.random() * 50 + 60;
+      const duration = Math.random() * 4 + 3.5;
+      const delay = Math.random() * 5;
 
-          let messages = [];
-          snapshot.forEach((doc) => {
-            messages.push({ id: doc.id, ...doc.data() });
-          });
+      img.style.left = `${leftPos}vw`;
+      img.style.width = `${size}px`;
+      img.style.height = `${size}px`;
+      img.style.animationDuration = `${duration}s`;
+      img.style.animationDelay = `${delay}s`;
 
-          // 依照時間倒序排序
-          messages.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-          const isBirthdayPassed = new Date() >= BIRTHDAY_TARGET;
-          countEl.innerText = `${messages.length} 則祝福 (${isBirthdayPassed ? '🎉 已解鎖' : '🔒 時空膠囊封印中'})`;
-
-          // 處理每一筆留言的解壓縮與顯示邏輯
-          const cardsHTML = await Promise.all(messages.map(async (msg) => {
-            let displayContent = "";
-            let capsuleTag = "";
-
-            if (msg.isCompressed && msg.compressedContent) {
-              if (isBirthdayPassed) {
-                // 生日到了！進行解壓縮
-                displayContent = await decompressText(msg.compressedContent);
-                capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✨ 膠囊已解鎖</span>`;
-              } else {
-                // 生日前：隱藏內容，顯示封印狀態
-                displayContent = "🔒 [時空膠囊封印中] 本篇祝福已被壓縮打包，將於 9/29 祈iruni 生日當天自動解開！";
-                capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">🔒 時空膠囊</span>`;
-              }
-            } else {
-              displayContent = msg.content || '';
-            }
-
-            return `
-              <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
-                <div class="flex items-center justify-between text-xs">
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
-                    ${capsuleTag}
-                  </div>
-                  <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
-                </div>
-                <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap ${!isBirthdayPassed && msg.isCompressed ? 'italic text-amber-800 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50' : ''}">${escapeHtml(displayContent)}</p>
-                <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
-              </div>
-            `;
-          }));
-
-          listEl.innerHTML = cardsHTML.join('');
-
-        }, (error) => {
-          console.error("Firestore read error:", error);
-          document.getElementById('cloudMessagesList').innerHTML = '<div class="text-center text-red-400 text-xs py-4">❌ 讀取雲端留言失敗</div>';
-        });
-
-      } catch (err) {
-        console.error("Firebase init error:", err);
-      }
+      rainContainer.appendChild(img);
     }
-
-    // HTML 轉義字元防護
-    function escapeHtml(str) {
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    // 📱 渲染單機預覽留言列表
-    async function renderLocalMessages() {
-      const listEl = document.getElementById('cloudMessagesList');
-      const countEl = document.getElementById('cloudCount');
-
-      if (localBlessings.length === 0) {
-        listEl.innerHTML = '<div class="text-center text-slate-400 text-xs py-8">成為第一個打包祝福時空膠囊的觀眾吧！🎉</div>';
-        countEl.innerText = '0 則祝福 (單機預覽)';
-        return;
-      }
-
-      const isBirthdayPassed = new Date() >= BIRTHDAY_TARGET;
-      countEl.innerText = `${localBlessings.length} 則祝福 (${isBirthdayPassed ? '🎉 已解鎖' : '🔒 時空膠囊封印中'})`;
-
-      const cardsHTML = await Promise.all(localBlessings.map(async (msg) => {
-        let displayContent = "";
-        let capsuleTag = "";
-
-        if (msg.isCompressed && msg.compressedContent) {
-          if (isBirthdayPassed) {
-            displayContent = await decompressText(msg.compressedContent);
-            capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">✨ 膠囊已解鎖</span>`;
-          } else {
-            displayContent = "🔒 [時空膠囊封印中] 本篇祝福已被壓縮打包，將於 9/29 祈iruni 生日當天自動解開！";
-            capsuleTag = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">🔒 時空膠囊</span>`;
-          }
-        } else {
-          displayContent = msg.content || '';
-        }
-
-        return `
-          <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1.5 transition-all hover:bg-white hover:shadow-sm">
-            <div class="flex items-center justify-between text-xs">
-              <div class="flex items-center gap-1.5">
-                <span class="font-bold text-slate-800">👤 ${escapeHtml(msg.name || '匿名觀眾')}</span>
-                ${capsuleTag}
-              </div>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600">${escapeHtml(msg.level || '一般觀眾')}</span>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap ${!isBirthdayPassed && msg.isCompressed ? 'italic text-amber-800 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/50' : ''}">${escapeHtml(displayContent)}</p>
-            <div class="text-[10px] text-slate-400 text-right">${msg.createdAt ? new Date(msg.createdAt).toLocaleString('zh-TW') : ''}</div>
-          </div>
-        `;
-      }));
-
-      listEl.innerHTML = cardsHTML.join('');
-    }
-
-    // ☁️ 上傳至雲端 (含壓縮封印與單機備用邏輯)
-    window.uploadToCloud = async function() {
-      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
-      const level = document.getElementById('memberLevel').value;
-      const content = document.getElementById('messageContent').value.trim();
-
-      if (!content) {
-        showToast("⚠️ 請先寫下給祈iruni的祝福作文內容！");
-        return;
-      }
-
-      const cloudBtn = document.getElementById('cloudBtn');
-      cloudBtn.disabled = true;
-      cloudBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 打包封印壓縮中...`;
-
-      try {
-        const isBeforeBirthday = new Date() < BIRTHDAY_TARGET;
-        // 1. 將祝福進行 Gzip 壓縮
-        const compressedData = await compressText(content);
-
-        // 如果沒有雲端連線環境，切換至單機預覽模式存入記憶體
-        if (!window.db || !window.currentUser) {
-          localBlessings.unshift({
-            id: 'local_' + Date.now(),
-            name: name,
-            level: level,
-            content: isBeforeBirthday ? "🔒 [祝福已被生日時空膠囊封印，將於 9/29 祈生日當天解開！]" : content,
-            compressedContent: compressedData,
-            isCompressed: true,
-            createdAt: new Date().toISOString(),
-            userId: 'local-user'
-          });
-
-          await renderLocalMessages();
-          showToast("🎉 祝福已成功壓縮打包至【生日時空膠囊】！");
-          document.getElementById('messageContent').value = '';
-          return;
-        }
-
-        // 有雲端連線時，寫入 Firebase Firestore
-        const messagesCol = collection(window.db, 'artifacts', appId, 'public', 'data', 'blessings');
-        await addDoc(messagesCol, {
-          name: name,
-          level: level,
-          content: isBeforeBirthday ? "🔒 [祝福已被生日時空膠囊封印，將於 9/29 祈生日當天解開！]" : content,
-          compressedContent: compressedData,
-          isCompressed: true,
-          createdAt: new Date().toISOString(),
-          userId: window.currentUser.uid
-        });
-
-        showToast("🎉 祝福已成功壓縮打包至【生日時空膠囊】！");
-        document.getElementById('messageContent').value = '';
-      } catch (err) {
-        console.error("Upload error:", err);
-        showToast("❌ 上傳失敗，請稍後再試或使用 TXT 匯出。");
-      } finally {
-        cloudBtn.disabled = false;
-        cloudBtn.innerHTML = `<i class="fa-solid fa-box-archive"></i> 封印至生日時空膠囊 (上傳雲端)`;
-      }
-    };
-
-    // 💾 下載為 TXT 檔案
-    window.downloadTXT = function() {
-      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
-      const level = document.getElementById('memberLevel').value;
-      const content = document.getElementById('messageContent').value.trim();
-
-      if (!content) {
-        showToast("⚠️ 請先寫下給祈iruni的祝福作文內容！");
-        return;
-      }
-
-      const fileData = `=== 祈iruni 生日祝福作文 ===\n觀眾暱稱：${name}\n會員等級：${level}\n投稿時間：${new Date().toLocaleString('zh-TW')}\n\n【想對祈iruni說的話】\n${content}\n`;
-
-      const blob = new Blob([fileData], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `祈iruni生日祝福_${name}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      showToast("✅ 已成功匯出 TXT 檔案！");
-    };
-
-    // 📂 讀取/上傳 TXT 檔案
-    window.uploadTXT = function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const text = e.target.result;
-        
-        const nameMatch = text.match(/觀眾暱稱：(.*)/);
-        const levelMatch = text.match(/會員等級：(.*)/);
-        const contentSplit = text.split("【想對祈iruni說的話】\n");
-
-        if (nameMatch && nameMatch[1]) {
-          document.getElementById('viewerName').value = nameMatch[1].trim();
-        }
-        if (levelMatch && levelMatch[1]) {
-          const levelVal = levelMatch[1].trim();
-          const select = document.getElementById('memberLevel');
-          for (let i = 0; i < select.options.length; i++) {
-            if (select.options[i].value.includes(levelVal) || levelVal.includes(select.options[i].value)) {
-              select.selectedIndex = i;
-              break;
-            }
-          }
-        }
-        if (contentSplit.length > 1) {
-          document.getElementById('messageContent').value = contentSplit[1].trim();
-        } else {
-          document.getElementById('messageContent').value = text;
-        }
-
-        showToast("📂 已成功讀取 TXT 檔案內容！");
-      };
-      reader.readAsText(file, 'UTF-8');
-      event.target.value = '';
-    };
-
-    // 📋 複製內容至剪貼簿
-    window.copyText = function() {
-      const name = document.getElementById('viewerName').value.trim() || "匿名觀眾";
-      const level = document.getElementById('memberLevel').value;
-      const content = document.getElementById('messageContent').value.trim();
-
-      if (!content) {
-        showToast("⚠️ 沒有可複製的內容！");
-        return;
-      }
-
-      const textToCopy = `觀眾暱稱：${name}\n會員等級：${level}\n\n${content}`;
-
-      const textarea = document.createElement('textarea');
-      textarea.value = textToCopy;
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast("📋 已成功複製內容到剪貼簿！");
-      } catch (err) {
-        showToast("❌ 複製失敗，請手動複製。");
-      }
-      document.body.removeChild(textarea);
-    };
-
-    // 初始化 Firebase
-    initFirebase();
   </script>
 </body>
 </html>
