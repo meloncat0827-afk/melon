@@ -106,25 +106,13 @@
       box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
     }
 
-    /* 遊戲畫布容器 */
-    #game-container {
-      position: relative;
-      margin-top: 20px;
-    }
-
-    canvas {
-      background: #fff;
+    /* 影片區域樣式 */
+    #video-view video {
+      width: 100%;
       border-radius: 16px;
       border: 3px solid var(--accent-color);
-      touch-action: none;
-    }
-
-    .game-stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-weight: bold;
-      color: var(--primary-color);
+      margin-top: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -147,22 +135,18 @@
     <!-- 提前 1.5 小時解鎖的驚喜按鈕區域 -->
     <div id="unlock-section" class="hidden">
       <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">驚喜區域已解鎖！</p>
-      <button class="btn" onclick="startGame()">🎮 開始小遊戲</button>
+      <button class="btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
     </div>
 
-    <!-- 小遊戲區域 -->
-    <div id="game-view" class="hidden">
-      <div class="game-stats">
-        <span>得分: <span id="score">0</span> / 10</span>
-        <span>目標: 10 個蛋糕</span>
-      </div>
-      <div id="game-container">
-        <canvas id="gameCanvas" width="320" height="350"></canvas>
-      </div>
-      <p style="font-size: 0.85rem; color: #888; margin-top: 8px;">左右移動滑鼠或用手指拖曳底部籃子來接蛋糕！</p>
+    <!-- 影片播放區域 -->
+    <div id="video-view" class="hidden">
+      <video id="birthday-video" controls playsinline preload="auto">
+        <source src="2026.mp4" type="video/mp4">
+        您的瀏覽器不支援影片播放。
+      </video>
     </div>
 
-    <!-- 通關/生日祝福卡片 -->
+    <!-- 生日祝福卡片 -->
     <div id="card-view" class="hidden">
       <h2 style="color: var(--primary-color); margin-bottom: 15px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
@@ -173,7 +157,7 @@
   </div>
 
   <script>
-    // 設定生日時間
+    // 設定生日時間 (2026 年 9 月 29 日 00:00:00)
     const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
     
     // 提前 1.5 小時解鎖 (90 分鐘)
@@ -185,6 +169,7 @@
     const secondsEl = document.getElementById('seconds');
     const unlockSection = document.getElementById('unlock-section');
     const statusText = document.getElementById('status-text');
+    const video = document.getElementById('birthday-video');
 
     // 倒數計時邏輯
     function updateCountdown() {
@@ -196,7 +181,7 @@
         unlockSection.classList.remove('hidden');
       }
 
-      if (distance < 0) {
+      if (distance <= 0) {
         statusText.innerText = "🎂 今天是祈iruni的生日！";
         document.getElementById('countdown-view').classList.add('hidden');
         unlockSection.classList.remove('hidden');
@@ -218,79 +203,23 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // 遊戲邏輯
-    let canvas, ctx;
-    let score = 0;
-    let basket = { x: 130, width: 60, height: 15 };
-    let cake = { x: 100, y: 0, speed: 3, size: 20 };
-
-    function startGame() {
+    // 開始播放影片
+    function startVideo() {
       document.getElementById('unlock-section').classList.add('hidden');
       document.getElementById('countdown-view').classList.add('hidden');
-      document.getElementById('game-view').classList.remove('hidden');
+      document.getElementById('video-view').classList.remove('hidden');
 
-      canvas = document.getElementById('gameCanvas');
-      ctx = canvas.getContext('2d');
-
-      // 滑鼠與觸控監聽
-      canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        basket.x = e.clientX - rect.left - basket.width / 2;
+      // 播放影片
+      video.play().catch(error => {
+        console.log("自動播放被瀏覽器阻擋，需由使用者手動點擊播放按鈕");
       });
-
-      canvas.addEventListener('touchmove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        basket.x = e.touches[0].clientX - rect.left - basket.width / 2;
-        e.preventDefault();
-      });
-
-      resetCake();
-      requestAnimationFrame(gameLoop);
     }
 
-    function resetCake() {
-      cake.x = Math.random() * (canvas.width - cake.size);
-      cake.y = 0;
-    }
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 移動與繪製蛋糕
-      cake.y += cake.speed;
-      ctx.font = "20px Sans-serif";
-      ctx.fillText("🎂", cake.x, cake.y);
-
-      // 繪製籃子
-      ctx.fillStyle = "#ff7597";
-      ctx.beginPath();
-      ctx.roundRect(basket.x, canvas.height - basket.height - 10, basket.width, basket.height, 8);
-      ctx.fill();
-
-      // 碰撞偵測 (接住蛋糕)
-      if (
-        cake.y >= canvas.height - basket.height - 20 &&
-        cake.x + cake.size >= basket.x &&
-        cake.x <= basket.x + basket.width
-      ) {
-        score++;
-        document.getElementById('score').innerText = score;
-        if (score >= 10) {
-          // 通關顯示卡片
-          document.getElementById('game-view').classList.add('hidden');
-          document.getElementById('card-view').classList.remove('hidden');
-          return;
-        }
-        resetCake();
-      }
-
-      // 沒接到，掉落地面重置
-      if (cake.y > canvas.height) {
-        resetCake();
-      }
-
-      requestAnimationFrame(gameLoop);
-    }
+    // 影片播放完畢後自動顯示祝福卡片
+    video.addEventListener('ended', () => {
+      document.getElementById('video-view').classList.add('hidden');
+      document.getElementById('card-view').classList.remove('hidden');
+    });
   </script>
 </body>
 </html>
