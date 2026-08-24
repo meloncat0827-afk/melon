@@ -29,8 +29,10 @@
       justify-content: center;
       text-align: center;
       padding: 20px;
+      overflow-x: hidden;
     }
 
+    /* 主要容器加上相對定位，作為貼圖定位基準 */
     .container {
       background: rgba(255, 255, 255, 0.9);
       padding: 40px 30px;
@@ -39,7 +41,6 @@
       max-width: 500px;
       width: 100%;
       position: relative;
-      overflow: hidden;
     }
 
     h1 {
@@ -81,7 +82,6 @@
       color: #888;
     }
 
-    /* 隱藏與顯示區域控制 */
     .hidden {
       display: none !important;
     }
@@ -106,19 +106,55 @@
       box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
     }
 
-    /* 影片區域樣式 */
+    /* 影片樣式 */
     #video-view video {
       width: 100%;
       border-radius: 16px;
       border: 3px solid var(--accent-color);
       margin-top: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ==========================================
+       周圍裝飾貼圖與表情符號樣式
+       ========================================== */
+    .sticker {
+      position: absolute;
+      width: 55px;
+      height: 55px;
+      object-fit: contain;
+      pointer-events: none; /* 避免擋到點擊按鈕 */
+      animation: float 3s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+      z-index: 10;
+    }
+
+    /* 各個貼圖的個別位置與擺放角度 */
+    .s1 { top: -25px; left: -20px; transform: rotate(-15deg); animation-delay: 0s; }
+    .s2 { top: -30px; right: -20px; transform: rotate(15deg); animation-delay: 0.5s; }
+    .s3 { top: 40%; left: -35px; transform: rotate(-10deg); animation-delay: 1s; }
+    .s4 { top: 40%; right: -35px; transform: rotate(10deg); animation-delay: 1.5s; }
+    .s5 { bottom: -20px; left: -15px; transform: rotate(12deg); animation-delay: 0.8s; }
+    .s6 { bottom: -20px; right: -15px; transform: rotate(-12deg); animation-delay: 0.3s; }
+
+    /* 輕微上下漂浮的動態效果 */
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-8px) rotate(5deg); }
     }
   </style>
 </head>
 <body>
 
   <div class="container">
+    <!-- 周圍的貼圖/表情包圖片 -->
+    <!-- 請將 src 替換為 iruni 資料夾裡的實際檔名 (如 1.png, 2.png 等) -->
+    <img src="iruni/1.png" class="sticker s1" alt="emote">
+    <img src="iruni/2.png" class="sticker s2" alt="emote">
+    <img src="iruni/3.png" class="sticker s3" alt="emote">
+    <img src="iruni/4.png" class="sticker s4" alt="emote">
+    <img src="iruni/5.png" class="sticker s5" alt="emote">
+    <img src="iruni/6.png" class="sticker s6" alt="emote">
+
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
@@ -132,7 +168,7 @@
       </div>
     </div>
 
-    <!-- 提前 1.5 小時解鎖的驚喜按鈕區域 -->
+    <!-- 提前 1.5 小時解鎖按鈕 -->
     <div id="unlock-section" class="hidden">
       <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">驚喜區域已解鎖！</p>
       <button class="btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
@@ -159,8 +195,6 @@
   <script>
     // 設定生日時間 (2026 年 9 月 29 日 00:00:00)
     const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
-    
-    // 提前 1.5 小時解鎖 (90 分鐘)
     const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
 
     const daysEl = document.getElementById('days');
@@ -171,12 +205,10 @@
     const statusText = document.getElementById('status-text');
     const video = document.getElementById('birthday-video');
 
-    // 倒數計時邏輯
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = BIRTHDAY_DATE - now;
 
-      // 檢查是否到達解鎖時間 (提前 1.5 小時)
       if (distance <= UNLOCK_BEFORE_MS && distance > 0) {
         unlockSection.classList.remove('hidden');
       }
@@ -188,7 +220,6 @@
         return;
       }
 
-      // 計算剩餘天、時、分、秒
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -203,19 +234,16 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    // 開始播放影片
     function startVideo() {
       document.getElementById('unlock-section').classList.add('hidden');
       document.getElementById('countdown-view').classList.add('hidden');
       document.getElementById('video-view').classList.remove('hidden');
 
-      // 播放影片
       video.play().catch(error => {
-        console.log("自動播放被瀏覽器阻擋，需由使用者手動點擊播放按鈕");
+        console.log("需要使用者點擊播放");
       });
     }
 
-    // 影片播放完畢後自動顯示祝福卡片
     video.addEventListener('ended', () => {
       document.getElementById('video-view').classList.add('hidden');
       document.getElementById('card-view').classList.remove('hidden');
