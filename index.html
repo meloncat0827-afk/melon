@@ -29,20 +29,20 @@
       justify-content: center;
       text-align: center;
       padding: 20px;
-      overflow: hidden; /* 防止出現滾動條 */
+      overflow: hidden;
       position: relative;
     }
 
     /* 主要容器 */
     .container {
       background: rgba(255, 255, 255, 0.92);
-      padding: 40px 30px;
+      padding: 30px 25px;
       border-radius: 24px;
       box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
       max-width: 500px;
       width: 100%;
       position: relative;
-      z-index: 10; /* 保證卡片在圖片雨上方 */
+      z-index: 10;
       backdrop-filter: blur(5px);
     }
 
@@ -54,7 +54,7 @@
 
     .subtitle {
       color: #777;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       font-size: 0.95rem;
     }
 
@@ -62,20 +62,20 @@
     .timer-box {
       display: flex;
       justify-content: space-around;
-      margin: 20px 0;
+      margin: 15px 0;
     }
 
     .time-card {
       background: #fff0f3;
-      padding: 12px;
+      padding: 10px;
       border-radius: 12px;
-      min-width: 65px;
+      min-width: 60px;
       border: 2px solid var(--accent-color);
     }
 
     .time-card span {
       display: block;
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: bold;
       color: var(--primary-color);
     }
@@ -94,14 +94,14 @@
       background: var(--primary-color);
       color: white;
       border: none;
-      padding: 14px 28px;
-      font-size: 1.1rem;
+      padding: 12px 26px;
+      font-size: 1.05rem;
       border-radius: 50px;
       cursor: pointer;
       font-weight: bold;
       box-shadow: 0 4px 15px rgba(255, 117, 151, 0.4);
       transition: all 0.2s ease;
-      margin-top: 15px;
+      margin-top: 10px;
     }
 
     .btn:hover {
@@ -109,7 +109,7 @@
       box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
     }
 
-    /* 影片樣式 */
+    /* 影片區域樣式 */
     #video-view video {
       width: 100%;
       border-radius: 16px;
@@ -117,16 +117,14 @@
       margin-top: 15px;
     }
 
-    /* ==========================================
-       圖片雨（Rain Effect）樣式
-       ========================================== */
+    /* 圖片雨樣式 */
     #rain-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      pointer-events: none; /* 滑鼠穿透，不擋住按鈕點擊 */
+      pointer-events: none;
       z-index: 1;
     }
 
@@ -153,14 +151,14 @@
 </head>
 <body>
 
-  <!-- 圖片雨背景容器 -->
+  <!-- 背景圖片雨 -->
   <div id="rain-container"></div>
 
   <div class="container">
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
-    <!-- 倒數計時視圖 -->
+    <!-- 倒數計時視圖 (全程保持顯示) -->
     <div id="countdown-view">
       <div class="timer-box">
         <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
@@ -172,8 +170,8 @@
 
     <!-- 提前 1.5 小時解鎖按鈕 -->
     <div id="unlock-section" class="hidden">
-      <p style="color: #e63946; font-weight: bold; margin-bottom: 10px;">驚喜區域已解鎖！</p>
-      <button class="btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
+      <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">驚喜區域已解鎖！</p>
+      <button class="btn" id="start-btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
     </div>
 
     <!-- 影片播放區域 -->
@@ -186,7 +184,7 @@
 
     <!-- 生日祝福卡片 -->
     <div id="card-view" class="hidden">
-      <h2 style="color: var(--primary-color); margin-bottom: 15px;">💖 生日快樂 祈iruni！</h2>
+      <h2 style="color: var(--primary-color); margin-top: 15px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
       <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
         親愛的魯尼：<br><br>
         生日快樂！又過了一年，身為理科腦不太擅長說感性的話，好像也只能說一句生日快樂。不過......希望尼明年也可以打開這個網站！
@@ -195,7 +193,6 @@
   </div>
 
   <script>
-    // 設定生日時間 (2026 年 9 月 29 日 00:00:00)
     const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
     const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
 
@@ -207,7 +204,6 @@
     const statusText = document.getElementById('status-text');
     const video = document.getElementById('birthday-video');
 
-    // 倒數計時邏輯
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = BIRTHDAY_DATE - now;
@@ -218,9 +214,7 @@
 
       if (distance <= 0) {
         statusText.innerText = "🎂 今天是祈iruni的生日！";
-        document.getElementById('countdown-view').classList.add('hidden');
         unlockSection.classList.remove('hidden');
-        return;
       }
 
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -228,18 +222,18 @@
       const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      daysEl.innerText = String(days).padStart(2, '0');
-      hoursEl.innerText = String(hours).padStart(2, '0');
-      minutesEl.innerText = String(minutes).padStart(2, '0');
-      secondsEl.innerText = String(seconds).padStart(2, '0');
+      daysEl.innerText = String(Math.max(0, days)).padStart(2, '0');
+      hoursEl.innerText = String(Math.max(0, hours)).padStart(2, '0');
+      minutesEl.innerText = String(Math.max(0, minutes)).padStart(2, '0');
+      secondsEl.innerText = String(Math.max(0, seconds)).padStart(2, '0');
     }
 
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
     function startVideo() {
-      document.getElementById('unlock-section').classList.add('hidden');
-      document.getElementById('countdown-view').classList.add('hidden');
+      // 僅隱藏解鎖按鈕，倒數計時視圖 (countdown-view) 保留顯示
+      unlockSection.classList.add('hidden');
       document.getElementById('video-view').classList.remove('hidden');
 
       video.play().catch(error => {
@@ -252,24 +246,20 @@
       document.getElementById('card-view').classList.remove('hidden');
     });
 
-    // ==========================================
     // 動態產生圖片雨 (iruni1.png ~ iruni6.png)
-    // ==========================================
     const rainContainer = document.getElementById('rain-container');
-    const TOTAL_DROPS = 25; // 螢幕同時顯示的圖片數量
+    const TOTAL_DROPS = 25;
 
     for (let i = 0; i < TOTAL_DROPS; i++) {
       const img = document.createElement('img');
-      // 隨機選擇 iruni1.png ~ iruni6.png
       const randomImgNum = Math.floor(Math.random() * 6) + 1;
       img.src = `iruni${randomImgNum}.png`;
       img.classList.add('rain-drop');
 
-      // 隨機設定水平位置、大小、下落速度與延遲
-      const leftPos = Math.random() * 100; // 0% ~ 100% 畫面寬度
-      const size = Math.random() * 35 + 35; // 35px ~ 70px
-      const duration = Math.random() * 4 + 3; // 3 ~ 7 秒下落完成
-      const delay = Math.random() * 5; // 0 ~ 5 秒延遲啟動
+      const leftPos = Math.random() * 100;
+      const size = Math.random() * 35 + 35;
+      const duration = Math.random() * 4 + 3;
+      const delay = Math.random() * 5;
 
       img.style.left = `${leftPos}vw`;
       img.style.width = `${size}px`;
