@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>祈魯尼的大冒險 - 背景生長加倍版</title>
+  <!-- 引入 Minecraft 風格像素字體 -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Press Start 2P', monospace, sans-serif;
+      image-rendering: pixelated; /* 強化像素質感 */
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 全螢幕 Canvas 畫布 */
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: #000;
+    }
+
+    /* Minecraft 風格 HUD 頂部狀態列 */
+    .hud {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      background: #c6c6c6;
+      padding: 6px;
+      border: 4px solid;
+      border-color: #ffffff #555555 #555555 #ffffff;
+      box-shadow: inset -4px -4px 0px #373737, inset 4px 4px 0px #8b8b8b, 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
+    .hud-slot {
+      background: #8b8b8b;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 11px;
+      text-shadow: 2px 2px 0px #3f3f3f;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 3px solid;
+      border-color: #373737 #ffffff #ffffff #373737;
+    }
+
+    .hud-slot span { color: #ffff55; }
+
+    .hud-slot-btn {
+      cursor: pointer;
+      user-select: none;
+    }
+    .hud-slot-btn:hover { background: #a0a0a0; }
+    .hud-slot-btn:active { border-color: #ffffff #373737 #373737 #ffffff; }
+
+    /* Minecraft 經典對話框 */
+    .mc-modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: #c6c6c6;
+      color: #3f3f3f;
+      padding: 20px;
+      width: 440px;
+      display: none;
+      z-index: 20;
+      text-align: center;
+      border: 4px solid;
+      border-color: #ffffff #555555 #555555 #ffffff;
+      box-shadow: 0 0 0 4px #000, inset -4px -4px 0px #373737, inset 4px 4px 0px #8b8b8b;
+    }
+
+    .mc-modal h3 {
+      font-size: 14px;
+      color: #404040;
+      text-shadow: 2px 2px 0px #ffffff;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 3px dashed #8b8b8b;
+    }
+
+    .mc-modal p {
+      font-size: 10px;
+      color: #202020;
+      line-height: 1.8;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .mc-btn {
+      display: block;
+      width: 100%;
+      background: #707070;
+      color: #e0e0e0;
+      border: 3px solid;
+      border-color: #a8a8a8 #373737 #373737 #a8a8a8;
+      padding: 10px 0;
+      margin: 8px 0;
+      font-size: 10px;
+      cursor: pointer;
+      text-shadow: 2px 2px 0px #000;
+      box-shadow: inset 2px 2px 0px #8b8b8b;
+    }
+
+    .mc-btn:hover {
+      background: #8b8b8b;
+      color: #ffffa0;
+      border-color: #ffffff #2d2d2d #2d2d2d #ffffff;
+    }
+
+    .mc-btn-close { background: #a83232; color: #fff; }
+    .mc-btn-close:hover { background: #c44141; }
+  </style>
+</head>
+<body>
+
+  <!-- 背景音樂 -->
+  <audio id="bgm" src="music.mp3" loop></audio>
+
+  <!-- HUD 狀態列 -->
+  <div class="hud">
+    <div class="hud-slot">📍<span id="sceneText">魯尼的小屋</span></div>
+    <div class="hud-slot">💰<span id="coinText">100</span></div>
+    <div class="hud-slot">🪓<span id="axeText">木斧</span></div>
+    <div class="hud-slot">🎒<span id="cropText">0</span></div>
+    <div class="hud-slot">💎<span id="oreText">0</span></div>
+    <div class="hud-slot hud-slot-btn" onclick="toggleMusic()">🎵<span id="musicBtnText">音樂: 開</span></div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- 提示訊息飄浮框 -->
+  <div id="noticeBox" style="display:none; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:#222; color:#ffff55; border:3px solid #fff; padding:10px 20px; font-size:11px; z-index:30; border-radius:4px; box-shadow:0 4px 10px rgba(0,0,0,0.8);">
+    <span id="noticeText"></span>
+  </div>
+
+  <!-- 開場新手教學 -->
+  <div id="tutorialModal" class="mc-modal" style="display: block;">
+    <h3>📜 遊戲指南</h3>
+    <p>歡迎來到魯尼的大冒險！</p>
+    <p>🎮 <b>[WASD / 方向鍵]</b> 控制移動</p>
+    <p>🚪 靠近傳送門按 <b>[E]</b> 進出農田、洞窟與小屋</p>
+    <p>🌾 作物與礦石即使身處其他地方也會自動生長/恢復！</p>
+    <p>⛏️ 升級斧頭越來越貴，但能大幅增加採集效率！</p>
+    <br>
+    <button class="mc-btn" onclick="closeTutorial()">知道了，開始冒險！</button>
+  </div>
+
+  <!-- 工作檯 Modal -->
+  <div id="craftModal" class="mc-modal">
+    <h3>🛠️ 工作檯 & 交易所</h3>
+    <p style="text-align: center;">販售農作物賺金幣，或消耗礦石與金幣升級斧頭！</p>
+    <button class="mc-btn" onclick="sellCrops()">💰 賣出所有農作物 (每顆25金)</button>
+    <button class="mc-btn" id="upgradeBtn" onclick="upgradeAxe()">🪓 升級斧頭</button>
+    <button class="mc-btn mc-btn-close" onclick="closeModal()">離開</button>
+  </div>
+
+  <!-- 挖礦微遊戲 Modal -->
+  <div id="miningModal" class="mc-modal">
+    <h3>⛏️ 挖掘礦石中...</h3>
+    <p style="text-align: center;">當滑桿經過黃色目標區時按 <b>[E]</b> 或 <b>[空白鍵]</b> 擊破！</p>
+    <div style="position: relative; width: 100%; height: 36px; background: #222; border: 3px solid #555; margin: 15px 0; border-radius: 4px; overflow: hidden; cursor: pointer;" onclick="checkMiningHit()">
+      <canvas id="miningBarCanvas" width="380" height="30" style="width:100%; height:100%; display:block;"></canvas>
+    </div>
+    <p style="text-align: center; font-size: 9px; color: #aaa;">剩餘目標區域：<span id="targetRemainingCount" style="color:#ffff55;">0</span></p>
+    <button class="mc-btn mc-btn-close" onclick="closeMiningModal()">放棄採礦</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const bgm = document.getElementById('bgm');
+    bgm.volume = 0.4;
+    let isMusicPlaying = false;
+
+    canvas.width = 1024;
+    canvas.height = 576;
+    ctx.imageSmoothingEnabled = false;
+
+    // 遊戲數據
+    let coins = 100;
+    let cropCount = 0;
+    let oreCount = 0;
+    const axeTiers = ["木斧", "石斧", "鐵斧", "金斧", "鑽石斧"];
+    let axeIndex = 0;
+    let currentScene = "house";
+    let isTutorialOpen = true;
+    let isCraftOpen = false;
+
+    // 挖礦微遊戲狀態變數
+    let isMiningActive = false;
+    let miningSliderPos = 0;
+    let miningSliderSpeed = 1.6;
+    let miningSliderDir = 1;
+    let miningTargets = [];
+    let activeMiningRock = null;
+
+    // 圖片資源
+    const houseBgImg = new Image();
+    houseBgImg.src = 'house.png';
+
+    const farmBgImg = new Image();
+    farmBgImg.src = 'farm.png';
+
+    const mineBgImg = new Image();
+    mineBgImg.src = 'mine.png';
+
+    const rockImg = new Image();
+    rockImg.src = 'rock.png';
+    let isRockImgLoaded = false;
+    rockImg.onload = () => { isRockImgLoaded = true; };
+
+    const outhouseImg = new Image();
+    outhouseImg.src = 'outhouse.png';
+    let isOuthouseImgLoaded = false;
+    outhouseImg.onload = () => { isOuthouseImgLoaded = true; };
+
+    const playerImg = new Image();
+    playerImg.src = 'farmiruni.png';
+    let isPlayerImgLoaded = false;
+    playerImg.onload = () => { isPlayerImgLoaded = true; };
+
+    // 玩家屬性
+    const player = {
+      x: 500,
+      y: 300,
+      width: 48,
+      height: 48,
+      speed: 4.5
+    };
+
+    // 小屋區域定義
+    const houseWalls = [
+      { x: 0, y: 0, w: 1024, h: 80 },
+      { x: 0, y: 0, w: 180, h: 576 },
+      { x: 840, y: 0, w: 184, h: 576 },
+      { x: 0, y: 480, w: 600, h: 96 },
+      { x: 780, y: 480, w: 244, h: 96 },
+      { x: 180, y: 80, w: 200, h: 160 }
+    ];
+    const craftZone = { x: 620, y: 180, w: 120, h: 90 };
+    const houseExitDoor = { x: 610, y: 460, w: 170, h: 80 };
+    const houseToMineDoor = { x: 740, y: 280, w: 90, h: 90 };
+
+    // 農田區域定義 (3 x 6 共 18 塊田地)
+    const farmPlots = [];
+    const farmRows = 3;
+    const farmCols = 6;
+    const plotWidth = 72;
+    const plotHeight = 72;
+    const startX = 240;
+    const startY = 150;
+    const gapX = 18;
+    const gapY = 18;
+
+    for (let row = 0; row < farmRows; row++) {
+      for (let col = 0; col < farmCols; col++) {
+        farmPlots.push({
+          x: startX + col * (plotWidth + gapX),
+          y: startY + row * (plotHeight + gapY),
+          w: plotWidth,
+          h: plotHeight,
+          state: 0,
+          timer: 0
+        });
+      }
+    }
+
+    const farmToHouseDoor = { x: 50, y: 220, w: 60, h: 120 };
+
+    // 洞窟礦石點定義
+    const mineRocks = [
+      { x: 260, y: 160, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 420, y: 140, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 580, y: 160, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 740, y: 180, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 300, y: 320, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 500, y: 340, w: 64, h: 64, state: 0, timer: 0 },
+      { x: 680, y: 320, w: 64, h: 64, state: 0, timer: 0 }
+    ];
+    const mineToHouseDoor = { x: 50, y: 220, w: 60, h: 120 };
+
+    // 鍵盤監聽
+    const keys = {};
+    window.addEventListener('keydown', e => {
+      keys[e.key.toLowerCase()] = true;
+      
+      if (isMiningActive && (e.key === 'e' || e.key === 'E' || e.key === ' ')) {
+        checkMiningHit();
+        return;
+      }
+
+      if (!isTutorialOpen && !isCraftOpen && !isMiningActive && (e.key === 'e' || e.key === 'E' || e.key === ' ')) {
+        checkInteraction();
+      }
+    });
+    window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+    function checkCollision(newX, newY) {
+      if (currentScene !== 'house') return false;
+      const pBox = { x: newX, y: newY, w: player.width, h: player.height };
+      for (let w of houseWalls) {
+        if (pBox.x < w.x + w.w &&
+            pBox.x + pBox.w > w.x &&
+            pBox.y < w.y + w.h &&
+            pBox.y + pBox.h > w.y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function update() {
+      // 無論身處哪個場景，全面在背景更新作物與礦石的進度
+      farmPlots.forEach(plot => {
+        if (plot.state > 0 && plot.state < 3) {
+          // 原本 180 幀變快 1.5 倍 (180 / 1.5 = 120 幀)
+          plot.timer += 1;
+          if (plot.timer > 120) {
+            plot.state += 1;
+            plot.timer = 0;
+          }
+        }
+      });
+
+      mineRocks.forEach(rock => {
+        if (rock.state === 1) {
+          // 原本 2100 幀冷卻變快 1.5 倍 (2100 / 1.5 = 1400 幀)
+          rock.timer += 1;
+          if (rock.timer > 1400) {
+            rock.state = 0;
+            rock.timer = 0;
+          }
+        }
+      });
+
+      if (isTutorialOpen || isCraftOpen || isMiningActive) {
+        if (isMiningActive) {
+          updateMiningMinigame();
+        }
+        return;
+      }
+
+      let nextX = player.x;
+      let nextY = player.y;
+
+      if (keys['w'] || keys['arrowup']) nextY -= player.speed;
+      if (keys['s'] || keys['arrowdown']) nextY += player.speed;
+      if (keys['a'] || keys['arrowleft']) nextX -= player.speed;
+      if (keys['d'] || keys['arrowright']) nextX += player.speed;
+
+      if (!checkCollision(nextX, player.y)) player.x = nextX;
+      if (!checkCollision(player.x, nextY)) player.y = nextY;
+
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+    }
+
+    function checkInteraction() {
+      if (currentScene === 'house') {
+        if (player.x < houseExitDoor.x + houseExitDoor.w &&
+            player.x + player.width > houseExitDoor.x &&
+            player.y < houseExitDoor.y + houseExitDoor.h &&
+            player.y + player.height > houseExitDoor.y) {
+          currentScene = 'farm';
+          player.x = 120;
+          player.y = 250;
+          document.getElementById('sceneText').innerText = '農田';
+          showNotice("🌾 進入農田");
+          return;
+        }
+        if (player.x < houseToMineDoor.x + houseToMineDoor.w &&
+            player.x + player.width > houseToMineDoor.x &&
+            player.y < houseToMineDoor.y + houseToMineDoor.h &&
+            player.y + player.height > houseToMineDoor.y) {
+          currentScene = 'mine';
+          player.x = 120;
+          player.y = 250;
+          document.getElementById('sceneText').innerText = '礦坑洞窟';
+          showNotice("⛏️ 進入礦坑洞窟");
+          return;
+        }
+        if (player.x < craftZone.x + craftZone.w &&
+            player.x + player.width > craftZone.x &&
+            player.y < craftZone.y + craftZone.h &&
+            player.y + player.height > craftZone.y) {
+          isCraftOpen = true;
+          updateUpgradeButtonText();
+          document.getElementById('craftModal').style.display = 'block';
+          return;
+        }
+      } else if (currentScene === 'farm') {
+        if (player.x < farmToHouseDoor.x + farmToHouseDoor.w &&
+            player.x + player.width > farmToHouseDoor.x &&
+            player.y < farmToHouseDoor.y + farmToHouseDoor.h &&
+            player.y + player.height > farmToHouseDoor.y) {
+          currentScene = 'house';
+          player.x = 650;
+          player.y = 400;
+          document.getElementById('sceneText').innerText = '魯尼的小屋';
+          showNotice("🏠 返回小屋");
+          return;
+        }
+        farmPlots.forEach(plot => {
+          if (player.x < plot.x + plot.w &&
+              player.x + player.width > plot.x &&
+              player.y < plot.y + plot.h &&
+              player.y + player.height > plot.y) {
+            
+            if (plot.state === 0) {
+              plot.state = 1;
+              plot.timer = 0;
+            } else if (plot.state === 3) {
+              const yieldCount = 1 + axeIndex;
+              cropCount += yieldCount;
+              plot.state = 0;
+              updateHUD();
+              showNotice(`🌾 採收獲得 ${yieldCount} 個農作物！`);
+            }
+          }
+        });
+      } else if (currentScene === 'mine') {
+        if (player.x < mineToHouseDoor.x + mineToHouseDoor.w &&
+            player.x + player.width > mineToHouseDoor.x &&
+            player.y < mineToHouseDoor.y + mineToHouseDoor.h &&
+            player.y + player.height > mineToHouseDoor.y) {
+          currentScene = 'house';
+          player.x = 700;
+          player.y = 300;
+          document.getElementById('sceneText').innerText = '魯尼的小屋';
+          showNotice("🏠 返回小屋");
+          return;
+        }
+        mineRocks.forEach(rock => {
+          if (rock.state === 0 &&
+              player.x < rock.x + rock.w &&
+              player.x + player.width > rock.x &&
+              player.y < rock.y + rock.h &&
+              player.y + player.height > rock.y) {
+            startMiningMiniGame(rock);
+          }
+        });
+      }
+    }
+
+    function startMiningMiniGame(rock) {
+      activeMiningRock = rock;
+      isMiningActive = true;
+      miningSliderPos = 0;
+      miningSliderDir = 1;
+      
+      const targetCount = Math.floor(Math.random() * 3) + 1;
+      miningTargets = [];
+      for (let i = 0; i < targetCount; i++) {
+        const tWidth = 15;
+        const tStart = Math.random() * (80 - tWidth) + 10;
+        miningTargets.push({ start: tStart, width: tWidth, hit: false });
+      }
+
+      document.getElementById('targetRemainingCount').innerText = targetCount;
+      document.getElementById('miningModal').style.display = 'block';
+    }
+
+    function updateMiningMinigame() {
+      if (!isMiningActive) return;
+
+      miningSliderPos += miningSliderSpeed * miningSliderDir;
+      if (miningSliderPos >= 100) {
+        miningSliderPos = 100;
+        miningSliderDir = -1;
+      } else if (miningSliderPos <= 0) {
+        miningSliderPos = 0;
+        miningSliderDir = 1;
+      }
+
+      const barCanvas = document.getElementById('miningBarCanvas');
+      const bCtx = barCanvas.getContext('2d');
+      bCtx.clearRect(0, 0, barCanvas.width, barCanvas.height);
+
+      bCtx.fillStyle = '#333';
+      bCtx.fillRect(0, 0, barCanvas.width, barCanvas.height);
+
+      miningTargets.forEach(t => {
+        const startX = (t.start / 100) * barCanvas.width;
+        const w = (t.width / 100) * barCanvas.width;
+        bCtx.fillStyle = t.hit ? '#55ff55' : '#ffcc00';
+        bCtx.fillRect(startX, 0, w, barCanvas.height);
+      });
+
+      const sliderX = (miningSliderPos / 100) * barCanvas.width;
+      bCtx.fillStyle = '#ffffff';
+      bCtx.fillRect(sliderX - 3, 0, 6, barCanvas.height);
+    }
+
+    function checkMiningHit() {
+      if (!isMiningActive) return;
+
+      let hitAny = false;
+      miningTargets.forEach(t => {
+        if (!t.hit && miningSliderPos >= t.start && miningSliderPos <= (t.start + t.width)) {
+          t.hit = true;
+          hitAny = true;
+        }
+      });
+
+      const remaining = miningTargets.filter(t => !t.hit).length;
+      document.getElementById('targetRemainingCount').innerText = remaining;
+
+      if (remaining === 0) {
+        const yieldOre = miningTargets.length + Math.floor(axeIndex / 2);
+        oreCount += yieldOre;
+        updateHUD();
+        showNotice(`💎 成功採礦！獲得 ${yieldOre} 顆礦石！`);
+        
+        if (activeMiningRock) {
+          activeMiningRock.state = 1;
+          activeMiningRock.timer = 0;
+        }
+        closeMiningModal();
+      } else if (!hitAny) {
+        showNotice("❌ 沒中目標！繼續抓準時機！");
+      }
+    }
+
+    function closeMiningModal() {
+      document.getElementById('miningModal').style.display = 'none';
+      isMiningActive = false;
+      activeMiningRock = null;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (currentScene === 'house') {
+        if (houseBgImg.complete && houseBgImg.naturalWidth !== 0) {
+          ctx.drawImage(houseBgImg, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = '#3a2517';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          ctx.fillStyle = '#5c3a21';
+          ctx.fillRect(180, 80, 660, 400);
+          ctx.strokeStyle = '#422815';
+          ctx.lineWidth = 2;
+          for (let i = 180; i < 840; i += 40) {
+            ctx.beginPath(); ctx.moveTo(i, 80); ctx.lineTo(i, 480); ctx.stroke();
+          }
+
+          ctx.fillStyle = '#8b5a2b';
+          ctx.fillRect(craftZone.x, craftZone.y, craftZone.w, craftZone.h);
+          drawPixelText("🛠️ 工作檯", craftZone.x + 10, craftZone.y + 45, '#ffffff', 11);
+
+          ctx.fillStyle = '#22140c';
+          ctx.fillRect(houseExitDoor.x, houseExitDoor.y, houseExitDoor.w, houseExitDoor.h);
+        }
+
+        if (player.x < craftZone.x + craftZone.w &&
+            player.x + player.width > craftZone.x &&
+            player.y < craftZone.y + craftZone.h &&
+            player.y + player.height > craftZone.y) {
+          drawPixelText("[E] 打開工作檯", craftZone.x - 10, craftZone.y - 15, '#ffff55', 12);
+        }
+
+        if (player.x < houseToMineDoor.x + houseToMineDoor.w &&
+            player.x + player.width > houseToMineDoor.x &&
+            player.y < houseToMineDoor.y + houseToMineDoor.h &&
+            player.y + player.height > houseToMineDoor.y) {
+          drawPixelText("[E] 前往洞窟", houseToMineDoor.x - 20, houseToMineDoor.y - 15, '#ffff55', 12);
+        } else {
+          drawPixelText("⛏️ 前往洞窟", houseToMineDoor.x - 10, houseToMineDoor.y - 10, '#55ffff', 11);
+        }
+
+        if (player.x < houseExitDoor.x + houseExitDoor.w &&
+            player.x + player.width > houseExitDoor.x &&
+            player.y < houseExitDoor.y + houseExitDoor.h &&
+            player.y + player.height > houseExitDoor.y) {
+          drawPixelText("[E] 前往農田", houseExitDoor.x + 20, houseExitDoor.y - 15, '#ffff55', 12);
+        } else {
+          drawPixelText("🚪 前往農田", houseExitDoor.x + 20, houseExitDoor.y + 45, '#ffffff', 12);
+        }
+
+      } else if (currentScene === 'farm') {
+        if (farmBgImg.complete && farmBgImg.naturalWidth !== 0) {
+          ctx.drawImage(farmBgImg, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = '#4e7828';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#7a7a7a';
+          ctx.fillRect(110, 230, 80, 60);
+        }
+
+        if (isOuthouseImgLoaded) {
+          ctx.drawImage(outhouseImg, farmToHouseDoor.x - 20, farmToHouseDoor.y - 20, 100, 140);
+        } else {
+          ctx.fillStyle = '#8b5a2b';
+          ctx.fillRect(farmToHouseDoor.x, farmToHouseDoor.y, farmToHouseDoor.w, farmToHouseDoor.h);
+        }
+
+        if (player.x < farmToHouseDoor.x + farmToHouseDoor.w &&
+            player.x + player.width > farmToHouseDoor.x &&
+            player.y < farmToHouseDoor.y + farmToHouseDoor.h &&
+            player.y + player.height > farmToHouseDoor.y) {
+          drawPixelText("[E] 回小屋", farmToHouseDoor.x - 10, farmToHouseDoor.y - 25, '#ffff55', 12);
+        } else {
+          drawPixelText("🏠 回小屋", farmToHouseDoor.x - 10, farmToHouseDoor.y - 25, '#ffffff', 11);
+        }
+
+        farmPlots.forEach((plot) => {
+          ctx.fillStyle = '#5a3d28';
+          ctx.fillRect(plot.x, plot.y, plot.w, plot.h);
+          ctx.strokeStyle = '#382415';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+
+          ctx.textAlign = "center";
+          ctx.font = '24px "Press Start 2P", sans-serif';
+          if (plot.state === 0) {
+            drawPixelText("泥土", plot.x + 12, plot.y + 42, '#8b6b55', 9);
+          } else if (plot.state === 1) {
+            ctx.fillText("🌱", plot.x + 36, plot.y + 45);
+          } else if (plot.state === 2) {
+            ctx.fillText("🌿", plot.x + 36, plot.y + 45);
+          } else if (plot.state === 3) {
+            ctx.fillText("🌽", plot.x + 36, plot.y + 45);
+          }
+
+          if (player.x < plot.x + plot.w &&
+              player.x + player.width > plot.x &&
+              player.y < plot.y + plot.h &&
+              player.y + player.height > plot.y) {
+            let tip = plot.state === 0 ? "[E] 播種" : (plot.state === 3 ? "[E] 採收!" : "🌱生長中");
+            drawPixelText(tip, plot.x - 5, plot.y - 10, '#ffff55', 9);
+          }
+        });
+
+      } else if (currentScene === 'mine') {
+        if (mineBgImg.complete && mineBgImg.naturalWidth !== 0) {
+          ctx.drawImage(mineBgImg, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.fillStyle = '#1c1c24';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = '#2d2d3a';
+          for (let i = 0; i < canvas.width; i += 80) {
+            for (let j = 0; j < canvas.height; j += 80) {
+              if ((i + j) % 160 === 0) ctx.fillRect(i, j, 40, 40);
+            }
+          }
+        }
+
+        if (isOuthouseImgLoaded) {
+          ctx.drawImage(outhouseImg, mineToHouseDoor.x - 20, mineToHouseDoor.y - 20, 100, 140);
+        } else {
+          ctx.fillStyle = '#8b5a2b';
+          ctx.fillRect(mineToHouseDoor.x, mineToHouseDoor.y, mineToHouseDoor.w, mineToHouseDoor.h);
+        }
+
+        if (player.x < mineToHouseDoor.x + mineToHouseDoor.w &&
+            player.x + player.width > mineToHouseDoor.x &&
+            player.y < mineToHouseDoor.y + mineToHouseDoor.h &&
+            player.y + player.height > mineToHouseDoor.y) {
+          drawPixelText("[E] 回小屋", mineToHouseDoor.x - 10, mineToHouseDoor.y - 25, '#ffff55', 12);
+        } else {
+          drawPixelText("🏠 回小屋", mineToHouseDoor.x - 10, mineToHouseDoor.y - 25, '#ffffff', 11);
+        }
+
+        mineRocks.forEach((rock) => {
+          if (rock.state === 0) {
+            if (isRockImgLoaded) {
+              ctx.drawImage(rockImg, rock.x, rock.y, rock.w, rock.h);
+            } else {
+              ctx.fillStyle = '#778899';
+              ctx.fillRect(rock.x, rock.y, rock.w, rock.h);
+              ctx.fillStyle = '#4682b4';
+              ctx.fillRect(rock.x + 12, rock.y + 12, 16, 16);
+            }
+
+            if (player.x < rock.x + rock.w &&
+                player.x + player.width > rock.x &&
+                player.y < rock.y + rock.h &&
+                player.y + player.height > rock.y) {
+              drawPixelText("[E] 開採礦石", rock.x - 10, rock.y - 12, '#55ffff', 9);
+            }
+          } else {
+            drawPixelText("⏳ 冷卻中", rock.x, rock.y + 35, '#888888', 9);
+          }
+        });
+      }
+
+      if (isPlayerImgLoaded) {
+        ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+      } else {
+        ctx.fillStyle = '#e8a87c';
+        ctx.fillRect(player.x + 8, player.y + 12, 32, 28);
+        ctx.fillStyle = '#3498db';
+        ctx.fillRect(player.x + 8, player.y + 28, 32, 20);
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(player.x + 4, player.y + 4, 40, 10);
+        ctx.fillRect(player.x + 12, player.y, 24, 6);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(player.x + 14, player.y + 20, 4, 4);
+        ctx.fillRect(player.x + 30, player.y + 20, 4, 4);
+      }
+    }
+
+    function drawPixelText(text, x, y, color = '#ffffff', fontSize = 12) {
+      ctx.textAlign = "left";
+      ctx.font = `${fontSize}px "Press Start 2P", sans-serif`;
+      ctx.fillStyle = '#000000';
+      ctx.fillText(text, x + 2, y + 2);
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    let noticeTimer = null;
+    function showNotice(msg) {
+      const box = document.getElementById('noticeBox');
+      const txt = document.getElementById('noticeText');
+      txt.innerText = msg;
+      box.style.display = 'block';
+      if (noticeTimer) clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(() => {
+        box.style.display = 'none';
+      }, 2000);
+    }
+
+    function mainLoop() {
+      update();
+      draw();
+      requestAnimationFrame(mainLoop);
+    }
+
+    function closeTutorial() {
+      document.getElementById('tutorialModal').style.display = 'none';
+      isTutorialOpen = false;
+      playMusic();
+    }
+
+    function playMusic() {
+      bgm.play().then(() => {
+        isMusicPlaying = true;
+        document.getElementById('musicBtnText').innerText = "音樂: 開";
+      }).catch(() => {
+        document.getElementById('musicBtnText').innerText = "音樂: 關";
+      });
+    }
+
+    function toggleMusic() {
+      if (isMusicPlaying) {
+        bgm.pause();
+        isMusicPlaying = false;
+        document.getElementById('musicBtnText').innerText = "音樂: 關";
+      } else {
+        playMusic();
+      }
+    }
+
+    // 賣出農作物賺取金幣
+    function sellCrops() {
+      if (cropCount > 0) {
+        const earned = cropCount * 25;
+        coins += earned;
+        showNotice(`🎉 賣出 ${cropCount} 個農作物，獲得 ${earned} 金幣！`);
+        cropCount = 0;
+        updateHUD();
+        closeModal();
+      } else {
+        showNotice("背包裡沒有農作物可以賣喔！");
+      }
+    }
+
+    // 取得當前等級的升級成本
+    function getUpgradeCost(index) {
+      const costs = [
+        { coins: 50, ores: 5 },    // 木斧 -> 石斧
+        { coins: 150, ores: 12 },  // 石斧 -> 鐵斧
+        { coins: 400, ores: 25 },  // 鐵斧 -> 金斧
+        { coins: 1000, ores: 50 }  // 金斧 -> 鑽石斧
+      ];
+      return costs[index] || { coins: 9999, ores: 9999 };
+    }
+
+    function updateUpgradeButtonText() {
+      const btn = document.getElementById('upgradeBtn');
+      if (axeIndex >= axeTiers.length - 1) {
+        btn.innerText = "🪓 斧頭已達最高等級";
+      } else {
+        const cost = getUpgradeCost(axeIndex);
+        btn.innerText = `🪓 升級為【${axeTiers[axeIndex + 1]}】(消耗 ${cost.ores} 礦 + ${cost.coins} 金)`;
+      }
+    }
+
+    // 升級斧頭
+    function upgradeAxe() {
+      if (axeIndex >= axeTiers.length - 1) {
+        showNotice("斧頭已經是最高等級【鑽石斧】囉！");
+        return;
+      }
+      
+      const cost = getUpgradeCost(axeIndex);
+
+      if (oreCount >= cost.ores && coins >= cost.coins) {
+        oreCount -= cost.ores;
+        coins -= cost.coins;
+        axeIndex++;
+        showNotice(`✨ 消耗 ${cost.ores} 礦石與 ${cost.coins} 金幣，升級為【${axeTiers[axeIndex]}】！`);
+        updateHUD();
+        updateUpgradeButtonText();
+        closeModal();
+      } else {
+        showNotice(`條件不足（需要 ${cost.ores} 礦石與 ${cost.coins} 金幣）！`);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('craftModal').style.display = 'none';
+      isCraftOpen = false;
+    }
+
+    function updateHUD() {
+      document.getElementById('coinText').innerText = coins;
+      document.getElementById('axeText').innerText = axeTiers[axeIndex];
+      document.getElementById('cropText').innerText = cropCount;
+      document.getElementById('oreText').innerText = oreCount;
+    }
+
+    mainLoop();
+  </script>
+</body>
+</html>
