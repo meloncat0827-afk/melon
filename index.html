@@ -36,71 +36,43 @@
       z-index: 15; pointer-events: none;
     }
 
-    /* Limbus 風格跑馬燈文字區域 (Z-index 設為 3，穿插在背景與卡片之間) */
-    .marquee-container {
+    /* 低語文字容器 (不影響滑鼠點擊) */
+    #whisper-container {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       pointer-events: none;
       z-index: 3;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
     }
 
-    .marquee-track {
+    /* 隨機出現的低語單字樣式 */
+    .whisper-text {
+      position: absolute;
       white-space: nowrap;
-      display: flex;
-      width: max-content;
       font-weight: 900;
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px rgba(255, 117, 151, 0.4);
       user-select: none;
+      pointer-events: none;
+      animation: whisperFade 4s ease-out forwards;
+      letter-spacing: 2px;
     }
 
-    /* 各軌道自訂字體大小、顏色與透明度 */
-    .track-1 {
-      font-size: 2.2rem;
-      color: rgba(255, 117, 151, 0.35);
-      animation: marqueeLeft 18s linear infinite;
-    }
-
-    .track-2 {
-      font-size: 1.4rem;
-      color: rgba(255, 179, 198, 0.5);
-      animation: marqueeRight 22s linear infinite;
-    }
-
-    .track-3 {
-      font-size: 3rem;
-      color: rgba(255, 117, 151, 0.25);
-      animation: marqueeLeft 14s linear infinite;
-    }
-
-    .track-4 {
-      font-size: 1.8rem;
-      color: rgba(230, 57, 70, 0.3);
-      animation: marqueeRight 26s linear infinite;
-    }
-
-    .track-5 {
-      font-size: 2.6rem;
-      color: rgba(255, 117, 151, 0.4);
-      animation: marqueeLeft 16s linear infinite;
-    }
-
-    /* 跑馬燈動畫：左至右 & 右至左 */
-    @keyframes marqueeLeft {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-
-    @keyframes marqueeRight {
-      0% { transform: translateX(-50%); }
-      100% { transform: translateX(0%); }
+    /* 低語出現與淡出動畫 */
+    @keyframes whisperFade {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0.8);
+      }
+      20% {
+        opacity: var(--max-opacity, 0.6);
+      }
+      80% {
+        opacity: var(--max-opacity, 0.6);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--move-x, 0px), var(--move-y, -20px)) scale(1.05);
+      }
     }
 
     /* 背景氣球 */
@@ -177,34 +149,13 @@
 </head>
 <body>
 
-  <!-- 滿版頂部橫幅 -->
+  <!-- 頂部橫幅 -->
   <img src="banner.png" alt="Banner" class="top-banner">
 
-  <!-- Limbus 風格 5 軌跑馬燈字串 -->
-  <div class="marquee-container">
-    <div class="marquee-track track-1">
-      <span>生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp;</span>
-      <span>生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-    <div class="marquee-track track-2">
-      <span>最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-      <span>最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-    <div class="marquee-track track-3">
-      <span>好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp;</span>
-      <span>好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-    <div class="marquee-track track-4">
-      <span>會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-      <span>會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-    <div class="marquee-track track-5">
-      <span>還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-      <span>還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-  </div>
+  <!-- 低語文字容器 -->
+  <div id="whisper-container"></div>
 
-  <!-- 兩側氣球 -->
+  <!-- 背景氣球 -->
   <img src="balloon1.png" class="balloon-deco b-left-1" alt="Balloon 1">
   <img src="balloon2.png" class="balloon-deco b-left-2" alt="Balloon 2">
   <img src="balloon3.png" class="balloon-deco b-left-3" alt="Balloon 3">
@@ -274,6 +225,74 @@
 
     setInterval(updateCountdown, 1000);
     updateCountdown();
+
+    // ----------------------------------------------------
+    // 低語隨機生成系統 (1~2秒隨機挑選、無序隨機出現)
+    // ----------------------------------------------------
+    const whisperPhrases = [
+      "生日快樂~~",
+      "最後一個半小時?",
+      "好期待...",
+      "會是什麼呢?",
+      "還要多久呢?"
+    ];
+
+    const whisperColors = [
+      "rgba(255, 117, 151, ",
+      "rgba(255, 179, 198, ",
+      "rgba(230, 57, 70, ",
+      "rgba(180, 100, 200, "
+    ];
+
+    const whisperContainer = document.getElementById('whisper-container');
+
+    function spawnWhisper() {
+      const el = document.createElement('div');
+      el.classList.add('whisper-text');
+      
+      // 1. 隨機挑選句子
+      const text = whisperPhrases[Math.floor(Math.random() * whisperPhrases.length)];
+      el.innerText = text;
+
+      // 2. 隨機大小 (1.2rem ~ 2.6rem)
+      const fontSize = (Math.random() * 1.4 + 1.2).toFixed(1);
+      el.style.fontSize = `${fontSize}rem`;
+
+      // 3. 隨機色彩與不透明度 (0.3 ~ 0.6)
+      const colorPrefix = whisperColors[Math.floor(Math.random() * whisperColors.length)];
+      const maxOpacity = (Math.random() * 0.3 + 0.3).toFixed(2);
+      el.style.color = `${colorPrefix}${maxOpacity})`;
+      el.style.setProperty('--max-opacity', maxOpacity);
+
+      // 隨機文字陰影 glow
+      el.style.textShadow = `0 0 8px ${colorPrefix}0.4)`;
+
+      // 4. 隨機位置 (避免貼太邊緣)
+      const posX = Math.random() * 80 + 10; // 10vw ~ 90vw
+      const posY = Math.random() * 80 + 10; // 10vh ~ 90vh
+      el.style.left = `${posX}vw`;
+      el.style.top = `${posY}vh`;
+
+      // 5. 隨機漂移方向 (-40px ~ 40px)
+      const moveX = (Math.random() * 80 - 40).toFixed(0);
+      const moveY = (Math.random() * 80 - 40).toFixed(0);
+      el.style.setProperty('--move-x', `${moveX}px`);
+      el.style.setProperty('--move-y', `${moveY}px`);
+
+      whisperContainer.appendChild(el);
+
+      // 動畫結束後自動銷毀 DOM 節點，防止佔用記憶體
+      setTimeout(() => {
+        el.remove();
+      }, 4000);
+
+      // 設定下一次生成的隨機時間 (1000ms ~ 2000ms 之間)
+      const nextDelay = Math.floor(Math.random() * 1000) + 1000;
+      setTimeout(spawnWhisper, nextDelay);
+    }
+
+    // 啟動低語系統
+    spawnWhisper();
 
     // 圖片雨生成
     const rainContainer = document.getElementById('rain-container');
