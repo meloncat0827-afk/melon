@@ -6,18 +6,12 @@
   <title>祈魯尼生日倒數</title>
   <style>
     :root {
-      --bg-color: #fdf0f5;
       --primary-color: #ff7597;
       --accent-color: #ffb3c6;
       --text-color: #4a3e3d;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
     body {
       background: linear-gradient(135deg, #ffe6eb 0%, #edf2ff 100%);
@@ -33,206 +27,182 @@
       position: relative;
     }
 
-    /* 頂部橫幅 (放大高度) */
+    /* 滿版頂部橫幅 */
     .top-banner {
       position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      max-width: 950px;
-      height: auto;
-      max-height: 160px;
-      object-fit: contain;
-      z-index: 15;
-      pointer-events: none;
+      top: 0; left: 0;
+      width: 100vw; height: auto; max-height: 200px;
+      object-fit: cover; object-position: top center;
+      z-index: 15; pointer-events: none;
     }
 
-    /* 背景氣球 (尺寸整體放大) */
-    .balloon-deco {
-      position: absolute;
-      width: 90px;
-      height: auto;
-      pointer-events: none;
-      z-index: 2;
-      animation: floatBalloon 4s ease-in-out infinite alternate;
-    }
-
-    .b-left-1 { left: 4%; top: 12%; animation-delay: 0s; }
-    .b-left-2 { left: 10%; top: 42%; animation-delay: 1.5s; width: 110px; }
-    .b-left-3 { left: 2%; top: 68%; animation-delay: 0.8s; }
-    .b-right-1 { right: 4%; top: 15%; animation-delay: 1s; }
-    .b-right-2 { right: 9%; top: 48%; animation-delay: 2.2s; width: 105px; }
-
-    @keyframes floatBalloon {
-      0% { transform: translateY(0px) rotate(-4deg); }
-      100% { transform: translateY(-18px) rotate(4deg); }
-    }
-
-    /* 主要容器 */
-    .container {
-      background: rgba(255, 255, 255, 0.93);
-      padding: 40px 30px 60px;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
-      max-width: 520px;
-      width: 100%;
-      position: relative;
-      z-index: 10;
-      backdrop-filter: blur(5px);
-      margin-top: 80px;
-    }
-
-    /* 禮物盒裝飾 (加大尺寸) */
-    .gift-deco {
-      position: absolute;
-      bottom: -30px;
-      width: 95px;
-      height: auto;
-      z-index: 12;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.15));
-      pointer-events: none;
-    }
-    .gift-1 { left: -40px; }
-    .gift-2 { left: 50px; bottom: -35px; width: 80px; }
-    .gift-3 { right: -40px; }
-
-    h1 {
-      color: var(--primary-color);
-      margin-bottom: 8px;
-      font-size: 1.9rem;
-    }
-
-    .subtitle {
-      color: #777;
-      margin-bottom: 20px;
-      font-size: 1rem;
-    }
-
-    /* 倒數計時器 */
-    .timer-box {
-      display: flex;
-      justify-content: space-around;
-      margin: 15px 0;
-    }
-
-    .time-card {
-      background: #fff0f3;
-      padding: 12px;
-      border-radius: 12px;
-      min-width: 65px;
-      border: 2px solid var(--accent-color);
-    }
-
-    .time-card span {
-      display: block;
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--primary-color);
-    }
-
-    .time-card .label {
-      font-size: 0.8rem;
-      color: #888;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    /* 按鈕 */
-    .btn {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 14px 28px;
-      font-size: 1.1rem;
-      border-radius: 50px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.4);
-      transition: all 0.2s ease;
-      margin-top: 10px;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6);
-    }
-
-    /* 影片 */
-    #video-view video {
-      width: 100%;
-      border-radius: 16px;
-      border: 3px solid var(--accent-color);
-      margin-top: 15px;
-    }
-
-    /* 蛋糕圖片容器 (加大為 220px) */
-    .cake-container {
-      margin: 15px auto 10px;
-      width: 220px;
-      display: block;
-    }
-
-    .cake-img {
-      width: 100%;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.12));
-    }
-
-    .float-up {
-      animation: floatUpFade 1.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    }
-
-    @keyframes floatUpFade {
-      0% {
-        opacity: 0;
-        transform: translateY(50px) scale(0.85);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    /* 圖片雨容器 */
-    #rain-container {
+    /* Limbus 風格跑馬燈文字區域 (Z-index 設為 3，穿插在背景與卡片之間) */
+    .marquee-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
       pointer-events: none;
-      z-index: 1;
+      z-index: 3;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
     }
 
-    .rain-drop {
-      position: absolute;
-      top: -120px;
-      object-fit: contain;
+    .marquee-track {
+      white-space: nowrap;
+      display: flex;
+      width: max-content;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 117, 151, 0.4);
+      user-select: none;
+    }
+
+    /* 各軌道自訂字體大小、顏色與透明度 */
+    .track-1 {
+      font-size: 2.2rem;
+      color: rgba(255, 117, 151, 0.35);
+      animation: marqueeLeft 18s linear infinite;
+    }
+
+    .track-2 {
+      font-size: 1.4rem;
+      color: rgba(255, 179, 198, 0.5);
+      animation: marqueeRight 22s linear infinite;
+    }
+
+    .track-3 {
+      font-size: 3rem;
+      color: rgba(255, 117, 151, 0.25);
+      animation: marqueeLeft 14s linear infinite;
+    }
+
+    .track-4 {
+      font-size: 1.8rem;
+      color: rgba(230, 57, 70, 0.3);
+      animation: marqueeRight 26s linear infinite;
+    }
+
+    .track-5 {
+      font-size: 2.6rem;
+      color: rgba(255, 117, 151, 0.4);
+      animation: marqueeLeft 16s linear infinite;
+    }
+
+    /* 跑馬燈動畫：左至右 & 右至左 */
+    @keyframes marqueeLeft {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @keyframes marqueeRight {
+      0% { transform: translateX(-50%); }
+      100% { transform: translateX(0%); }
+    }
+
+    /* 背景氣球 */
+    .balloon-deco {
+      position: absolute; width: 90px; height: auto;
+      pointer-events: none; z-index: 2;
+      animation: floatBalloon 4s ease-in-out infinite alternate;
+    }
+    .b-left-1 { left: 4%; top: 18%; animation-delay: 0s; }
+    .b-left-2 { left: 10%; top: 45%; animation-delay: 1.5s; width: 110px; }
+    .b-left-3 { left: 2%; top: 70%; animation-delay: 0.8s; }
+    .b-right-1 { right: 4%; top: 20%; animation-delay: 1s; }
+    .b-right-2 { right: 9%; top: 50%; animation-delay: 2.2s; width: 105px; }
+
+    @keyframes floatBalloon {
+      0% { transform: translateY(0px) rotate(-4deg); }
+      100% { transform: translateY(-18px) rotate(4deg); }
+    }
+
+    /* 主卡片容器 */
+    .container {
+      background: rgba(255, 255, 255, 0.93);
+      padding: 40px 30px 50px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(255, 117, 151, 0.2);
+      max-width: 520px; width: 100%;
+      position: relative; z-index: 10;
+      backdrop-filter: blur(5px);
+      margin-top: 120px;
+    }
+
+    /* 角落禮物盒 */
+    .gift-deco {
+      position: absolute; bottom: -30px; width: 95px; height: auto;
+      z-index: 12; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.15));
       pointer-events: none;
-      animation: fall linear infinite;
-      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.08));
     }
+    .gift-1 { left: -40px; }
+    .gift-2 { left: 50px; bottom: -35px; width: 80px; }
+    .gift-3 { right: -40px; }
 
+    h1 { color: var(--primary-color); margin-bottom: 8px; font-size: 1.9rem; }
+    .subtitle { color: #777; margin-bottom: 20px; font-size: 1rem; }
+
+    /* 倒數計時樣式 */
+    .timer-box { display: flex; justify-content: space-around; margin: 15px 0; }
+    .time-card {
+      background: #fff0f3; padding: 12px; border-radius: 12px;
+      min-width: 65px; border: 2px solid var(--accent-color);
+    }
+    .time-card span { display: block; font-size: 1.8rem; font-weight: bold; color: var(--primary-color); }
+    .time-card .label { font-size: 0.8rem; color: #888; }
+
+    .hidden { display: none !important; }
+
+    .btn {
+      background: var(--primary-color); color: white; border: none;
+      padding: 14px 28px; font-size: 1.1rem; border-radius: 50px;
+      cursor: pointer; font-weight: bold;
+      box-shadow: 0 4px 15px rgba(255, 117, 151, 0.4);
+      transition: all 0.2s ease; margin-top: 15px; text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 117, 151, 0.6); }
+
+    /* 背景圖片雨 */
+    #rain-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
+    .rain-drop { position: absolute; top: -120px; pointer-events: none; animation: fall linear infinite; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.08)); }
     @keyframes fall {
-      0% {
-        transform: translateY(0px) rotate(0deg);
-        opacity: 0.9;
-      }
-      100% {
-        transform: translateY(115vh) rotate(360deg);
-        opacity: 0.3;
-      }
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.9; }
+      100% { transform: translateY(115vh) rotate(360deg); opacity: 0.3; }
     }
   </style>
 </head>
 <body>
 
-  <!-- 頂部生日橫幅 -->
-  <img src="banner.png" alt="Happy Birthday Banner" class="top-banner">
+  <!-- 滿版頂部橫幅 -->
+  <img src="banner.png" alt="Banner" class="top-banner">
+
+  <!-- Limbus 風格 5 軌跑馬燈字串 -->
+  <div class="marquee-container">
+    <div class="marquee-track track-1">
+      <span>生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp; 生日快樂~~ &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    </div>
+    <div class="marquee-track track-2">
+      <span>最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp; 最後一個半小時? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    </div>
+    <div class="marquee-track track-3">
+      <span>好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp; 好期待... &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    </div>
+    <div class="marquee-track track-4">
+      <span>會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp; 會是什麼呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    </div>
+    <div class="marquee-track track-5">
+      <span>還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span>還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp; 還要多久呢? &nbsp;&nbsp;&nbsp;&nbsp;</span>
+    </div>
+  </div>
 
   <!-- 兩側氣球 -->
   <img src="balloon1.png" class="balloon-deco b-left-1" alt="Balloon 1">
@@ -241,11 +211,10 @@
   <img src="balloon4.png" class="balloon-deco b-right-1" alt="Balloon 4">
   <img src="balloon5.png" class="balloon-deco b-right-2" alt="Balloon 5">
 
-  <!-- 背景圖片雨 -->
   <div id="rain-container"></div>
 
+  <!-- 主卡片 -->
   <div class="container">
-    <!-- 角落禮物盒 -->
     <img src="gift1.png" class="gift-deco gift-1" alt="Gift 1">
     <img src="gift2.png" class="gift-deco gift-2" alt="Gift 2">
     <img src="gift3.png" class="gift-deco gift-3" alt="Gift 3">
@@ -253,7 +222,6 @@
     <h1>🎉 祈Iruni 生日倒數 🎂</h1>
     <p class="subtitle" id="status-text">距離祈iruni的生日還有：</p>
 
-    <!-- 倒數計時區 -->
     <div id="countdown-view">
       <div class="timer-box">
         <div class="time-card"><span id="days">00</span><div class="label">天</div></div>
@@ -265,36 +233,14 @@
 
     <!-- 解鎖按鈕區 -->
     <div id="unlock-section" class="hidden">
-      <p style="color: #e63946; font-weight: bold; margin-bottom: 5px;">🎉 驚喜區域已解鎖！</p>
-      <button class="btn" id="start-btn" onclick="startVideo()">🎬 點擊觀看特別驚喜</button>
-    </div>
-
-    <!-- 影片播放區 -->
-    <div id="video-view" class="hidden">
-      <video id="birthday-video" controls playsinline preload="auto">
-        <source src="2026.mp4" type="video/mp4">
-        您的瀏覽器不支援影片播放。
-      </video>
-    </div>
-
-    <!-- 祝福卡片與大蛋糕區 -->
-    <div id="card-view" class="hidden">
-      <div id="cake-box" class="cake-container">
-        <img src="cake.png" alt="Birthday Cake" class="cake-img">
-      </div>
-      <h2 style="color: var(--primary-color); margin-top: 10px; margin-bottom: 10px;">💖 生日快樂 祈iruni！</h2>
-      <p style="line-height: 1.6; text-align: left; background: #fff6f8; padding: 15px; border-radius: 12px;">
-        親愛的魯尼：<br><br>
-        生日快樂！又過了一年，身為理科腦不太擅長說感性的話，好像也只能說一句生日快樂。不過......希望尼明年也可以打開這個網站！
-        雖然說是這樣但是，這一年我們一起經歷許多好玩的事，有FF有漫博，當然明年也要一起過生日，也要注意身體要好好吃飯，注意身體
-        尼是我們最棒、最可愛、最療育、最完美的柯基!!!(要會考了沒辦法做到很精良只能每天抽空做動畫，希望魯尼能助我會考模考加油)
-      </p>
+      <p style="color: #e63946; font-weight: bold; margin-top: 10px;">🎉 生日小驚喜已開放！</p>
+      <a href="game.html" class="btn">🎮 點擊前往農場小遊戲</a>
     </div>
   </div>
 
   <script>
-    const BIRTHDAY_DATE = new Date("2026-08-25T03:10:05").getTime();//2026-09-28T00:00:00//
-    const UNLOCK_BEFORE_MS = 90 * 60 * 1000; 
+    const BIRTHDAY_DATE = new Date("2026-09-29T00:00:00").getTime();
+    const UNLOCK_BEFORE_MS = 90 * 60 * 1000; // 倒數最後 1.5 小時
 
     const daysEl = document.getElementById('days');
     const hoursEl = document.getElementById('hours');
@@ -302,20 +248,17 @@
     const secondsEl = document.getElementById('seconds');
     const unlockSection = document.getElementById('unlock-section');
     const statusText = document.getElementById('status-text');
-    const video = document.getElementById('birthday-video');
-    const cakeBox = document.getElementById('cake-box');
 
     function updateCountdown() {
       const now = new Date().getTime();
       const distance = BIRTHDAY_DATE - now;
 
-      if (distance <= UNLOCK_BEFORE_MS && distance > 0) {
+      if (distance <= UNLOCK_BEFORE_MS) {
         unlockSection.classList.remove('hidden');
       }
 
       if (distance <= 0) {
         statusText.innerText = "🎂 今天是祈iruni的生日！";
-        unlockSection.classList.remove('hidden');
       }
 
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -332,42 +275,18 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
 
-    function startVideo() {
-      unlockSection.classList.add('hidden');
-      document.getElementById('video-view').classList.remove('hidden');
-
-      video.play().catch(error => {
-        console.log("需要尼點擊來播放");
-      });
-    }
-
-    video.addEventListener('ended', () => {
-      document.getElementById('video-view').classList.add('hidden');
-      document.getElementById('card-view').classList.remove('hidden');
-      cakeBox.classList.add('float-up');
-    });
-
-    // 動態產生圖片雨 (尺寸調大為 60px ~ 110px)
+    // 圖片雨生成
     const rainContainer = document.getElementById('rain-container');
-    const TOTAL_DROPS = 25;
-
-    for (let i = 0; i < TOTAL_DROPS; i++) {
+    for (let i = 0; i < 25; i++) {
       const img = document.createElement('img');
-      const randomImgNum = Math.floor(Math.random() * 6) + 1;
-      img.src = `iruni${randomImgNum}.png`;
+      img.src = `iruni${Math.floor(Math.random() * 6) + 1}.png`;
       img.classList.add('rain-drop');
-
-      const leftPos = Math.random() * 100;
-      const size = Math.random() * 50 + 60; // 放大為 60px ~ 110px
-      const duration = Math.random() * 4 + 3.5;
-      const delay = Math.random() * 5;
-
-      img.style.left = `${leftPos}vw`;
+      const size = Math.random() * 50 + 60;
+      img.style.left = `${Math.random() * 100}vw`;
       img.style.width = `${size}px`;
       img.style.height = `${size}px`;
-      img.style.animationDuration = `${duration}s`;
-      img.style.animationDelay = `${delay}s`;
-
+      img.style.animationDuration = `${Math.random() * 4 + 3.5}s`;
+      img.style.animationDelay = `${Math.random() * 5}s`;
       rainContainer.appendChild(img);
     }
   </script>
