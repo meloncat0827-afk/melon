@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>祈Iruni的偶像救贖之旅 - 扭曲森林篇</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background-color: #0b131d; color: #ffffff;
+            font-family: "Courier New", "Microsoft JhengHei", monospace;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100vw; height: 100vh;
+            background-color: #111c2e;
+            display: flex; flex-direction: column;
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 對話式劇情 overlay 樣式 --- */
+        .story-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(7, 12, 20, 0.95);
+            z-index: 500;
+            display: flex; flex-direction: column;
+            justify-content: flex-end; align-items: center;
+            padding: 40px; box-sizing: border-box;
+            cursor: pointer;
+        }
+        .story-dialog-box {
+            width: 100%; max-width: 800px; height: 180px;
+            border: 2px dashed #a4161a; border-radius: 8px;
+            background: rgba(13, 27, 42, 0.95);
+            padding: 20px 25px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            box-shadow: 0 0 20px rgba(164, 22, 26, 0.4);
+            margin-bottom: 20px;
+            transition: all 0.5s ease;
+        }
+        .story-text {
+            color: #ffb3b3;
+            font-size: 18px; line-height: 1.6;
+            font-weight: bold;
+            white-space: pre-wrap;
+            text-shadow: 0 0 5px rgba(255, 179, 179, 0.4);
+            min-height: 80px;
+        }
+        .story-hint {
+            align-self: flex-end;
+            font-size: 12px; color: #e06d6d;
+            animation: blink 1.2s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .music-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 100;
+            background: rgba(27, 38, 59, 0.85); color: #ffb3b3;
+            border: 1px dashed #a4161a; border-radius: 6px;
+            padding: 6px 12px; font-size: 12px; font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+        }
+        .music-btn:hover { background: #3a1114; color: #fff; }
+
+        .battle-screen {
+            flex: 1; display: flex; justify-content: space-around; align-items: center;
+            padding: 20px 60px;
+            background: url('bg.png') center/cover no-repeat;
+            position: relative; overflow: hidden;
+            transition: background 0.5s ease;
+        }
+        .battle-screen.bg-stage-2 {
+            background: url('bg2.png') center/cover no-repeat;
+        }
+
+        .battle-screen::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 19, 29, 0.5); pointer-events: none; z-index: 1;
+        }
+
+        /* --- 背景單字逐字淡入樣式 --- */
+        .ticker-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1; overflow: hidden; opacity: 0.25;
+        }
+        .ticker-word {
+            position: absolute; font-weight: 900;
+            color: #a4161a; text-shadow: 0 0 8px rgba(164, 22, 26, 0.8);
+            font-size: 20px; user-select: none;
+            animation: fadeInOut 3s infinite ease-in-out;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.8); }
+        }
+        body.stage-2-theme .ticker-word {
+            color: #48cae4; text-shadow: 0 0 8px rgba(72, 202, 228, 0.8);
+        }
+        
+        .character { width: 220px; text-align: center; position: relative; z-index: 2; }
+        .minions-zone { display: flex; flex-direction: column; gap: 15px; z-index: 2; }
+        .minion-card {
+            width: 130px; background: rgba(27, 38, 59, 0.85); border: 2px dashed #a4161a;
+            padding: 8px; border-radius: 6px; text-align: center; cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .minion-card:hover { transform: scale(1.05); border-color: #ffb3b3; }
+        .minion-card.selected { border: 3px solid #ffb703; box-shadow: 0 0 10px #ffb703; }
+        
+        .avatar {
+            width: 90px; height: 90px;
+            background-color: #1b263b; border-radius: 50%;
+            margin: 0 auto 8px auto;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; border: 4px dashed #a4161a;
+            transition: transform 0.9s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.5s; position: relative;
+            box-shadow: 0 0 15px rgba(164, 22, 26, 0.4);
+        }
+        .player-avatar { border-color: #d90429; background-color: #1d3557; box-shadow: 0 0 15px rgba(217, 4, 41, 0.4); }
+        .boss-avatar { border-color: #e63946; background-color: #0b131d; }
+
+        .buff-container {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; z-index: 10; width: 260px;
+        }
+        .buff-tag {
+            font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: bold;
+            box-shadow: 0 0 6px rgba(255,255,255,0.3); display: none; white-space: nowrap; margin-bottom: 2px;
+        }
+        .tag-blessing { background: #660708; color: white; }
+        .tag-harden { background: #6c757d; color: #f8f9fa; border: 1px solid #adb5bd; }
+        .tag-speed { background: #ffb703; color: #000; }
+        .tag-def { background: #880e4f; color: white; }
+        .tag-taunt { background: #f72585; color: white; }
+        .tag-poison-weapon { background: #560bad; color: white; }
+        .tag-poison { background: #52b788; color: #081c15; }
+        .tag-grief { background: #a4161a; color: #fff; }
+        .tag-pressure { background: #e63946; color: white; }
+        .tag-charge { background: #d90429; color: #ffb703; border: 1px solid #ffb703; animation: pulse 0.8s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.6; }
+        }
+
+        .avatar.attack-dash { transform: translateX(380px) scale(1.2); }
+        .avatar.hit-shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-15px) rotate(-5deg); }
+            50% { transform: translateX(15px) rotate(5deg); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .feedback-text {
+            position: absolute; top: -20px; left: 50%;
+            transform: translateX(-50%); font-size: 26px; font-weight: 900;
+            font-style: italic; pointer-events: none; z-index: 99; white-space: nowrap;
+            animation: popUp 0.8s ease-out forwards;
+        }
+        @keyframes popUp {
+            0% { opacity: 0; transform: translate(-50%, 10px) scale(0.5); }
+            30% { opacity: 1; transform: translate(-50%, -25px) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -55px) scale(1); }
+        }
+
+        .fb-perfect { color: #ffb703; text-shadow: 0 0 10px #fb8500, 0 0 20px #d00000; }
+        .fb-excellent { color: #e63946; text-shadow: 0 0 10px #a4161a; }
+        .fb-great { color: #ffb3b3; text-shadow: 0 0 10px #660708; }
+        .fb-bad { color: #e63946; text-shadow: 0 0 10px #d90429; }
+        .fb-poison { color: #52b788; text-shadow: 0 0 10px #1b4332; }
+        .fb-kill { color: #ff0055; text-shadow: 0 0 15px #ff0000; font-size: 36px; }
+
+        .stat-group { text-align: left; margin-top: 6px; font-size: 13px; background: rgba(13, 27, 42, 0.85); padding: 8px; border-radius: 6px; border: 1px solid #3a1114; transition: border-color 0.5s; }
+        .stat-label { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .hp-bar-container, .prayer-bar-container {
+            width: 100%; background-color: #0b131d; height: 14px;
+            border-radius: 4px; overflow: hidden; border: 1px solid #3a1114; margin-bottom: 6px;
+            transition: border-color 0.5s;
+        }
+        .hp-bar { height: 100%; width: 100%; background-color: #e06d6d; transition: width 0.3s; }
+        .boss-hp { background-color: #e63946; }
+        .minion-hp { background-color: #fca311; }
+        .prayer-bar { height: 100%; width: 0%; background-color: #a4161a; transition: width 0.3s, background-color 0.5s; }
+
+        .qte-bar-overlay {
+            position: absolute; bottom: 230px; left: 50%;
+            transform: translateX(-50%); width: 380px; background: rgba(13, 27, 42, 0.95);
+            border: 2px dashed #a4161a; border-radius: 12px; padding: 10px;
+            text-align: center; display: none; z-index: 100;
+            transition: border-color 0.5s;
+        }
+        .qte-hint { font-size: 13px; color: #ffb3b3; font-weight: bold; margin-bottom: 6px; transition: color 0.5s; }
+        .qte-bar {
+            width: 100%; height: 16px; background-color: #0b131d;
+            border-radius: 6px; position: relative; overflow: hidden; border: 1px solid #a4161a;
+            transition: border-color 0.5s;
+        }
+        .qte-target { position: absolute; left: 65%; width: 22%; height: 100%; background-color: #3a1114; transition: background-color 0.5s; }
+        .qte-perfect { position: absolute; left: 72%; width: 8%; height: 100%; background-color: #a4161a; z-index: 2; transition: background-color 0.5s; }
+        .qte-cursor { position: absolute; left: 0%; width: 4px; height: 100%; background-color: #fff; z-index: 3; }
+
+        .control-panel { height: 220px; display: flex; background-color: #070c14; border-top: 2px dashed #3a1114; z-index: 5; transition: border-color 0.5s; }
+        .menu-section {
+            width: 45%; padding: 12px; display: grid;
+            grid-template-columns: repeat(2, 1fr); gap: 8px; border-right: 2px dashed #3a1114;
+            transition: border-color 0.5s;
+        }
+        .menu-btn {
+            background-color: #111c2e; color: #ffdede; border: 1px dashed #a4161a; border-radius: 4px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6px;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover:not(:disabled) { background-color: #3a1114; color: #fff; }
+        .menu-btn:disabled { background-color: #0b131d; color: #4a2829; border-color: #1b1213; cursor: not-allowed; }
+        .btn-other { grid-column: span 2; }
+        .btn-sub { font-size: 11px; color: #e06d6d; margin-top: 2px; transition: color 0.5s; }
+
+        .log-section {
+            flex: 1; padding: 14px; background-color: #05080c;
+            overflow-y: auto; font-size: 13px; line-height: 1.6; color: #e2e8f0;
+        }
+        .log-entry { margin-bottom: 4px; }
+        .log-player { color: #ffb3b3; }
+        .log-boss { color: #e63946; }
+        .log-system { color: #ffb703; }
+        .log-prayer { color: #a4161a; }
+        .log-qte { color: #f72585; font-weight: bold; }
+        .log-poison { color: #52b788; }
+        .log-danger { color: #ff3333; font-weight: bold; }
+        
+        .target-selector {
+            font-size: 12px; color: #ffb3b3; margin-bottom: 4px; grid-column: span 2; text-align: center;
+        }
+
+        /* --- 二階段淡藍色佈景主題樣式 --- */
+        body.stage-2-theme .story-dialog-box {
+            border-color: #48cae4;
+            box-shadow: 0 0 20px rgba(72, 202, 228, 0.4);
+        }
+        body.stage-2-theme .story-text { color: #ade8f4; text-shadow: 0 0 5px rgba(173, 232, 244, 0.4); }
+        body.stage-2-theme .story-hint { color: #90e0ef; }
+        body.stage-2-theme .music-btn { border-color: #48cae4; color: #ade8f4; }
+        body.stage-2-theme .music-btn:hover { background: #0077b6; color: #fff; }
+        body.stage-2-theme .minion-card { border-color: #48cae4; }
+        body.stage-2-theme .minion-card:hover { border-color: #ade8f4; }
+        body.stage-2-theme .avatar { border-color: #48cae4; box-shadow: 0 0 15px rgba(72, 202, 228, 0.4); }
+        body.stage-2-theme .player-avatar { border-color: #00b4d8; background-color: #03045e; box-shadow: 0 0 15px rgba(0, 180, 216, 0.4); }
+        body.stage-2-theme .stat-group { border-color: #0077b6; }
+        body.stage-2-theme .hp-bar-container, body.stage-2-theme .prayer-bar-container { border-color: #0077b6; }
+        body.stage-2-theme .prayer-bar { background-color: #00b4d8; }
+        body.stage-2-theme .qte-bar-overlay { border-color: #48cae4; }
+        body.stage-2-theme .qte-hint { color: #ade8f4; }
+        body.stage-2-theme .qte-bar { border-color: #48cae4; }
+        body.stage-2-theme .qte-target { background-color: #0077b6; }
+        body.stage-2-theme .qte-perfect { background-color: #48cae4; }
+        body.stage-2-theme .control-panel { border-top-color: #0077b6; }
+        body.stage-2-theme .menu-section { border-right-color: #0077b6; }
+        body.stage-2-theme .menu-btn { border-color: #48cae4; color: #ade8f4; }
+        body.stage-2-theme .menu-btn:hover:not(:disabled) { background-color: #0077b6; color: #fff; }
+        body.stage-2-theme .menu-btn:disabled { border-color: #1a3a4b; color: #335566; }
+        body.stage-2-theme .btn-sub { color: #90e0ef; }
+        body.stage-2-theme .target-selector { color: #ade8f4; }
+        body.stage-2-theme .log-prayer { color: #48cae4; }
+    </style>
+</head>
+<body>
+
+<audio id="bgm" src="realmusic.mp3" loop></audio>
+
+<!-- 對話框劇情 Overlay -->
+<div class="story-screen" id="storyScreen" onclick="handleDialogueClick()">
+    <div class="story-dialog-box">
+        <div class="story-text" id="storyText"></div>
+        <div class="story-hint">按下 [空白鍵] 或點擊推進對話 ▶</div>
+    </div>
+</div>
+
+<div class="game-container">
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()">🎵 音樂: 關</button>
+
+    <div class="qte-bar-overlay" id="qteOverlay">
+        <div class="qte-hint" id="qteHint">按下 [空白鍵] 淨化森林</div>
+        <div class="qte-bar">
+            <div class="qte-target" id="qteTarget"></div>
+            <div class="qte-perfect" id="qtePerfect"></div>
+            <div class="qte-cursor" id="qteCursor"></div>
+        </div>
+    </div>
+
+    <div class="battle-screen" id="battleScreen">
+        <div class="ticker-layer" id="tickerLayer"></div>
+
+        <div class="character" id="playerChar">
+            <div class="buff-container">
+                <div class="buff-tag tag-blessing" id="blessingTag">天使加護 (3)</div>
+                <div class="buff-tag tag-def" id="defTag">🛡️ 防禦準備</div>
+                <div class="buff-tag tag-harden" id="hardenTag">🗿 硬化中</div>
+                <div class="buff-tag tag-speed" id="speedTag">⚡ 速度 (2層)</div>
+                <div class="buff-tag tag-taunt" id="tauntTag">😏 腹黑嘲諷</div>
+                <div class="buff-tag tag-poison-weapon" id="poisonWeaponTag">🧪 甜美陷阱</div>
+                <div class="buff-tag tag-grief" id="griefTag">😭 悲傷 (3)</div>
+                <div class="buff-tag tag-pressure" id="pressureTag">🤯 壓力 (0層)</div>
+            </div>
+            <div class="avatar player-avatar" id="playerAvatar">🎤</div>
+            <div><strong>祈Iruni</strong></div>
+            <div class="stat-group">
+                <div class="stat-label"><span>哈士祈信仰</span><span><span id="playerHpText">100</span> / 100</span></div>
+                <div class="hp-bar-container"><div id="playerHpBar" class="hp-bar"></div></div>
+                <div class="stat-label"><span>希望之光</span><span><span id="playerPrayerText">0.0</span> / 2.0</span></div>
+                <div class="prayer-bar-container"><div id="playerPrayerBar" class="prayer-bar"></div></div>
+            </div>
+        </div>
+
+        <div class="minions-zone" id="minionsZone"></div>
+
+        <div class="character" id="bossChar">
+            <div class="buff-container">
+                <div class="buff-tag tag-poison" id="bossPoisonTag">☣️ 中毒 (3)</div>
+                <div class="buff-tag tag-charge" id="bossChargeTag">💀 苦痛蓄力中!</div>
+            </div>
+            <div class="avatar boss-avatar" id="bossAvatar">👁️</div>
+            <div><strong>噩夢陰影</strong></div>
+            <div class="stat-group">
+                <div class="stat-label"><span>心靈陰影</span><span><span id="bossHpText">300</span> / 300</span></div>
+                <div class="hp-bar-container"><div id="bossHpBar" class="hp-bar boss-hp"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="menu-section" id="menuSection"></div>
+        <div class="log-section" id="battleLog">
+            <div class="log-entry log-system">🌲 祈Iruni 踏入了被黑暗塗鴉扭曲的迷失森林... 準備好用歌聲療癒一切！</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let storyLines = [];
+    let currentLineIndex = 0;
+    let isStoryActive = true;
+    let isTyping = false;
+    let currentTypingTimer = null;
+    let currentFullText = "";
+    let storyMode = 'intro';
+
+    let deathCount = 0;
+    let bossMaxHpBase = 300;
+    let bossAtkMultiplier = 1.0;
+
+    function typeWriter(text, elementId, speed = 40, onComplete) {
+        const el = document.getElementById(elementId);
+        el.innerText = "";
+        let i = 0;
+        isTyping = true;
+        currentFullText = text;
+
+        function type() {
+            if (i < text.length) {
+                el.innerText += text.charAt(i);
+                i++;
+                currentTypingTimer = setTimeout(type, speed);
+            } else {
+                isTyping = false;
+                if (onComplete) onComplete();
+            }
+        }
+        type();
+    }
+
+    function handleDialogueClick() {
+        if (!isStoryActive) return;
+        if (isTyping) {
+            clearTimeout(currentTypingTimer);
+            document.getElementById('storyText').innerText = currentFullText;
+            isTyping = false;
+            return;
+        }
+        currentLineIndex++;
+        showCurrentLine();
+    }
+
+    async function loadStoryText() {
+        let textContent = await fetch('story.txt').then(res => res.ok ? res.text() : null).catch(() => null);
+        if (textContent) {
+            storyLines = textContent.split('\n').filter(line => line.trim() !== '');
+        } else {
+            storyLines = getFallbackIntroStory();
+        }
+        startStory('intro', storyLines);
+    }
+
+    async function loadDeathStoryText() {
+        deathCount++;
+        
+        if (deathCount >= 3) {
+            const bgmAudio = document.getElementById('bgm');
+            if (bgmAudio) {
+                bgmAudio.src = 'music2.mp3';
+                if (isMusicPlaying) {
+                    bgmAudio.play().catch(err => console.log('音樂自動播放受阻', err));
+                }
+            }
+            const battleScreen = document.getElementById('battleScreen');
+            if (battleScreen) {
+                battleScreen.classList.add('bg-stage-2');
+            }
+            document.body.classList.add('stage-2-theme');
+
+            addLog(`🔄 【階段轉變】死亡次數已達 3 次！背景切換為 bg2.png，音樂切換為 music2.mp3！選單佈景轉為淡藍色！`, 'log-system');
+
+            let story2Content = await fetch('story2.txt').then(res => res.ok ? res.text() : null).catch(() => null);
+            if (story2Content) {
+                return story2Content.split('\n').filter(line => line.trim() !== '');
+            }
+        }
+
+        let deadContent = await fetch('dead.txt').then(res => res.ok ? res.text() : null).catch(() => null);
+        if (deadContent) {
+            return deadContent.split('\n').filter(line => line.trim() !== '');
+        }
+
+        return getFallbackDeathStory();
+    }
+
+    function getFallbackIntroStory() {
+        return [
+            "數位虛擬的邊界開始崩塌，深藍色的資料流如星海般閃爍...",
+            "祈Iruni 睜開雙眼，發現自己身處在一座被扭曲代碼交織而成的迷失森林中。",
+            "—這裏是哪裏？直播訊號完全被切斷了，這樣要怎麼和哈士祈們見面啦……",
+            "四周的黑暗中，無數名為「噩夢」的巨大陰影正帶著冰冷的惡意悄然逼近。",
+            "身為天使的她輕輕勾起一抹腹黑又甜美的微笑：「竟然敢打擾本偶像的直播，看來你們這群陰影是想嚐嚐懲罰囉！」"
+        ];
+    }
+
+    function getFallbackDeathStory() {
+        return [
+            "視線逐漸模糊，直播間的畫面最終定格在滿屏的雪花雜訊中……",
+            "—嗚，肉桂捲和司康還沒吃夠呢，居然在這裡翻車了嗎……",
+            `遠處的黑暗深處，忽然亮起了一點熟悉而溫暖的螢光（第 ${deathCount} 次倒下）。`,
+            "「祈Iruni，不要放棄！我們還要聽妳唱歌、陪妳一起走到最後！」",
+            "這股溫暖的粉絲信仰之力重新注入胸口，讓天使的羽翼再次綻放光芒！"
+        ];
+    }
+
+    async function startStory(mode, lines) {
+        storyMode = mode;
+        if (mode === 'death') {
+            storyLines = await loadDeathStoryText();
+        } else {
+            storyLines = lines;
+        }
+        currentLineIndex = 0;
+        isStoryActive = true;
+        document.getElementById('storyScreen').style.display = 'flex';
+        showCurrentLine();
+    }
+
+    function showCurrentLine() {
+        if (currentLineIndex < storyLines.length) {
+            typeWriter(storyLines[currentLineIndex], 'storyText');
+        } else {
+            finishStory();
+        }
+    }
+
+    function finishStory() {
+        isStoryActive = false;
+        document.getElementById('storyScreen').style.display = 'none';
+
+        if (storyMode === 'intro') {
+            if (!isMusicPlaying) toggleMusic();
+        } else if (storyMode === 'death') {
+            applyBossStatReduction();
+            resetBattle();
+        }
+    }
+
+    function applyBossStatReduction() {
+        bossMaxHpBase = Math.max(90, Math.floor(300 * Math.pow(0.9, deathCount)));
+        bossAtkMultiplier = Math.max(0.3, Math.pow(0.9, deathCount));
+        addLog(`📉 【噩夢削弱】哈士祈們的呼喚削弱了魔王！最大血量降至 ${bossMaxHpBase}，傷害倍率降至 ${Math.round(bossAtkMultiplier*100)}%！`, 'log-system');
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (isStoryActive && e.code === 'Space') {
+            e.preventDefault();
+            handleDialogueClick();
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        loadStoryText();
+    });
+
+    let player = { 
+        hp: 100, maxHp: 100, 
+        prayer: 0.0, maxPrayer: 2.0, 
+        defenseMode: null, 
+        blessingTurns: 0,
+        isHardenedNextTurn: false,
+        isHardenedActive: false,
+        speedStacks: 0,
+        speedActionsLeft: 0,
+        isTaunting: false,
+        isWeaponPoisoned: false,
+        griefTurns: 0,
+        pressureStacks: 0
+    };
+    let boss = { 
+        hp: 300, maxHp: 300,
+        poisonTurns: 0,
+        isChargingPain: false
+    };
+    let minions = []; 
+    let selectedTarget = 'boss';
+    
+    let isGameOver = false;
+    let menuState = 'main';
+    let isActing = false;
+    
+    let qteActive = false;
+    let qtePos = 0;
+    let qteSpeed = 1.2; // 稍微調慢預設 QTE 速度以優化體驗
+    let currentQteTargetStart = 65;
+    let currentQtePerfectStart = 72;
+
+    const bgm = document.getElementById('bgm');
+    const musicBtn = document.getElementById('musicBtn');
+    let isMusicPlaying = false;
+
+    function toggleMusic() {
+        if (isMusicPlaying) {
+            bgm.pause();
+            musicBtn.innerText = '🎵 音樂: 關';
+            isMusicPlaying = false;
+        } else {
+            bgm.play().then(() => {
+                musicBtn.innerText = '🎵 音樂: 開';
+                isMusicPlaying = true;
+            }).catch(err => {
+                addLog('⚠️ 瀏覽器限制自動播放，請點擊音樂按鈕。', 'system');
+            });
+        }
+    }
+
+    const tickerWords = ["祈Iruni", "哈士祈", "深藍色", "天使", "肉桂捲", "司康", "偶像", "腹黑", "療癒", "直播", "代碼", "森林", "信仰", "希望"];
+
+    function createTickers() {
+        const layer = document.getElementById('tickerLayer');
+        layer.innerHTML = '';
+        
+        // 隨機在畫面不同位置浮現單個詞彙
+        setInterval(() => {
+            if (layer.childElementCount > 15) return;
+            
+            let el = document.createElement('div');
+            el.className = 'ticker-word';
+            el.innerText = tickerWords[Math.floor(Math.random() * tickerWords.length)];
+            
+            el.style.top = Math.random() * 85 + '%';
+            el.style.left = Math.random() * 85 + '%';
+            
+            let duration = Math.random() * 2 + 2;
+            el.style.animationDuration = duration + 's';
+            
+            layer.appendChild(el);
+            
+            setTimeout(() => {
+                el.remove();
+            }, duration * 1000);
+        }, 500);
+    }
+
+    function resetBattle() {
+        player.hp = player.maxHp;
+        player.prayer = 0;
+        player.defenseMode = null;
+        player.blessingTurns = 0;
+        player.isHardenedNextTurn = false;
+        player.isHardenedActive = false;
+        player.speedStacks = 0;
+        player.speedActionsLeft = 0;
+        player.isTaunting = false;
+        player.isWeaponPoisoned = false;
+        player.griefTurns = 0;
+        player.pressureStacks = 0;
+
+        boss.maxHp = bossMaxHpBase;
+        boss.hp = bossMaxHpBase;
+        boss.poisonTurns = 0;
+        boss.isChargingPain = false;
+
+        minions = [];
+        selectedTarget = 'boss';
+        isGameOver = false;
+        isActing = false;
+        menuState = 'main';
+
+        updateDisplay();
+        addLog(`⚔️ 戰鬥重新開始！「噩夢陰影」當前生命值：${boss.hp}`, 'system');
+    }
+
+    function triggerDeathSequence() {
+        isGameOver = true;
+        isActing = true;
+        renderMenu();
+        setTimeout(() => {
+            startStory('death');
+        }, 1000);
+    }
+
+    function getTargetName(targetId) {
+        if (targetId === 'boss') return '噩夢陰影 (BOSS)';
+        let m = minions.find(item => item.id === targetId);
+        return m ? m.name : '夢魘造物';
+    }
+
+    function updateDisplay() {
+        document.getElementById('playerHpText').innerText = player.hp;
+        document.getElementById('playerHpBar').style.width = (player.hp / player.maxHp) * 100 + '%';
+        document.getElementById('playerPrayerText').innerText = player.prayer.toFixed(2);
+        document.getElementById('playerPrayerBar').style.width = (player.prayer / player.maxPrayer) * 100 + '%';
+        document.getElementById('bossHpText').innerText = boss.hp;
+        document.getElementById('bossHpBar').style.width = (boss.hp / boss.maxHp) * 100 + '%';
+
+        const bTag = document.getElementById('blessingTag');
+        bTag.style.display = player.blessingTurns > 0 ? 'block' : 'none';
+        if (player.blessingTurns > 0) bTag.innerText = `天使加護 (${player.blessingTurns})`;
+
+        const dTag = document.getElementById('defTag');
+        if (player.defenseMode) {
+            let modeName = player.defenseMode === 'block' ? '格擋' : (player.defenseMode === 'dodge' ? '閃避' : '反擊');
+            dTag.innerText = `🛡️ ${modeName}準備`;
+            dTag.style.display = 'block';
+        } else { dTag.style.display = 'none'; }
+
+        document.getElementById('hardenTag').style.display = (player.isHardenedActive || player.isHardenedNextTurn) ? 'block' : 'none';
+
+        const sTag = document.getElementById('speedTag');
+        sTag.style.display = player.speedStacks > 0 ? 'block' : 'none';
+        if (player.speedStacks > 0) sTag.innerText = `⚡ 速度 (${player.speedStacks}層)`;
+
+        document.getElementById('tauntTag').style.display = player.isTaunting ? 'block' : 'none';
+        document.getElementById('poisonWeaponTag').style.display = player.isWeaponPoisoned ? 'block' : 'none';
+
+        const gTag = document.getElementById('griefTag');
+        gTag.style.display = player.griefTurns > 0 ? 'block' : 'none';
+        if (player.griefTurns > 0) gTag.innerText = `😭 悲傷 (${player.griefTurns})`;
+
+        const pTag = document.getElementById('pressureTag');
+        pTag.style.display = player.pressureStacks > 0 ? 'block' : 'none';
+        if (player.pressureStacks > 0) pTag.innerText = `🤯 壓力 (${player.pressureStacks}層)`;
+
+        const bpTag = document.getElementById('bossPoisonTag');
+        bpTag.style.display = boss.poisonTurns > 0 ? 'block' : 'none';
+        if (boss.poisonTurns > 0) bpTag.innerText = `☣️ 中毒 (${boss.poisonTurns})`;
+
+        document.getElementById('bossChargeTag').style.display = boss.isChargingPain ? 'block' : 'none';
+
+        const mZone = document.getElementById('minionsZone');
+        mZone.innerHTML = '';
+        minions.forEach((m) => {
+            let mDiv = document.createElement('div');
+            mDiv.className = `minion-card ${selectedTarget === m.id ? 'selected' : ''}`;
+            mDiv.onclick = () => { selectedTarget = m.id; updateDisplay(); };
+            mDiv.innerHTML = `
+                <div style="font-size:20px;">👤</div>
+                <div style="font-size:11px; font-weight:bold; margin-bottom:3px;">${m.name}</div>
+                <div class="hp-bar-container"><div class="hp-bar minion-hp" style="width:${(m.hp/m.maxHp)*100}%"></div></div>
+                <div style="font-size:10px;">${m.hp}/${m.maxHp}</div>
+            `;
+            mZone.appendChild(mDiv);
+        });
+
+        renderMenu();
+    }
+
+    function renderMenu() {
+        const menuSection = document.getElementById('menuSection');
+        menuSection.innerHTML = '';
+        if (isGameOver || isActing) return;
+
+        let targetText = getTargetName(selectedTarget);
+
+        if (menuState === 'main') {
+            menuSection.innerHTML = `
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('axe'))">偶像麥克風<span class="btn-sub">攻擊招術 | 目標: ${targetText}</span></button>
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('defMenu'))">守備姿態<span class="btn-sub">3種天使防禦</span></button>
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('special'))">特殊技能<span class="btn-sub">祈願與加護</span></button>
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('item'))">療癒點心<span class="btn-sub">肉桂捲與藥水</span></button>
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('other'))">其他互動<span class="btn-sub">祈禱 / 腹黑嘲諷</span></button>
+                <button class="menu-btn" onclick="checkPlayerMentalThenAction(() => switchMenu('targetSelect'))">🎯 切換目標<span class="btn-sub">當前: ${targetText}</span></button>
+            `;
+        } else if (menuState === 'targetSelect') {
+            let options = `<div class="target-selector">選擇攻擊目標：</div>
+                <button class="menu-btn ${selectedTarget==='boss'?'btn-other':''}" onclick="selectedTarget='boss'; switchMenu('main');">噩夢陰影 (BOSS)</button>`;
+            minions.forEach((m) => {
+                options += `<button class="menu-btn" onclick="selectedTarget='${m.id}'; switchMenu('main');">${m.name}</button>`;
+            });
+            options += `<button class="menu-btn btn-other" onclick="switchMenu('main')">返回</button>`;
+            menuSection.innerHTML = options;
+        } else if (menuState === 'axe') {
+            menuSection.innerHTML = `
+                <button class="menu-btn" onclick="triggerAttack('normal')">甜美歌聲<span class="btn-sub">標準輸出/微量祈願</span></button>
+                <button class="menu-btn" onclick="triggerAttack('heavy')">偶像重音<span class="btn-sub">中等輸出/祈願</span></button>
+                <button class="menu-btn" onclick="triggerAttack('combo')">連音連打<span class="btn-sub">3連擊 QTE</span></button>
+                <button class="menu-btn" onclick="switchMenu('main')">返回<span class="btn-sub">回到主選單</span></button>
+            `;
+        } else if (menuState === 'defMenu') {
+            menuSection.innerHTML = `
+                <button class="menu-btn" onclick="selectDefense('block')">天使格擋<span class="btn-sub">QTE免傷/失敗減傷</span></button>
+                <button class="menu-btn" onclick="selectDefense('dodge')">極限閃避<span class="btn-sub">QTE免傷/失敗重傷</span></button>
+                <button class="menu-btn" onclick="selectDefense('counter')">腹黑反擊<span class="btn-sub">QTE免傷+反彈傷害</span></button>
+                <button class="menu-btn" onclick="switchMenu('main')">返回<span class="btn-sub">回到主選單</span></button>
+            `;
+        } else if (menuState === 'item') {
+            menuSection.innerHTML = `
+                <button class="menu-btn" onclick="playerAction('hpPotion')">肉桂捲/司康<span class="btn-sub">恢復 35 信仰</span></button>
+                <button class="menu-btn" onclick="playerAction('hardenPotion')">天使硬化<span class="btn-sub">下回無敵抵抗秒殺</span></button>
+                <button class="menu-btn" onclick="playerAction('speedPotion')">疾走速度<span class="btn-sub">獲得 2 層速度</span></button>
+                <button class="menu-btn" onclick="switchMenu('main')">返回<span class="btn-sub">回到主選單</span></button>
+            `;
+        } else if (menuState === 'special') {
+            let canPrayer = player.prayer >= 1.0;
+            menuSection.innerHTML = `
+                <button class="menu-btn" ${!canPrayer ? 'disabled' : ''} onclick="triggerAttack('prayerSkill')">偶像祈願彈<span class="btn-sub">1.0祈願 / 全體範圍傷害</span></button>
+                <button class="menu-btn" ${!canPrayer ? 'disabled' : ''} onclick="playerAction('blessing')">天使加護<span class="btn-sub">1.0祈願，減傷3回合</span></button>
+                <button class="menu-btn btn-other" onclick="switchMenu('main')">返回<span class="btn-sub">回到主選單</span></button>
+            `;
+        } else if (menuState === 'other') {
+            menuSection.innerHTML = `
+                <button class="menu-btn" onclick="playerAction('prayDirect')">哈士祈應援<span class="btn-sub">直接獲取 +0.40 祈願</span></button>
+                <button class="menu-btn" onclick="playerAction('taunt')">腹黑嘲諷<span class="btn-sub">QTE變慢，受傷+30%</span></button>
+                <button class="menu-btn" onclick="playerAction('poisonWeapon')">甜美陷阱<span class="btn-sub">下次擊中附加中毒</span></button>
+                <button class="menu-btn" onclick="switchMenu('main')">返回<span class="btn-sub">回到主選單</span></button>
+            `;
+        }
+    }
+
+    function switchMenu(state) { menuState = state; renderMenu(); }
+
+    function addLog(text, type = 'system') {
+        const logSection = document.getElementById('battleLog');
+        const entry = document.createElement('div');
+        entry.className = `log-entry log-${type}`;
+        entry.innerText = text;
+        logSection.appendChild(entry);
+        logSection.scrollTop = logSection.scrollHeight;
+    }
+
+    function showFeedback(targetContainerId, text, typeClass) {
+        const target = document.getElementById(targetContainerId);
+        if (!target) return;
+        const fb = document.createElement('div');
+        fb.className = `feedback-text ${typeClass}`;
+        fb.innerText = text;
+        target.appendChild(fb);
+        setTimeout(() => fb.remove(), 800);
+    }
+
+    function addPrayer(amount) {
+        let oldPrayer = player.prayer;
+        player.prayer = Math.min(player.maxPrayer, player.prayer + amount);
+        let actualGained = player.prayer - oldPrayer;
+        if (actualGained > 0) {
+            addLog(`✨ 哈士祈信仰共鳴上升 +${actualGained.toFixed(2)} (${player.prayer.toFixed(2)}/2.0)`, 'prayer');
+        }
+    }
+
+    function checkPlayerMentalThenAction(actionCallback) {
+        if (player.pressureStacks > 0) {
+            let stunChance = player.pressureStacks * 0.20;
+            if (Math.random() < stunChance) {
+                isActing = true;
+                renderMenu();
+                addLog(`🤯 壓力過大！祈Iruni腦袋當機，本回合無法行動！`, 'log-danger');
+                showFeedback('playerChar', '🤯 腦袋空白!', 'fb-bad');
+                setTimeout(bossTurn, 1000);
+                return;
+            }
+
+            let selfHitChance = player.pressureStacks * 0.15;
+            if (Math.random() < selfHitChance) {
+                let selfDmg = Math.floor(Math.random() * 5) + 5;
+                player.hp = Math.max(0, player.hp - selfDmg);
+                addLog(`🤯 壓力錯亂！祈Iruni分心不小心絆倒了，受到 ${selfDmg} 點傷害！`, 'log-danger');
+                showFeedback('playerChar', `💥 自傷 -${selfDmg}`, 'fb-bad');
+                if (player.hp <= 0) {
+                    addLog(`💀 祈Iruni體力不支倒下了...`, 'system');
+                    triggerDeathSequence();
+                    return;
+                }
+            }
+        }
+        actionCallback();
+    }
+
+    function showBottomQTE(modeHint, speed, callback) {
+        qteActive = true;
+        qtePos = 0;
+        qteSpeed = speed || 1.2;
+        
+        const overlay = document.getElementById('qteOverlay');
+        const hint = document.getElementById('qteHint');
+        const cursor = document.getElementById('qteCursor');
+        const targetEl = document.getElementById('qteTarget');
+        const perfectEl = document.getElementById('qtePerfect');
+
+        if (player.pressureStacks > 0) {
+            currentQteTargetStart = Math.floor(Math.random() * 70) + 5;
+            currentQtePerfectStart = currentQteTargetStart + 7;
+            hint.innerText = `🤯 [壓力影響] 節奏混亂! ` + modeHint;
+        } else {
+            currentQteTargetStart = 65;
+            currentQtePerfectStart = 72;
+            hint.innerText = modeHint;
+        }
+
+        targetEl.style.left = currentQteTargetStart + '%';
+        perfectEl.style.left = currentQtePerfectStart + '%';
+
+        overlay.style.display = 'block';
+
+        let qteAnimFrame = null;
+        function animateCursor() {
+            qtePos += qteSpeed;
+            if (qtePos > 100) qtePos = 0;
+            cursor.style.left = qtePos + '%';
+            if (qteActive) qteAnimFrame = requestAnimationFrame(animateCursor);
+        }
+        qteAnimFrame = requestAnimationFrame(animateCursor);
+
+        const handleKeyDown = (e) => {
+            if (!isStoryActive && e.code === 'Space' && qteActive) {
+                e.preventDefault();
+                qteActive = false;
+                cancelAnimationFrame(qteAnimFrame);
+                
+                let pStart = currentQtePerfectStart;
+                let tStart = currentQteTargetStart;
+
+                let res = 'MISS';
+                if (qtePos >= pStart + 2 && qtePos <= pStart + 6) res = 'PERFECT';
+                else if (qtePos >= pStart - 1 && qtePos <= pStart + 9) res = 'EXCELLENT';
+                else if (qtePos >= tStart + 2 && qtePos <= tStart + 20) res = 'GREAT';
+                else if (qtePos >= tStart - 3 && qtePos <= tStart + 25) res = 'GOOD';
+
+                overlay.style.display = 'none';
+                window.removeEventListener('keydown', handleKeyDown);
+                callback(res);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        setTimeout(() => {
+            if (qteActive) {
+                qteActive = false;
+                cancelAnimationFrame(qteAnimFrame);
+                overlay.style.display = 'none';
+                window.removeEventListener('keydown', handleKeyDown);
+                callback('MISS');
+            }
+        }, 2500);
+    }
+
+    function checkPoisonHit() {
+        if (player.isWeaponPoisoned) {
+            player.isWeaponPoisoned = false;
+            boss.poisonTurns = 3;
+            showFeedback('bossChar', '☣️ 甜美陷阱中毒!', 'fb-poison');
+            addLog(`🧪 甜美陷阱生效！噩夢陰影遭受甜點香氣感染（持續 3 回合）！`, 'log-poison');
+        }
+    }
+
+    function applySingleDamage(targetId, damage, isCrit = false) {
+        let label = isCrit ? `💥 暴擊 -${damage}` : `💖 -${damage}`;
+        let style = isCrit ? 'fb-perfect' : 'fb-great';
+
+        if (targetId === 'boss') {
+            boss.hp = Math.max(0, boss.hp - damage);
+            showFeedback('bossChar', label, style);
+            if (boss.hp <= 0) addLog(`🎉 「噩夢陰影」被祈Iruni的偶像歌聲完全淨化消散！`, 'system');
+        } else {
+            let mIndex = minions.findIndex(m => m.id === targetId);
+            if (mIndex !== -1) {
+                let m = minions[mIndex];
+                m.hp -= damage;
+                addLog(`✨ 對「${m.name}」造成 ${damage} 點淨化傷害！${isCrit ? '（暴擊！）' : ''}`, 'player');
+                if (m.hp <= 0) {
+                    addLog(`🌸 「${m.name}」已被偶像魅力瓦解！`, 'system');
+                    minions.splice(mIndex, 1);
+                    selectedTarget = 'boss';
+                }
+            } else {
+                boss.hp = Math.max(0, boss.hp - damage);
+            }
+        }
+    }
+
+    function completeActionAndContinue() {
+        if (player.pressureStacks > 0) {
+            player.pressureStacks--;
+            addLog(`🤯 祈Iruni深呼吸調整，壓力層數減少 1 層 (剩餘 ${player.pressureStacks} 層)`, 'system');
+        }
+
+        updateDisplay();
+        if (boss.hp <= 0) {
+            addLog(`🎉 勝利！祈Iruni成功擊退了噩夢，直播圓滿成功，粉絲們歡呼不斷！`, 'system');
+            isGameOver = true;
+            isActing = true;
+            renderMenu();
+            return;
+        }
+
+        if (player.speedActionsLeft > 0) {
+            player.speedActionsLeft--;
+            addLog(`⚡ 速度連續行動！可再次執行 1 次指令！`, 'player');
+            isActing = false;
+            updateDisplay();
+        } else {
+            setTimeout(bossTurn, 1000);
+        }
+    }
+
+    function selectDefense(mode) {
+        isActing = true;
+        renderMenu();
+
+        player.defenseMode = mode;
+        let modeName = mode === 'block' ? '天使格擋' : (mode === 'dodge' ? '極限閃避' : '腹黑反擊');
+        addLog(`🛡️ 祈Iruni切換為「${modeName}」姿態！`, 'player');
+        
+        menuState = 'main';
+        completeActionAndContinue();
+    }
+
+    function triggerAttack(attackType) {
+        isActing = true;
+        renderMenu();
+
+        player.defenseMode = null;
+
+        const pAvatar = document.getElementById('playerAvatar');
+        const bAvatar = document.getElementById('bossAvatar');
+
+        pAvatar.classList.add('attack-dash');
+
+        setTimeout(() => {
+            if (attackType === 'combo') {
+                runMultipleQTE(3, 1.5, 0, [], (results) => {
+                    setTimeout(() => {
+                        pAvatar.classList.remove('attack-dash');
+                        bAvatar.classList.add('hit-shake');
+                        let totalDmg = 0;
+                        results.forEach((qteRes) => {
+                            let dmg = Math.floor(Math.random() * 2) + 2;
+                            if (qteRes === 'PERFECT' || qteRes === 'EXCELLENT') dmg += 1;
+                            totalDmg += dmg;
+                        });
+
+                        applySingleDamage(selectedTarget, totalDmg);
+                        addLog(`祈Iruni完成 3 連音打擊！造成 ${totalDmg} 點傷害！`, 'player');
+                        addPrayer(totalDmg * 0.03);
+                        checkPoisonHit();
+                        finishTurn();
+                    }, 300);
+                });
+            } else {
+                let qteSpeedSetting = attackType === 'heavy' ? 1.8 : 1.2;
+                let hintText = attackType === 'heavy' ? '💥 偶像重音準備！按下 [空白鍵]' : '🎤 歌聲即將命中！按下 [空白鍵]';
+
+                showBottomQTE(hintText, qteSpeedSetting, (qteRes) => {
+                    setTimeout(() => {
+                        pAvatar.classList.remove('attack-dash');
+                        bAvatar.classList.add('hit-shake');
+
+                        if (attackType === 'heavy') {
+                            let baseDmg = 12;
+                            let bonus = qteRes === 'PERFECT' ? 8 : (qteRes === 'EXCELLENT' ? 5 : (qteRes === 'GREAT' ? 2 : 0));
+                            let isCrit = false;
+                            if (qteRes === 'PERFECT') showFeedback('bossChar', '💥 IDOL CRIT!', 'fb-perfect');
+                            let totalDmg = baseDmg + bonus;
+                            if (Math.random() < 0.25 || qteRes === 'PERFECT') {
+                                isCrit = true;
+                                totalDmg = Math.floor(totalDmg * 1.5);
+                            }
+                            applySingleDamage(selectedTarget, totalDmg, isCrit);
+                            addLog(`祈Iruni展現偶像爆發力，造成了 ${totalDmg} 點傷害！`, 'player');
+                            addPrayer(totalDmg * 0.03);
+
+                        } else if (attackType === 'normal') {
+                            let baseDmg = 6;
+                            let bonus = qteRes === 'PERFECT' ? 5 : (qteRes === 'EXCELLENT' ? 3 : (qteRes === 'GREAT' ? 1 : 0));
+                            if (qteRes === 'PERFECT') showFeedback('bossChar', '✨ PERFECT!', 'fb-perfect');
+                            let totalDmg = baseDmg + bonus;
+                            applySingleDamage(selectedTarget, totalDmg);
+                            addLog(`祈Iruni甜美哼唱，造成了 ${totalDmg} 點傷害！`, 'player');
+                            addPrayer(totalDmg * 0.03);
+
+                        } else if (attackType === 'prayerSkill') {
+                            player.prayer -= 1.0;
+                            let baseDmg = 16;
+                            let bonus = qteRes === 'PERFECT' ? 10 : (qteRes === 'EXCELLENT' ? 6 : 3);
+                            if (qteRes === 'PERFECT') showFeedback('bossChar', '🌟 ANGEL BEAM!', 'fb-perfect');
+                            let totalDmg = baseDmg + bonus;
+                            
+                            addLog(`✨ 發動「偶像祈願彈」！全體敵方遭受天使聖光範圍打擊！`, 'player');
+                            applySingleDamage('boss', totalDmg);
+                            for (let i = minions.length - 1; i >= 0; i--) {
+                                applySingleDamage(minions[i].id, totalDmg);
+                            }
+                        }
+
+                        checkPoisonHit();
+                        finishTurn();
+                    }, 300);
+                });
+            }
+        }, 450);
+
+        function finishTurn() {
+            setTimeout(() => {
+                pAvatar.classList.remove('attack-dash');
+                bAvatar.classList.remove('hit-shake');
+                menuState = 'main';
+                completeActionAndContinue();
+            }, 400);
+        }
+    }
+
+    function runMultipleQTE(count, speed, currentIdx, results, onComplete) {
+        if (currentIdx >= count) {
+            onComplete(results);
+            return;
+        }
+        showBottomQTE(`連打 [${currentIdx + 1}/${count}]！按下 [空白鍵]`, speed, (res) => {
+            results.push(res);
+            setTimeout(() => {
+                runMultipleQTE(count, speed, currentIdx + 1, results, onComplete);
+            }, 150);
+        });
+    }
+
+    function playerAction(action) {
+        if (isGameOver) return;
+        isActing = true;
+        renderMenu();
+
+        player.defenseMode = null;
+
+        if (action === 'hpPotion') {
+            player.hp = Math.min(player.maxHp, player.hp + 35);
+            addLog(`🥐 食用了美味肉桂捲與司康，恢復了 35 點信仰體力！`, 'player');
+            showFeedback('playerChar', '+35 體力', 'fb-excellent');
+
+        } else if (action === 'hardenPotion') {
+            player.isHardenedNextTurn = true;
+            addLog(`🗿 啟用天使硬化結界！下一回合絕對無敵，抵抗致命秒殺！`, 'system');
+            showFeedback('playerChar', '🗿 HARDENED', 'fb-great');
+
+        } else if (action === 'speedPotion') {
+            player.speedStacks = 2;
+            player.speedActionsLeft = 1;
+            addLog(`⚡ 啟動疾走模式！獲得 2 層速度加成！`, 'system');
+            showFeedback('playerChar', '⚡ SPEED UP x2', 'fb-perfect');
+
+        } else if (action === 'blessing') {
+            player.prayer -= 1.0;
+            player.blessingTurns = 3;
+            addLog(`✨ 消耗 1.0 祈願施展「天使加護」！獲得持續 3 回合的 50% 減傷護盾！`, 'prayer');
+            showFeedback('playerChar', '🛡️ BLESSING', 'fb-excellent');
+
+        } else if (action === 'prayDirect') {
+            addPrayer(0.40);
+            addLog(`💖 接收到哈士祈們的應援... 直接獲得了 +0.40 點祈願值！`, 'prayer');
+            showFeedback('playerChar', '+0.40 祈願', 'fb-excellent');
+
+        } else if (action === 'taunt') {
+            player.isTaunting = true;
+            addLog(`😏 祈Iruni露出腹黑微笑發動嘲諷！敵方情緒激動，QTE 變慢但受傷增加 30%！`, 'system');
+            showFeedback('playerChar', '😏 腹黑嘲諷', 'fb-bad');
+
+        } else if (action === 'poisonWeapon') {
+            player.isWeaponPoisoned = true;
+            addLog(`🧪 佈置了甜美陷阱！下次擊中噩夢陰影時將附加中毒效果！`, 'log-poison');
+            showFeedback('playerChar', '🧪 甜美陷阱', 'fb-excellent');
+        }
+        
+        menuState = 'main';
+        completeActionAndContinue();
+    }
+
+    function bossTurn() {
+        if (isGameOver) return;
+        isActing = true;
+        renderMenu();
+
+        addLog(`--- 噩夢侵蝕 ---`, 'system');
+
+        if (boss.poisonTurns > 0) {
+            let poisonDmg = Math.floor(Math.random() * 2) + 1;
+            boss.hp = Math.max(0, boss.hp - poisonDmg);
+            boss.poisonTurns--;
+            showFeedback('bossChar', `☣️ 甜點毒素 -${poisonDmg}`, 'fb-poison');
+            addLog(`☣️ 噩夢陰影受甜點香氣侵蝕，損失了 ${poisonDmg} 點生命值！(剩餘 ${boss.poisonTurns} 回合)`, 'log-poison');
+
+            if (boss.hp <= 0) {
+                updateDisplay();
+                addLog(`🎉 勝利！噩夢陰影不敵甜點魅力倒地！`, 'system');
+                isGameOver = true;
+                isActing = true;
+                renderMenu();
+                return;
+            }
+        }
+
+        if (player.griefTurns > 0) {
+            player.prayer = Math.max(0, player.prayer - 0.25);
+            player.griefTurns--;
+            addLog(`😭 悲傷侵蝕！祈Iruni損失 0.25 祈願值！(剩餘 ${player.griefTurns} 回合)`, 'log-danger');
+        }
+
+        if (player.isHardenedNextTurn) {
+            player.isHardenedActive = true;
+            player.isHardenedNextTurn = false;
+        } else {
+            player.isHardenedActive = false;
+        }
+
+        updateDisplay();
+
+        if (minions.length < 2 && Math.random() < 0.5) {
+            let mId = 'minion_' + Date.now();
+            let minionName = `扭曲陰影 ${minions.length + 1}`;
+            minions.push({ id: mId, name: minionName, hp: 40, maxHp: 40 });
+            addLog(`🖤 噩夢凝聚出一隻「${minionName}」！`, 'log-danger');
+            showFeedback('bossChar', '👤 召喚造物!', 'fb-bad');
+        }
+
+        if (boss.isChargingPain) {
+            boss.isChargingPain = false;
+            addLog(`💀 噩夢陰影釋放了蓄力打擊「心靈崩潰」！！`, 'log-danger');
+
+            if (player.isHardenedActive) {
+                showFeedback('playerChar', '🗿 天使無敵！免傷', 'fb-perfect');
+                addLog(`🗿 祈Iruni啟動了硬化結界，完美擋下了毀滅性攻擊！`, 'log-prayer');
+            } else {
+                showFeedback('playerChar', '💀 999999!!', 'fb-kill');
+                player.hp = 0;
+                updateDisplay();
+                addLog(`💀 崩潰爆發！祈Iruni遭受了致死打擊...`, 'log-danger');
+                triggerDeathSequence();
+                return;
+            }
+
+            finishBossTurn();
+            return;
+        }
+
+        let skills = ['melancholy', 'anger', 'grief', 'pressure'];
+        if (Math.random() < 0.25) skills.push('painCharge');
+
+        let chosenSkill = skills[Math.floor(Math.random() * skills.length)];
+        if (player.isTaunting && Math.random() < 0.6) chosenSkill = 'anger';
+
+        let qteSpeedSetting = 1.2;
+        let qteHintText = '🛡️ 陰影襲來！按下 [空白鍵] 反應！';
+
+        if (player.defenseMode === 'dodge') {
+            qteHintText = '💨 極限閃避！抓準區塊按下 [空白鍵]';
+            qteSpeedSetting = 1.8; 
+        } else if (player.defenseMode === 'counter') {
+            qteHintText = '⚔️ 腹黑反擊！精密完美判定！';
+            qteSpeedSetting = 2.0;
+        }
+
+        if (player.isTaunting) {
+            qteSpeedSetting *= 0.5;
+            qteHintText = `😏 腹黑嘲諷生效中！(慢速) ` + qteHintText;
+        }
+
+        if (chosenSkill === 'painCharge') {
+            boss.isChargingPain = true;
+            addLog(`⚠️ 噩夢陰影開始蓄力「心靈崩潰」！下回合若無硬化結界將會被秒殺！`, 'log-danger');
+            showFeedback('bossChar', '💀 崩潰蓄力中!', 'fb-bad');
+            finishBossTurn();
+            return;
+
+        } else if (chosenSkill === 'pressure') {
+            addLog(`🤯 壓力波來襲！展開 10 連打攻勢！`, 'log-danger');
+            let hitsCount = 10;
+            let currentHit = 0;
+
+            function runPressureHits() {
+                if (currentHit >= hitsCount || player.hp <= 0) {
+                    finishBossTurn();
+                    return;
+                }
+                showBottomQTE(`🤯 壓力 10 連擊 [${currentHit + 1}/10]！`, qteSpeedSetting, (qteRes) => {
+                    let success = (qteRes === 'PERFECT' || qteRes === 'EXCELLENT');
+                    if (!success) {
+                        let dmg = Math.floor(2 * bossAtkMultiplier);
+                        if (player.blessingTurns > 0) dmg = Math.max(1, Math.floor(dmg * 0.5));
+                        if (player.isHardenedActive) dmg = 0;
+                        player.hp = Math.max(0, player.hp - dmg);
+                        player.pressureStacks++;
+                        showFeedback('playerChar', `🤯 壓力+1`, 'fb-bad');
+                        addLog(`💥 壓力打擊命中！造成 ${dmg} 點傷害，壓力增加 1 層 (共 ${player.pressureStacks} 層)`, 'boss');
+                    } else {
+                        showFeedback('playerChar', '🛡️ 格擋', 'fb-great');
+                    }
+                    updateDisplay();
+                    currentHit++;
+                    setTimeout(runPressureHits, 100);
+                });
+            }
+            runPressureHits();
+
+        } else if (chosenSkill === 'grief') {
+            addLog(`😭 悲傷深淵！發動 2 連打攻擊！`, 'log-danger');
+            let griefHits = 2;
+            let currentGrief = 0;
+
+            function runGriefHits() {
+                if (currentGrief >= griefHits || player.hp <= 0) {
+                    finishBossTurn();
+                    return;
+                }
+                showBottomQTE(`😭 悲傷打擊 [${currentGrief + 1}/2]！`, qteSpeedSetting, (qteRes) => {
+                    let success = (qteRes === 'PERFECT' || qteRes === 'EXCELLENT');
+                    if (!success) {
+                        let dmg = Math.floor(8 * bossAtkMultiplier);
+                        if (player.blessingTurns > 0) dmg = Math.floor(dmg * 0.5);
+                        if (player.isHardenedActive) dmg = 0;
+                        player.hp = Math.max(0, player.hp - dmg);
+                        player.griefTurns = 3;
+                        showFeedback('playerChar', '😭 陷入悲傷!', 'fb-bad');
+                        addLog(`💥 悲傷打擊命中！造成 ${dmg} 點傷害，祈Iruni陷入悲傷狀態！`, 'boss');
+                    } else {
+                        showFeedback('playerChar', '🛡️ 格擋', 'fb-great');
+                    }
+                    updateDisplay();
+                    currentGrief++;
+                    setTimeout(runGriefHits, 150);
+                });
+            }
+            runGriefHits();
+
+        } else {
+            let isAnger = chosenSkill === 'anger';
+            let skillName = isAnger ? '😡 狂怒衝擊' : '😔 孤獨憂鬱';
+            addLog(`噩夢陰影發動「${skillName}」！`, 'boss');
+
+            showBottomQTE(qteHintText, qteSpeedSetting, (qteRes) => {
+                const pAvatar = document.getElementById('playerAvatar');
+                const bAvatar = document.getElementById('bossAvatar');
+                
+                let rawBossDamage = Math.floor((isAnger ? 28 : 18) * bossAtkMultiplier);
+                if (player.isTaunting) {
+                    rawBossDamage = Math.floor(rawBossDamage * 1.3);
+                    if (isAnger) {
+                        rawBossDamage = Math.floor(rawBossDamage * 1.4);
+                        addLog(`😡 敵方因腹黑嘲諷徹底暴怒！傷害額外暴增！`, 'log-danger');
+                    }
+                }
+
+                let finalDamage = rawBossDamage;
+                let reflectDamage = 0;
+                let qteSuccess = (qteRes === 'PERFECT' || qteRes === 'EXCELLENT');
+
+                if (player.defenseMode === 'block') {
+                    if (qteSuccess) {
+                        finalDamage = 0;
+                        showFeedback('playerChar', '🛡️ 格擋成功! 免傷', 'fb-perfect');
+                    } else {
+                        finalDamage = Math.floor(rawBossDamage * 0.5);
+                        showFeedback('playerChar', '🛡️ 格擋半減', 'fb-great');
+                    }
+                } else if (player.defenseMode === 'dodge') {
+                    if (qteSuccess) {
+                        finalDamage = 0;
+                        showFeedback('playerChar', '💨 完美閃避!', 'fb-perfect');
+                    } else {
+                        finalDamage = Math.floor(rawBossDamage * 1.5);
+                        showFeedback('playerChar', '💥 閃避失敗! 重創', 'fb-bad');
+                    }
+                } else if (player.defenseMode === 'counter') {
+                    if (qteRes === 'PERFECT') {
+                        finalDamage = 0;
+                        reflectDamage = rawBossDamage;
+                        showFeedback('playerChar', '⚔️ 腹黑反擊成功!!', 'fb-perfect');
+                        showFeedback('bossChar', `💥 反彈 -${reflectDamage}`, 'fb-bad');
+                    } else {
+                        finalDamage = rawBossDamage;
+                        showFeedback('playerChar', '❌ 反擊失敗!', 'fb-bad');
+                    }
+                } else {
+                    if (qteSuccess) finalDamage = Math.floor(rawBossDamage * 0.4);
+                }
+
+                if (player.blessingTurns > 0 && finalDamage > 0) {
+                    finalDamage = Math.floor(finalDamage * 0.5);
+                    player.blessingTurns--;
+                }
+
+                if (player.isHardenedActive) finalDamage = 0;
+
+                player.hp = Math.max(0, player.hp - finalDamage);
+                if (reflectDamage > 0) {
+                    boss.hp = Math.max(0, boss.hp - reflectDamage);
+                    bAvatar.classList.add('hit-shake');
+                    setTimeout(() => bAvatar.classList.remove('hit-shake'), 400);
+                }
+
+                if (finalDamage > 0) pAvatar.classList.add('hit-shake');
+                setTimeout(() => pAvatar.classList.remove('hit-shake'), 400);
+
+                finishBossTurn();
+            });
+        }
+    }
+
+    function finishBossTurn() {
+        let minionIndex = 0;
+
+        function processNextMinion() {
+            if (minionIndex < minions.length) {
+                if (player.hp > 0) {
+                    let m = minions[minionIndex];
+                    let mDmg = Math.floor((Math.random() * 3 + 4) * bossAtkMultiplier);
+                    if (player.defenseMode === 'block') mDmg = Math.floor(mDmg * 0.5);
+                    if (player.isHardenedActive) mDmg = 0;
+                    player.hp = Math.max(0, player.hp - mDmg);
+                    addLog(`👤 「${m.name}」偷襲了祈Iruni，造成 ${mDmg} 點傷害！`, 'log-boss');
+                }
+                minionIndex++;
+                setTimeout(processNextMinion, 300);
+            } else {
+                finalizeEnemyTurn();
+            }
+        }
+        processNextMinion();
+    }
+
+    function finalizeEnemyTurn() {
+        player.defenseMode = null;
+        player.isTaunting = false;
+        updateDisplay();
+
+        if (boss.hp <= 0) {
+            addLog(`🎉 勝利！噩夢陰影被消滅！`, 'system');
+            isGameOver = true;
+            isActing = true;
+            renderMenu();
+            return;
+        }
+
+        if (player.hp <= 0) {
+            addLog(`💀 祈Iruni體力耗盡倒下了...`, 'system');
+            triggerDeathSequence();
+            return;
+        }
+
+        addLog(`--- 祈Iruni 的回合 ---`, 'system');
+
+        if (player.speedStacks > 0) {
+            player.speedStacks--;
+            player.speedActionsLeft = 1;
+            addLog(`⚡ 疾走狀態生效中！本回合可進行 2 次行動！(剩餘速度層數: ${player.speedStacks})`, 'player');
+        }
+
+        if (player.isHardenedActive) {
+            addLog(`🗿 由於天使硬化結界副作用，祈Iruni本回合調整呼吸無法行動！`, 'system');
+            player.isHardenedActive = false;
+            updateDisplay();
+            setTimeout(bossTurn, 1500);
+        } else {
+            isActing = false;
+            renderMenu();
+        }
+    }
+
+    createTickers();
+    updateDisplay();
+</script>
+
+</body>
+</html>

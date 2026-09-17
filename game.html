@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>祈魯尼的大冒險</title>
+  <title>祈魯尼的大冒險 - 背景計時彩蛋版</title>
   <!-- 引入 Minecraft 風格像素字體 -->
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
@@ -129,6 +129,43 @@
 
     .mc-btn-close { background: #a83232; color: #fff; }
     .mc-btn-close:hover { background: #c44141; }
+
+    /* Chrome 斷線彩蛋頁面風格 */
+    #offlineOverlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #ffffff;
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 10vh 10vw;
+      font-family: Arial, sans-serif;
+      color: #222;
+      user-select: none;
+    }
+    #offlineOverlay .offline-dino {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    #offlineOverlay h1 {
+      font-size: 24px;
+      font-weight: normal;
+      margin-bottom: 15px;
+      color: #474747;
+    }
+    #offlineOverlay p {
+      font-size: 13px;
+      color: #777;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    #offlineOverlay .error-code {
+      margin-top: 20px;
+      color: #aaa;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
@@ -153,14 +190,24 @@
     <span id="noticeText"></span>
   </div>
 
+  <!-- Google Chrome 斷線彩蛋畫面 -->
+  <div id="offlineOverlay">
+    <div class="offline-dino">🦖</div>
+    <h1>無法連線至網際網路</h1>
+    <p>請檢查網路連線狀態（數據機、路由器、Wi-Fi）。</p>
+    <p>ERR_INTERNET_DISCONNECTED</p>
+    <div class="error-code" style="margin-top: 40px; font-weight: bold; color: #333;">
+      ⏳ 時間已滿 5 分鐘！即將自動前往真正的遊戲 (realgame.html)...
+    </div>
+  </div>
+
   <!-- 開場新手教學 -->
   <div id="tutorialModal" class="mc-modal" style="display: block;">
     <h3>📜 遊戲指南</h3>
     <p>歡迎來到魯尼的大冒險！</p>
     <p>🎮 <b>[WASD / 方向鍵]</b> 控制移動</p>
     <p>🚪 靠近傳送門按 <b>[E]</b> 進出農田、洞窟與小屋</p>
-    <p>🌾 作物與礦石即使身處其他地方也會自動生長/恢復！</p>
-    <p>⛏️ 升級斧頭越來越貴，但能大幅增加採集效率！</p>
+    <p>⏰ <b>注意：</b> 遊戲開始後背景將計時 5 分鐘，時間到會自動帶你前往下一關！</p>
     <br>
     <button class="mc-btn" onclick="closeTutorial()">知道了，開始冒險！</button>
   </div>
@@ -206,6 +253,11 @@
     let currentScene = "house";
     let isTutorialOpen = true;
     let isCraftOpen = false;
+    let isGameEnded = false;
+
+    // 5 分鐘背景計時變數 (300 秒)
+    let totalSeconds = 300;
+    let timerInterval = null;
 
     // 挖礦微遊戲狀態變數
     let isMiningActive = false;
@@ -331,10 +383,11 @@
     }
 
     function update() {
-      // 無論身處哪個場景，全面在背景更新作物與礦石的進度
+      if (isGameEnded) return;
+
+      // 作物與礦石背景生長 (1.5倍速度)
       farmPlots.forEach(plot => {
         if (plot.state > 0 && plot.state < 3) {
-          // 原本 180 幀變快 1.5 倍 (180 / 1.5 = 120 幀)
           plot.timer += 1;
           if (plot.timer > 120) {
             plot.state += 1;
@@ -345,7 +398,6 @@
 
       mineRocks.forEach(rock => {
         if (rock.state === 1) {
-          // 原本 2100 幀冷卻變快 1.5 倍 (2100 / 1.5 = 1400 幀)
           rock.timer += 1;
           if (rock.timer > 1400) {
             rock.state = 0;
@@ -744,15 +796,43 @@
     }
 
     function mainLoop() {
-      update();
-      draw();
-      requestAnimationFrame(mainLoop);
+      if (!isGameEnded) {
+        update();
+        draw();
+        requestAnimationFrame(mainLoop);
+      }
     }
 
     function closeTutorial() {
       document.getElementById('tutorialModal').style.display = 'none';
       isTutorialOpen = false;
       playMusic();
+      startBackgroundTimer(); // 關閉教學後正式啟動 5 分鐘背景計時
+    }
+
+    // 啟動背景 5 分鐘計時器
+    function startBackgroundTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        totalSeconds--;
+        if (totalSeconds <= 0) {
+          clearInterval(timerInterval);
+          triggerOfflineAndRedirect();
+        }
+      }, 1000);
+    }
+
+    // 觸發斷線畫面並跳轉
+    function triggerOfflineAndRedirect() {
+      isGameEnded = true;
+      if (bgm) bgm.pause();
+      // 顯示 Chrome 斷線網頁
+      document.getElementById('offlineOverlay').style.display = 'flex';
+      
+      // 4 秒後自動跳轉至 realgame.html
+      setTimeout(() => {
+        window.location.href = 'realgame.html';
+      }, 4000);
     }
 
     function playMusic() {
@@ -821,7 +901,7 @@
       if (oreCount >= cost.ores && coins >= cost.coins) {
         oreCount -= cost.ores;
         coins -= cost.coins;
-        axeIndex++;
+      axeIndex++;
         showNotice(`✨ 消耗 ${cost.ores} 礦石與 ${cost.coins} 金幣，升級為【${axeTiers[axeIndex]}】！`);
         updateHUD();
         updateUpgradeButtonText();
